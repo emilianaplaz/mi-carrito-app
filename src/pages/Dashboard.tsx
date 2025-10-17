@@ -118,7 +118,11 @@ const Dashboard = () => {
             <p className="text-muted-foreground mb-4">
               Gestiona tu inventario con lenguaje natural
             </p>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate("/pantry")}
+            >
               Gestionar Despensa
             </Button>
           </Card>
