@@ -181,34 +181,6 @@ const TestPreferencias = () => {
     }
   };
 
-  const generateMealPlan = (duration: string, breakfast: number, lunch: number, dinner: number) => {
-    const days = duration === "2_weeks" ? 14 : 7;
-    const plan = [];
-
-    const sampleMeals = {
-      breakfast: ["Avena con frutas", "Tostadas con aguacate", "Yogurt con granola", "Huevos revueltos", "Smoothie bowl"],
-      lunch: ["Ensalada César", "Pasta primavera", "Pollo a la plancha", "Sopa de verduras", "Bowl de quinoa"],
-      dinner: ["Salmón al horno", "Tacos de pescado", "Curry de lentejas", "Pizza casera", "Stir-fry de verduras"],
-    };
-
-    for (let i = 0; i < days; i++) {
-      plan.push({
-        day: i + 1,
-        breakfast: Array.from({ length: breakfast }, (_, idx) => 
-          sampleMeals.breakfast[idx % sampleMeals.breakfast.length]
-        ),
-        lunch: Array.from({ length: lunch }, (_, idx) => 
-          sampleMeals.lunch[idx % sampleMeals.lunch.length]
-        ),
-        dinner: Array.from({ length: dinner }, (_, idx) => 
-          sampleMeals.dinner[idx % sampleMeals.dinner.length]
-        ),
-      });
-    }
-
-    return plan;
-  };
-
   const handleSubmit = async () => {
     try {
       const validated = preferencesSchema.parse(preferences);
@@ -240,17 +212,27 @@ const TestPreferencias = () => {
 
       if (prefsError) throw prefsError;
 
-      // Generate and save meal plan
-      const mealPlan = generateMealPlan(
-        validated.planDuration,
-        validated.breakfastOptions,
-        validated.lunchOptions,
-        validated.dinnerOptions
+      // Generate AI-powered meal plan
+      toast({
+        title: "Generando tu plan...",
+        description: "Esto puede tomar unos momentos",
+      });
+
+      const { data: planData, error: planGenError } = await supabase.functions.invoke(
+        'generate-meal-plan',
+        {
+          body: { preferences: validated }
+        }
       );
-      
+
+      if (planGenError) throw planGenError;
+      if (!planData?.success) throw new Error("Failed to generate meal plan");
+
+      // Save meal plan with recipe IDs
       const { error: planError } = await supabase.from("meal_plans").upsert({
         user_id: session.user.id,
-        plan_data: mealPlan,
+        plan_data: planData.plan.days,
+        recipe_ids: planData.plan,
       });
 
       if (planError) throw planError;

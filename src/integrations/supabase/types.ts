@@ -49,6 +49,7 @@ export type Database = {
           created_at: string
           id: string
           plan_data: Json
+          recipe_ids: Json | null
           updated_at: string
           user_id: string
         }
@@ -56,6 +57,7 @@ export type Database = {
           created_at?: string
           id?: string
           plan_data: Json
+          recipe_ids?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -63,6 +65,7 @@ export type Database = {
           created_at?: string
           id?: string
           plan_data?: Json
+          recipe_ids?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -104,6 +107,51 @@ export type Database = {
           unit?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      recipes: {
+        Row: {
+          cook_time: number | null
+          created_at: string
+          cuisine_type: string | null
+          description: string | null
+          dietary_tags: string[] | null
+          id: string
+          ingredients: Json
+          instructions: Json
+          meal_type: string | null
+          name: string
+          prep_time: number | null
+          servings: number | null
+        }
+        Insert: {
+          cook_time?: number | null
+          created_at?: string
+          cuisine_type?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          id?: string
+          ingredients?: Json
+          instructions?: Json
+          meal_type?: string | null
+          name: string
+          prep_time?: number | null
+          servings?: number | null
+        }
+        Update: {
+          cook_time?: number | null
+          created_at?: string
+          cuisine_type?: string | null
+          description?: string | null
+          dietary_tags?: string[] | null
+          id?: string
+          ingredients?: Json
+          instructions?: Json
+          meal_type?: string | null
+          name?: string
+          prep_time?: number | null
+          servings?: number | null
         }
         Relationships: []
       }
@@ -157,6 +205,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_recipe_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          is_liked: boolean
+          recipe_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_liked: boolean
+          recipe_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_liked?: boolean
+          recipe_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_recipe_preferences_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
