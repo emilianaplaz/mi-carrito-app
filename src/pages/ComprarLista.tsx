@@ -434,42 +434,6 @@ const ComprarLista = () => {
               </Card>
             )}
 
-            {/* Alternative Shopping Plans */}
-            {recommendations.length > 1 && (
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Otras Opciones de Compra</h2>
-                <div className="space-y-3">
-                  {recommendations.slice(1).map((rec, index) => (
-                    <div
-                      key={index}
-                      className="border rounded-lg p-4 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <Store className="h-6 w-6 text-primary" />
-                          <div>
-                            <h3 className="font-semibold text-lg">{rec.supermarket}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {rec.items.length} artículos
-                              {rec.isCombination && " • Combinación"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-primary">€{rec.totalPrice.toFixed(2)}</p>
-                          {recommendations[0] && (
-                            <p className="text-xs text-muted-foreground">
-                              +€{(rec.totalPrice - recommendations[0].totalPrice).toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground italic">{rec.reasoning}</p>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
           </>
         )}
         
