@@ -12,9 +12,7 @@ const Landing = () => {
   useEffect(() => {
     const checkSession = async () => {
       const {
-        data: {
-          session
-        }
+        data: { session },
       } = await supabase.auth.getSession();
       if (session) {
         navigate("/dashboard");
@@ -22,32 +20,40 @@ const Landing = () => {
     };
     checkSession();
   }, [navigate]);
-  const features = [{
-    icon: ChefHat,
-    title: "Menús Personalizados",
-    description: "Genera menús semanales adaptados a tus objetivos, alergias y preferencias alimentarias."
-  }, {
-    icon: ShoppingCart,
-    title: "Comparador de Tiendas",
-    description: "Encuentra los mejores precios comparando entre múltiples supermercados locales en tiempo real."
-  }, {
-    icon: TrendingDown,
-    title: "Optimización de Costos",
-    description: "Reduce tu gasto en alimentos hasta un 30% con carritos divididos por tienda."
-  }, {
-    icon: Home,
-    title: "Gestión de Despensa",
-    description: "Actualiza tu inventario usando lenguaje natural y recibe sugerencias inteligentes."
-  }, {
-    icon: Bell,
-    title: "Alertas Inteligentes",
-    description: "Notificaciones de bajas de precio, reabastecimiento y ofertas personalizadas."
-  }, {
-    icon: Sparkles,
-    title: "IA Nutricional",
-    description: "Tecnología avanzada que calcula macros, micros y porciones perfectas para ti."
-  }];
-  return <div className="min-h-screen">
+  const features = [
+    {
+      icon: ChefHat,
+      title: "Menús Personalizados",
+      description: "Genera menús semanales adaptados a tus objetivos, alergias y preferencias alimentarias.",
+    },
+    {
+      icon: ShoppingCart,
+      title: "Comparador de Tiendas",
+      description: "Encuentra los mejores precios comparando entre múltiples supermercados locales en tiempo real.",
+    },
+    {
+      icon: TrendingDown,
+      title: "Optimización de Costos",
+      description: "Reduce tu gasto en alimentos hasta un 30% con carritos divididos por tienda.",
+    },
+    {
+      icon: Home,
+      title: "Gestión de Despensa",
+      description: "Actualiza tu inventario usando lenguaje natural y recibe sugerencias inteligentes.",
+    },
+    {
+      icon: Bell,
+      title: "Alertas Inteligentes",
+      description: "Notificaciones de bajas de precio, reabastecimiento y ofertas personalizadas.",
+    },
+    {
+      icon: Sparkles,
+      title: "IA Nutricional",
+      description: "Tecnología avanzada que calcula macros, micros y porciones perfectas para ti.",
+    },
+  ];
+  return (
+    <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -61,9 +67,7 @@ const Landing = () => {
             <Button variant="ghost" onClick={() => navigate("/auth")}>
               Iniciar Sesión
             </Button>
-            <Button onClick={() => navigate("/auth")}>
-              Comenzar Gratis
-            </Button>
+            <Button onClick={() => navigate("/auth")}>Comenzar Gratis</Button>
           </div>
         </div>
       </nav>
@@ -81,14 +85,13 @@ const Landing = () => {
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground">
-                Menús personalizados, comparación de precios entre tiendas y gestión inteligente de tu despensa. 
-                Todo en una sola plataforma.
+                Menús personalizados, autogeneración de listas de compra, comparación de precios entre supermercados y
+                gestión inteligente de tu despensa. Todo en una sola plataforma.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-8">
                   Comenzar Ahora
                 </Button>
-                
               </div>
               <div className="flex items-center gap-8 pt-4">
                 <div>
@@ -107,7 +110,11 @@ const Landing = () => {
             </div>
             <div className="relative animate-slide-in-left">
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-3xl blur-3xl -z-10" />
-              <img src={heroImage} alt="Fresh healthy ingredients" className="rounded-3xl shadow-strong w-full object-cover" />
+              <img
+                src={heroImage}
+                alt="Fresh healthy ingredients"
+                className="rounded-3xl shadow-strong w-full object-cover"
+              />
             </div>
           </div>
         </div>
@@ -117,21 +124,25 @@ const Landing = () => {
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-4xl font-bold mb-4">
-              Todo lo que necesitas para comer mejor y ahorrar
-            </h2>
+            <h2 className="text-4xl font-bold mb-4">Todo lo que necesitas para comer mejor y ahorrar</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Una plataforma completa que combina nutrición inteligente con optimización de costos
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => <Card key={index} className="p-6 hover:shadow-medium transition-all duration-300 hover:-translate-y-1 border-border bg-card" style={{
-            animationDelay: `${index * 100}ms`
-          }}>
+            {features.map((feature, index) => (
+              <Card
+                key={index}
+                className="p-6 hover:shadow-medium transition-all duration-300 hover:-translate-y-1 border-border bg-card"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                }}
+              >
                 <feature.icon className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </Card>)}
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -140,9 +151,7 @@ const Landing = () => {
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <Card className="p-12 text-center bg-gradient-to-br from-primary/10 via-accent to-secondary/10 border-primary/20 shadow-strong">
-            <h2 className="text-4xl font-bold mb-4">
-              ¿Listo para transformar tu alimentación?
-            </h2>
+            <h2 className="text-4xl font-bold mb-4">¿Listo para transformar tu alimentación?</h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Únete a miles de usuarios que ya están comiendo mejor y ahorrando dinero
             </p>
@@ -160,11 +169,10 @@ const Landing = () => {
             <ChefHat className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold">MiCarrito</span>
           </div>
-          <p className="text-muted-foreground">
-            © 2025 MiCarrito. Todos los derechos reservados.
-          </p>
+          <p className="text-muted-foreground">© 2025 MiCarrito. Todos los derechos reservados.</p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
 export default Landing;
