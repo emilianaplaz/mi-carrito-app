@@ -70,10 +70,15 @@ INSTRUCCIONES IMPORTANTES SOBRE OPCIONES:
 - Distribuye y repite estas recetas a lo largo de los ${days} días
 - Máximo 1 receta nueva por día
 
-FORMATO DE INGREDIENTES:
+FORMATO DE INGREDIENTES (MUY IMPORTANTE):
 - Usa nombres de ingredientes BASE sin preparación (ejemplo: "cebolla" en vez de "cebolla picada")
-- Incluye cantidades específicas y unidades claras
+- SIEMPRE incluye cantidades específicas y realistas:
+  * Carnes: usa "kg" o "unidad" (ejemplo: "500" con unidad "g", o "4" con unidad "pechugas de pollo")
+  * Vegetales: usa cantidades contables o peso (ejemplo: "2" con unidad "cebollas", "3" con unidad "tomates", "250" con unidad "g")
+  * Líquidos: usa "ml" o "l"
+  * Especias/condimentos: usa "cucharadas" o "g"
 - Agrupa cantidades del mismo ingrediente
+- NO uses cantidades vagas como "al gusto" o sin número
 
 IMPORTANTE: 
 - TODOS los nombres de recetas, descripciones e instrucciones deben estar en ESPAÑOL

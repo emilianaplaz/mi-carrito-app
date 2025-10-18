@@ -172,6 +172,32 @@ const MiPlan = () => {
     }
   };
 
+  const combineItems = (items: any[]): any[] => {
+    const itemMap = new Map<string, any>();
+    
+    items.forEach(item => {
+      const key = item.item || item.name;
+      if (!key) return;
+      
+      if (itemMap.has(key)) {
+        const existing = itemMap.get(key);
+        // Try to parse and add numeric amounts
+        const existingAmount = parseFloat(existing.amount) || 0;
+        const newAmount = parseFloat(item.amount) || 0;
+        existing.amount = String(existingAmount + newAmount);
+      } else {
+        itemMap.set(key, {
+          name: key,
+          brand: item.brand || "",
+          amount: item.amount || "1",
+          unit: item.unit || "unidad"
+        });
+      }
+    });
+    
+    return Array.from(itemMap.values());
+  };
+
   const handleAddToShoppingList = async () => {
     if (!selectedRecipe || selectedIngredients.size === 0) {
       toast({
@@ -203,13 +229,19 @@ const MiPlan = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const selectedItems = Array.from(selectedIngredients).map(idx => selectedRecipe.ingredients[idx]);
+    const selectedItems = Array.from(selectedIngredients).map(idx => ({
+      name: selectedRecipe.ingredients[idx].item,
+      brand: "",
+      amount: selectedRecipe.ingredients[idx].amount,
+      unit: selectedRecipe.ingredients[idx].unit
+    }));
 
     if (listChoice === "new") {
+      const combinedItems = combineItems(selectedItems);
       const { error } = await supabase.from("grocery_lists").insert({
         user_id: session.user.id,
         name: listName,
-        items: selectedItems,
+        items: combinedItems,
       });
 
       if (error) {
@@ -230,9 +262,10 @@ const MiPlan = () => {
 
       if (existingList) {
         const currentItems = Array.isArray(existingList.items) ? existingList.items : [];
+        const combinedItems = combineItems([...currentItems, ...selectedItems]);
         const { error } = await supabase
           .from("grocery_lists")
-          .update({ items: [...currentItems, ...selectedItems] })
+          .update({ items: combinedItems })
           .eq("id", selectedListId);
 
         if (error) {
@@ -306,10 +339,11 @@ const MiPlan = () => {
     }
 
     if (listChoice === "new") {
+      const combinedItems = combineItems(allIngredients);
       const { error } = await supabase.from("grocery_lists").insert({
         user_id: session.user.id,
         name: listName,
-        items: allIngredients,
+        items: combinedItems,
       });
 
       if (error) {
@@ -329,9 +363,10 @@ const MiPlan = () => {
 
       if (existingList) {
         const currentItems = Array.isArray(existingList.items) ? existingList.items : [];
+        const combinedItems = combineItems([...currentItems, ...allIngredients]);
         const { error } = await supabase
           .from("grocery_lists")
-          .update({ items: [...currentItems, ...allIngredients] })
+          .update({ items: combinedItems })
           .eq("id", selectedListId);
 
         if (error) {
@@ -345,9 +380,10 @@ const MiPlan = () => {
       }
     }
 
+    const uniqueCount = combineItems(allIngredients).length;
     toast({
       title: "¡Lista creada!",
-      description: `${allIngredients.length} ingredientes agregados`,
+      description: `${uniqueCount} ingredientes únicos agregados`,
     });
     setShowBulkAddDialog(false);
     setSelectedRecipeIds(new Set());
