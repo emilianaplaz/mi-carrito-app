@@ -197,9 +197,65 @@ const MiPlan = () => {
     return synonyms[lowerName] || lowerName;
   };
 
-  const combineItems = (items: any[]): any[] => {
+  const roundToBuyableAmount = (amount: number, unit: string, availableSizes: number[]): number => {
+    if (availableSizes.length === 0) return amount;
+    
+    // Normalize unit to match database
+    const normalizedUnit = unit.toLowerCase().trim();
+    
+    // Find smallest package that fits the need
+    const sorted = [...availableSizes].sort((a, b) => a - b);
+    const suitable = sorted.find(size => size >= amount);
+    
+    return suitable || sorted[sorted.length - 1]; // Return biggest if none fit
+  };
+
+  const parseUnit = (unitStr: string): { value: number; unit: string } => {
+    // Handle units like "1kg", "500g", "250ml"
+    const match = unitStr.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)$/);
+    if (match) {
+      return { value: parseFloat(match[1]), unit: match[2].toLowerCase() };
+    }
+    return { value: 0, unit: unitStr.toLowerCase() };
+  };
+
+  const combineItems = async (items: any[]): Promise<any[]> => {
     const excludedItems = ['agua', 'sal', 'pimienta', 'pimienta negra', 'aceite de oliva', 'aceite de oliva virgen extra'];
     const itemMap = new Map<string, any>();
+    
+    // Fetch available product sizes from database
+    const { data: productsData } = await supabase
+      .from("products")
+      .select("id, name");
+    
+    const { data: pricesData } = await supabase
+      .from("product_prices")
+      .select("product_id, unit");
+    
+    // Build map of product name -> available sizes per unit type
+    const productSizes = new Map<string, Map<string, number[]>>();
+    
+    if (productsData && pricesData) {
+      const productIdToName = new Map(productsData.map(p => [p.id, p.name.toLowerCase()]));
+      
+      pricesData.forEach((price: any) => {
+        const productName = productIdToName.get(price.product_id);
+        if (!productName) return;
+        
+        const parsed = parseUnit(price.unit);
+        if (parsed.value === 0) return;
+        
+        if (!productSizes.has(productName)) {
+          productSizes.set(productName, new Map());
+        }
+        
+        const unitMap = productSizes.get(productName)!;
+        if (!unitMap.has(parsed.unit)) {
+          unitMap.set(parsed.unit, []);
+        }
+        unitMap.get(parsed.unit)!.push(parsed.value);
+      });
+    }
     
     items.forEach(item => {
       const originalName = item.item || item.name;
@@ -243,7 +299,25 @@ const MiPlan = () => {
       }
     });
     
-    return Array.from(itemMap.values());
+    // Round up amounts to buyable sizes
+    const result: any[] = [];
+    for (const item of itemMap.values()) {
+      const normalizedProductName = normalizeIngredientName(item.name);
+      const unit = (item.unit || "unidad").toLowerCase();
+      const amount = parseFloat(item.amount) || 1;
+      
+      const availableSizesForUnit = productSizes.get(normalizedProductName)?.get(unit) || [];
+      const buyableAmount = availableSizesForUnit.length > 0 
+        ? roundToBuyableAmount(amount, unit, availableSizesForUnit)
+        : amount;
+      
+      result.push({
+        ...item,
+        amount: String(buyableAmount)
+      });
+    }
+    
+    return result;
   };
 
   const handleAddToShoppingList = async () => {
@@ -285,7 +359,7 @@ const MiPlan = () => {
     }));
 
     if (listChoice === "new") {
-      const combinedItems = combineItems(selectedItems);
+      const combinedItems = await combineItems(selectedItems);
       const { error } = await supabase.from("grocery_lists").insert({
         user_id: session.user.id,
         name: listName,
@@ -310,7 +384,7 @@ const MiPlan = () => {
 
       if (existingList) {
         const currentItems = Array.isArray(existingList.items) ? existingList.items : [];
-        const combinedItems = combineItems([...currentItems, ...selectedItems]);
+        const combinedItems = await combineItems([...currentItems, ...selectedItems]);
         const { error } = await supabase
           .from("grocery_lists")
           .update({ items: combinedItems })
@@ -392,7 +466,7 @@ const MiPlan = () => {
     }
 
     if (listChoice === "new") {
-      const combinedItems = combineItems(allIngredients);
+      const combinedItems = await combineItems(allIngredients);
       const { error } = await supabase.from("grocery_lists").insert({
         user_id: session.user.id,
         name: listName,
@@ -416,7 +490,7 @@ const MiPlan = () => {
 
       if (existingList) {
         const currentItems = Array.isArray(existingList.items) ? existingList.items : [];
-        const combinedItems = combineItems([...currentItems, ...allIngredients]);
+        const combinedItems = await combineItems([...currentItems, ...allIngredients]);
         const { error } = await supabase
           .from("grocery_lists")
           .update({ items: combinedItems })
@@ -433,7 +507,8 @@ const MiPlan = () => {
       }
     }
 
-    const uniqueCount = combineItems(allIngredients).length;
+    const combinedForCount = await combineItems(allIngredients);
+    const uniqueCount = combinedForCount.length;
     toast({
       title: "¡Lista creada!",
       description: `${uniqueCount} ingredientes con cantidades totales para toda la semana`,
