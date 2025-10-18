@@ -51,6 +51,7 @@ const DeliveryOrder = () => {
   const [zone, setZone] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [deliveryOption, setDeliveryOption] = useState("standard");
+  const [paymentMethod, setPaymentMethod] = useState("card");
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,7 +94,7 @@ const DeliveryOrder = () => {
       return;
     }
 
-    if (!cardNumber.trim() || !cardName.trim()) {
+    if (paymentMethod === "card" && (!cardNumber.trim() || !cardName.trim())) {
       toast({
         title: "Error",
         description: "Por favor completa los datos de pago",
@@ -325,45 +326,95 @@ const DeliveryOrder = () => {
                   <CreditCard className="h-5 w-5 text-primary" />
                   Método de Pago
                 </h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Mock de pago - En producción, integrar con Stripe o pasarela local
-                </p>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="cardNumber">Número de Tarjeta</Label>
-                    <Input
-                      id="cardNumber"
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      maxLength={19}
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="cardName">Nombre en la Tarjeta</Label>
-                      <Input
-                        id="cardName"
-                        placeholder="Juan Pérez"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cardExpiry">Vencimiento</Label>
-                      <Input id="cardExpiry" type="text" placeholder="MM/AA" maxLength={5} />
+                
+                {/* Payment Method Selector */}
+                <div className="space-y-3 mb-6">
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                      paymentMethod === "card"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    onClick={() => setPaymentMethod("card")}
+                  >
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="h-5 w-5" />
+                      <div>
+                        <p className="font-semibold">Tarjeta de Crédito/Débito</p>
+                        <p className="text-sm text-muted-foreground">Pago inmediato con tarjeta</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="cardCVV">CVV</Label>
-                      <Input id="cardCVV" type="text" placeholder="123" maxLength={3} />
+                  
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                      paymentMethod === "cashea"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    onClick={() => setPaymentMethod("cashea")}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-5 rounded bg-primary/20 flex items-center justify-center">
+                        <span className="text-xs font-bold">C</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Cashea</p>
+                        <p className="text-sm text-muted-foreground">Compra ahora, paga después</p>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Credit Card Form - Only show if card is selected */}
+                {paymentMethod === "card" && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="cardNumber">Número de Tarjeta</Label>
+                      <Input
+                        id="cardNumber"
+                        type="text"
+                        placeholder="1234 5678 9012 3456"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value)}
+                        maxLength={19}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="cardName">Nombre en la Tarjeta</Label>
+                        <Input
+                          id="cardName"
+                          placeholder="Juan Pérez"
+                          value={cardName}
+                          onChange={(e) => setCardName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cardExpiry">Vencimiento</Label>
+                        <Input id="cardExpiry" type="text" placeholder="MM/AA" maxLength={5} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="cardCVV">CVV</Label>
+                        <Input id="cardCVV" type="text" placeholder="123" maxLength={3} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cashea Info - Only show if cashea is selected */}
+                {paymentMethod === "cashea" && (
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <p className="text-sm">
+                      Serás redirigido a Cashea para completar tu compra de forma segura.
+                      Paga en cuotas flexibles sin tarjeta de crédito.
+                    </p>
+                  </div>
+                )}
               </Card>
 
               {/* Submit Button */}
