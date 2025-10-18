@@ -53,6 +53,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          allergies: string[] | null
+          completed_at: string | null
+          cooking_time: string | null
+          created_at: string
+          cuisine_preferences: string[] | null
+          dietary_restrictions: string[] | null
+          health_goals: string[] | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string[] | null
+          completed_at?: string | null
+          cooking_time?: string | null
+          created_at?: string
+          cuisine_preferences?: string[] | null
+          dietary_restrictions?: string[] | null
+          health_goals?: string[] | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string[] | null
+          completed_at?: string | null
+          cooking_time?: string | null
+          created_at?: string
+          cuisine_preferences?: string[] | null
+          dietary_restrictions?: string[] | null
+          health_goals?: string[] | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
