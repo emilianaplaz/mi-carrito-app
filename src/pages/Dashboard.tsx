@@ -35,18 +35,8 @@ const Dashboard = () => {
       if (!session) {
         navigate("/auth");
       } else {
-        // Check if user has completed preferences
-        const { data: prefs } = await supabase
-          .from("user_preferences")
-          .select("id")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        
-        if (!prefs) {
-          navigate("/test-preferencias");
-        } else {
-          setLoading(false);
-        }
+        // Always allow access to dashboard once authenticated
+        setLoading(false);
       }
 
       return () => subscription.unsubscribe();
