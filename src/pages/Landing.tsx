@@ -5,56 +5,49 @@ import { ChefHat, ShoppingCart, Sparkles, TrendingDown, Bell, Home } from "lucid
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-nutrition.jpg";
-
 const Landing = () => {
   const navigate = useNavigate();
 
   // Redirect if already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (session) {
         navigate("/dashboard");
       }
     };
     checkSession();
   }, [navigate]);
-
-  const features = [
-    {
-      icon: ChefHat,
-      title: "Menús Personalizados",
-      description: "Genera menús semanales adaptados a tus objetivos, alergias y preferencias alimentarias."
-    },
-    {
-      icon: ShoppingCart,
-      title: "Comparador de Tiendas",
-      description: "Encuentra los mejores precios comparando entre múltiples tiendas locales en tiempo real."
-    },
-    {
-      icon: TrendingDown,
-      title: "Optimización de Costos",
-      description: "Reduce tu gasto en alimentos hasta un 30% con carritos divididos por tienda."
-    },
-    {
-      icon: Home,
-      title: "Gestión de Despensa",
-      description: "Actualiza tu inventario usando lenguaje natural y recibe sugerencias inteligentes."
-    },
-    {
-      icon: Bell,
-      title: "Alertas Inteligentes",
-      description: "Notificaciones de bajas de precio, reabastecimiento y ofertas personalizadas."
-    },
-    {
-      icon: Sparkles,
-      title: "IA Nutricional",
-      description: "Tecnología avanzada que calcula macros, micros y porciones perfectas para ti."
-    }
-  ];
-
-  return (
-    <div className="min-h-screen">
+  const features = [{
+    icon: ChefHat,
+    title: "Menús Personalizados",
+    description: "Genera menús semanales adaptados a tus objetivos, alergias y preferencias alimentarias."
+  }, {
+    icon: ShoppingCart,
+    title: "Comparador de Tiendas",
+    description: "Encuentra los mejores precios comparando entre múltiples tiendas locales en tiempo real."
+  }, {
+    icon: TrendingDown,
+    title: "Optimización de Costos",
+    description: "Reduce tu gasto en alimentos hasta un 30% con carritos divididos por tienda."
+  }, {
+    icon: Home,
+    title: "Gestión de Despensa",
+    description: "Actualiza tu inventario usando lenguaje natural y recibe sugerencias inteligentes."
+  }, {
+    icon: Bell,
+    title: "Alertas Inteligentes",
+    description: "Notificaciones de bajas de precio, reabastecimiento y ofertas personalizadas."
+  }, {
+    icon: Sparkles,
+    title: "IA Nutricional",
+    description: "Tecnología avanzada que calcula macros, micros y porciones perfectas para ti."
+  }];
+  return <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -95,9 +88,7 @@ const Landing = () => {
                 <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-8">
                   Comenzar Ahora
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8">
-                  Ver Demo
-                </Button>
+                
               </div>
               <div className="flex items-center gap-8 pt-4">
                 <div>
@@ -116,11 +107,7 @@ const Landing = () => {
             </div>
             <div className="relative animate-slide-in-left">
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-3xl blur-3xl -z-10" />
-              <img 
-                src={heroImage} 
-                alt="Fresh healthy ingredients" 
-                className="rounded-3xl shadow-strong w-full object-cover"
-              />
+              <img src={heroImage} alt="Fresh healthy ingredients" className="rounded-3xl shadow-strong w-full object-cover" />
             </div>
           </div>
         </div>
@@ -138,17 +125,13 @@ const Landing = () => {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <Card 
-                key={index} 
-                className="p-6 hover:shadow-medium transition-all duration-300 hover:-translate-y-1 border-border bg-card"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
+            {features.map((feature, index) => <Card key={index} className="p-6 hover:shadow-medium transition-all duration-300 hover:-translate-y-1 border-border bg-card" style={{
+            animationDelay: `${index * 100}ms`
+          }}>
                 <feature.icon className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -182,8 +165,6 @@ const Landing = () => {
           </p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
