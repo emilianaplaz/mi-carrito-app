@@ -70,33 +70,44 @@ INSTRUCCIONES IMPORTANTES SOBRE OPCIONES:
 - Distribuye y repite estas recetas a lo largo de los ${days} días
 - Máximo 1 receta nueva por día
 
-FORMATO DE INGREDIENTES (CRÍTICO - SEGUIR ESTRICTAMENTE):
-- NUNCA NUNCA incluyas estos items: agua, sal, pimienta, aceite de oliva
-- Usa nombres de ingredientes BASE sin preparación (ejemplo: "ajo" NO "ajo picado")
-- Usa nombres CONSISTENTES:
-  * "berries" (NO frutas del bosque, frutos rojos, bayas)
-  * "tomate" (NO jitomate)
-  * "patatas" (NO papas, papa)
-  * "pimiento" (NO ají, chile, pimentón)
-  * "huevos" (siempre plural, NO huevo)
-  * "dientes de ajo" (NO dientes, NO ajo)
+FORMATO DE INGREDIENTES (CRÍTICO):
 
-- CANTIDADES ESPECÍFICAS OBLIGATORIAS (números grandes para toda la semana):
-  * Huevos: Mínimo "12" con unidad "huevos" (NO menos de 6)
-  * Ajo: Mínimo "8" con unidad "dientes" (NO menos de 5)
-  * Carnes: Mínimo "500" con unidad "g" o "1" con unidad "kg"
-  * Vegetales contables: "4" con unidad "tomates", "3" con unidad "cebollas"
-  * Vegetales peso: "300" con unidad "g" mínimo
-  * Líquidos: "250" con unidad "ml" mínimo
-  * Quesos: "200" con unidad "g" mínimo
-  * Frutos secos: "100" con unidad "g" mínimo
+PRODUCTOS DISPONIBLES - Basa las recetas en estos productos de la base de datos:
+- Proteínas: huevos, pechugas de pollo, carne picada, pescado, atún
+- Lácteos: leche entera, yogur griego, queso
+- Vegetales: tomate, cebolla, pimiento, ajo, espinacas, brócoli, calabacín, lechuga, zanahoria
+- Carbohidratos: arroz, pasta, patatas, pan integral, avena
+- Otros: aceite de oliva, aceitunas, frutos secos
 
-- FORMATO JSON EXACTO:
-  * Campo "item": nombre del ingrediente base
-  * Campo "amount": SIEMPRE número (entero o decimal: 1, 2, 12, 0.5, 1.5)
-  * Campo "unit": unidad específica (huevos, dientes, g, kg, ml, l, cucharadas, cucharaditas)
+REGLAS IMPORTANTES:
+1. INCLUYE en las recetas: agua, sal, pimienta, aceite de oliva (son necesarios para cocinar)
+2. Usa nombres de ingredientes BASE: "ajo" NO "ajo picado", "tomate" NO "tomate triturado"
+3. Nombres CONSISTENTES:
+   * "huevos" (siempre plural)
+   * "dientes" para ajo (ejemplo: "3 dientes")
+   * "tomate" (NO jitomate)
+   * "patatas" (NO papas)
+   * "pimiento" (NO ají, chile)
 
-- NO uses: "al gusto", "suficiente", "a gusto", sin número
+4. CANTIDADES NUMÉRICAS ESPECÍFICAS (números reales para cocinar):
+   * Huevos: "2" o "3" o "4" con unidad "huevos" (por receta)
+   * Ajo: "2" o "3" o "4" con unidad "dientes" (por receta)
+   * Carnes: "200" o "300" con unidad "g" (por persona/porción)
+   * Vegetales contables: "1" o "2" con unidad "tomates", "cebollas"
+   * Vegetales peso: "150" o "200" con unidad "g"
+   * Líquidos: "100" o "200" con unidad "ml"
+   * Aceite: "2" o "3" con unidad "cucharadas"
+   * Sal/pimienta: "1" con unidad "cucharadita"
+   * Quesos: "100" con unidad "g"
+
+5. FORMATO JSON EXACTO:
+   * Campo "item": nombre base del ingrediente
+   * Campo "amount": número (1, 2, 3, 0.5, 1.5, 200, etc.)
+   * Campo "unit": unidad (huevos, dientes, g, kg, ml, l, cucharadas, cucharaditas, unidad)
+
+6. NO uses cantidades vagas: "al gusto", "suficiente", sin número
+
+NOTA: El sistema automáticamente excluirá agua, sal, pimienta y aceite de oliva de las listas de compra, pero DEBEN estar en las recetas.
 
 IMPORTANTE: 
 - TODOS los nombres de recetas, descripciones e instrucciones deben estar en ESPAÑOL

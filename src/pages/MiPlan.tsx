@@ -362,6 +362,11 @@ const MiPlan = () => {
     if (!session) return;
 
     // Collect all ingredients from selected recipes
+    // Important: This includes ingredients from recipes that are repeated in the week
+    // The combineItems function will automatically:
+    // 1. Exclude water, salt, pepper, and olive oil (pantry staples)
+    // 2. Sum up quantities of the same ingredient across all recipes
+    // 3. Normalize ingredient names to avoid duplicates
     const allIngredients: any[] = [];
     selectedRecipeIds.forEach(recipeId => {
       const recipe = recipes[recipeId];
@@ -431,7 +436,7 @@ const MiPlan = () => {
     const uniqueCount = combineItems(allIngredients).length;
     toast({
       title: "¡Lista creada!",
-      description: `${uniqueCount} ingredientes únicos agregados`,
+      description: `${uniqueCount} ingredientes con cantidades totales para toda la semana`,
     });
     setShowBulkAddDialog(false);
     setSelectedRecipeIds(new Set());
