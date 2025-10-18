@@ -153,7 +153,7 @@ const Landing = () => {
           <Card className="p-12 text-center bg-gradient-to-br from-primary/10 via-accent to-secondary/10 border-primary/20 shadow-strong">
             <h2 className="text-4xl font-bold mb-4">¿Listo para transformar tu alimentación?</h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Únete a miles de usuarios que ya están comiendo mejor y ahorrando dinero
+              Únete al equipo que ya está comiendo mejor y ahorrando dinero
             </p>
             <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-12">
               Comenzar Gratis
