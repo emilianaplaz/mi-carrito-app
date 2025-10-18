@@ -37,6 +37,7 @@ const Listas = () => {
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<{ name: string; brands: string[] }[]>([]);
+  const [allBrands, setAllBrands] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -56,12 +57,19 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      // Fetch all products from the database (use only products that exist)
+      // Fetch all products from the database
       const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("name")
         .order("name", { ascending: true });
       if (productsError) throw productsError;
+
+      // Fetch ALL brands from the brands table
+      const { data: brandsData, error: brandsError } = await supabase
+        .from("brands")
+        .select("name")
+        .order("name", { ascending: true });
+      if (brandsError) throw brandsError;
 
       // Fetch brand availability per product based on existing price records
       const { data: pricesData, error: pricesError } = await supabase
@@ -84,6 +92,7 @@ const Listas = () => {
       }));
 
       setAvailableProducts(products);
+      setAllBrands((brandsData || []).map((b: any) => b.name));
     } catch (error) {
       console.error("Error loading products:", error);
     }
@@ -394,13 +403,11 @@ const Listas = () => {
                           <SelectValue placeholder="Selecciona marca" />
                         </SelectTrigger>
                         <SelectContent>
-                          {availableProducts
-                            .find((p) => p.name === item.name)
-                            ?.brands.map((brand) => (
-                              <SelectItem key={brand} value={brand}>
-                                {brand}
-                              </SelectItem>
-                            ))}
+                          {allBrands.map((brand) => (
+                            <SelectItem key={brand} value={brand}>
+                              {brand}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       {newItems.length > 1 && (
@@ -615,24 +622,22 @@ const Listas = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Select
-                    value={item.brand}
-                    onValueChange={(value) => updateItemField(index, "brand", value)}
-                    disabled={!item.name}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecciona marca" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableProducts
-                        .find((p) => p.name === item.name)
-                        ?.brands.map((brand) => (
-                          <SelectItem key={brand} value={brand}>
-                            {brand}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                      <Select
+                        value={item.brand}
+                        onValueChange={(value) => updateItemField(index, "brand", value)}
+                        disabled={!item.name}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Selecciona marca" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allBrands.map((brand) => (
+                            <SelectItem key={brand} value={brand}>
+                              {brand}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                   {newItems.length > 1 && (
                     <Button
                       variant="ghost"
