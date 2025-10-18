@@ -124,9 +124,9 @@ const Landing = () => {
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-4xl font-bold mb-4">Todo lo que necesitas para comer mejor y ahorrar</h2>
+            <h2 className="text-4xl font-bold mb-4">Mas ahorro. Menos tiempo. Menos esfuerzo.</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Una plataforma completa que combina nutrición inteligente con optimización de costos
+              Optimiza tu alimentación de la manera más inteligente.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
