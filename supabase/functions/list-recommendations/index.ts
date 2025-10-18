@@ -11,8 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const { listName, items, availablePrices } = await req.json();
-    console.log('Received request:', { listName, itemCount: items.length, priceCount: availablePrices.length });
+    const { listName, items, availablePrices, allSupermarkets } = await req.json();
+    console.log('Received request:', { listName, itemCount: items.length, priceCount: availablePrices.length, supermarketCount: allSupermarkets?.length || 0 });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
