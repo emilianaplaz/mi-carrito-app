@@ -5,7 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChefHat, ArrowLeft, Leaf, Apple, Clock, Target, Utensils, Check, Calendar, UtensilsCrossed } from "lucide-react";
+import {
+  ChefHat,
+  ArrowLeft,
+  Leaf,
+  Apple,
+  Clock,
+  Target,
+  Utensils,
+  Check,
+  Calendar,
+  UtensilsCrossed,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
@@ -137,7 +148,9 @@ const TestPreferencias = () => {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
@@ -186,7 +199,9 @@ const TestPreferencias = () => {
       const validated = preferencesSchema.parse(preferences);
       setSaving(true);
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         toast({
           title: "Error",
@@ -218,12 +233,9 @@ const TestPreferencias = () => {
         description: "Esto puede tomar unos momentos",
       });
 
-      const { data: planData, error: planGenError } = await supabase.functions.invoke(
-        'generate-meal-plan',
-        {
-          body: { preferences: validated }
-        }
-      );
+      const { data: planData, error: planGenError } = await supabase.functions.invoke("generate-meal-plan", {
+        body: { preferences: validated },
+      });
 
       if (planGenError) throw planGenError;
       if (!planData?.success) throw new Error("Failed to generate meal plan");
@@ -279,7 +291,7 @@ const TestPreferencias = () => {
     <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
@@ -293,7 +305,9 @@ const TestPreferencias = () => {
         {/* Progress Bar */}
         <div className="mb-8 animate-fade-in">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Paso {currentStep + 1} de {steps.length}</span>
+            <span>
+              Paso {currentStep + 1} de {steps.length}
+            </span>
             <span>{Math.round(progress)}% completado</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -361,9 +375,10 @@ const TestPreferencias = () => {
                     onClick={() => toggleOption(currentStepData.field, option.value, currentStepData.single)}
                     className={`
                       relative p-4 rounded-lg border-2 transition-all duration-300
-                      ${isSelected
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border hover:border-primary/50 hover:bg-accent/50"
+                      ${
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-md"
+                          : "border-border hover:border-primary/50 hover:bg-accent/50"
                       }
                     `}
                   >
@@ -385,19 +400,10 @@ const TestPreferencias = () => {
 
         {/* Navigation Buttons */}
         <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentStep === 0}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={handleBack} disabled={currentStep === 0} className="flex-1">
             Atrás
           </Button>
-          <Button
-            onClick={handleNext}
-            disabled={saving}
-            className="flex-1"
-          >
+          <Button onClick={handleNext} disabled={saving} className="flex-1">
             {saving ? "Guardando..." : currentStep === steps.length - 1 ? "Finalizar" : "Siguiente"}
           </Button>
         </div>
