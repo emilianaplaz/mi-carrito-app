@@ -27,14 +27,14 @@ const Landing = () => {
       description: "Genera menús semanales adaptados a tus objetivos, alergias y preferencias alimentarias.",
     },
     {
-      icon: ShoppingCart,
+      icon: Bell,
       title: "Comparador de Precios",
       description: "Encuentra los mejores precios comparando entre múltiples supermercados locales en tiempo real.",
     },
     {
-      icon: TrendingDown,
-      title: "Optimización de Costos",
-      description: "Reduce tu gasto en alimentos con carritos divididos por tienda.",
+      icon: ShoppingCart,
+      title: "Mercado inteligente",
+      description: "Automatiza la compra de tu mercado según tus necesidades.",
     },
     {
       icon: Home,
@@ -42,9 +42,9 @@ const Landing = () => {
       description: "Crea listas de compra y recibe recomendaciones de nuevos productos por mejores precios.",
     },
     {
-      icon: Bell,
-      title: "Mercado inteligente",
-      description: "Automatiza la compra de tu mercado según tus necesidades.",
+      icon: TrendingDown,
+      title: "Optimización de Costos",
+      description: "Reduce tu gasto en alimentos con carritos divididos por tienda.",
     },
     {
       icon: Sparkles,
