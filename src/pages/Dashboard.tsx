@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CartButton } from "@/components/Cart";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -115,7 +116,9 @@ const Dashboard = () => {
             </span>
           </div>
           
-          <DropdownMenu>
+          <div className="flex items-center gap-2">
+            <CartButton />
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <UserIcon className="h-5 w-5" />
@@ -137,6 +140,7 @@ const Dashboard = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </header>
 

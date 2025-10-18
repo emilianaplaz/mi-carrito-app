@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 type CartItem = {
   name: string;
@@ -38,13 +39,18 @@ const DeliveryOrder = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { items: cartItems, clearCart } = useCart();
 
-  // Mock cart items - In production, fetch from Supabase or local state
-  const [cartItems] = useState<CartItem[]>([
-    { name: "Arroz largo", quantity: 2, price: 1.15, unit: "kg" },
-    { name: "Pollo", quantity: 1, price: 4.20, unit: "kg" },
-    { name: "Huevos", quantity: 12, price: 2.15, unit: "unidades" },
-  ]);
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      toast({
+        title: "Carrito vacío",
+        description: "No hay productos en el carrito",
+        variant: "destructive",
+      });
+      navigate("/listas");
+    }
+  }, []);
 
   // Form state
   const [street, setStreet] = useState("");
@@ -119,6 +125,7 @@ const DeliveryOrder = () => {
 
       setOrderId(mockOrderId);
       setOrderSuccess(true);
+      clearCart();
 
       toast({
         title: "¡Pedido confirmado!",
@@ -167,7 +174,7 @@ const DeliveryOrder = () => {
     <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/comprar-ingrediente")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">

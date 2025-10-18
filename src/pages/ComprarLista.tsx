@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 type GroceryItem = {
   name: string;
@@ -66,6 +67,25 @@ const ComprarLista = () => {
   const [aiSummary, setAiSummary] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addItem } = useCart();
+
+  const handleAddToCart = (supermarket: string, items: ItemWithPrice[]) => {
+    items.forEach((item) => {
+      addItem({
+        name: item.item,
+        brand: item.brand,
+        quantity: 1,
+        price: item.price,
+        unit: "unidad",
+        supermarket,
+      });
+    });
+
+    toast({
+      title: "¡Agregado al carrito!",
+      description: `${items.length} productos de ${supermarket} agregados`,
+    });
+  };
 
   useEffect(() => {
     loadList();
@@ -301,7 +321,15 @@ const ComprarLista = () => {
                           </p>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground italic">{recommendations[0].reasoning}</p>
+                      <p className="text-sm text-muted-foreground italic mb-4">{recommendations[0].reasoning}</p>
+                      <Button 
+                        className="w-full" 
+                        size="lg"
+                        onClick={() => handleAddToCart(recommendations[0].supermarket, recommendations[0].items)}
+                      >
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        Agregar Todo al Carrito
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -369,6 +397,21 @@ const ComprarLista = () => {
                             <p className="text-xs text-muted-foreground">
                               {((data.available.length / list.items.length) * 100).toFixed(0)}% cobertura
                             </p>
+                            <Button
+                              size="sm"
+                              className="mt-2"
+                              onClick={() => {
+                                const itemsForCart = data.available.map((prod: any) => ({
+                                  item: prod.name,
+                                  brand: prod.brand,
+                                  price: prod.price,
+                                }));
+                                handleAddToCart(supermarket, itemsForCart);
+                              }}
+                            >
+                              <ShoppingCart className="mr-2 h-4 w-4" />
+                              Agregar al Carrito
+                            </Button>
                           </div>
                         </div>
 
