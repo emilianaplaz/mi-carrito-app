@@ -8,8 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Settings, Coffee, UtensilsCrossed, Moon, ThumbsUp, ThumbsDown, ShoppingCart, Clock, Users } from "lucide-react";
+import { ChefHat, ArrowLeft, Settings, Coffee, UtensilsCrossed, Moon, ThumbsUp, ThumbsDown, ShoppingCart, Clock, Users, ListPlus, CheckSquare } from "lucide-react";
 
 type Recipe = {
   id: string;
@@ -40,12 +42,34 @@ const MiPlan = () => {
   const [showAddToList, setShowAddToList] = useState(false);
   const [selectedIngredients, setSelectedIngredients] = useState<Set<number>>(new Set());
   const [listName, setListName] = useState("");
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedRecipeIds, setSelectedRecipeIds] = useState<Set<string>>(new Set());
+  const [showBulkAddDialog, setShowBulkAddDialog] = useState(false);
+  const [existingLists, setExistingLists] = useState<any[]>([]);
+  const [listChoice, setListChoice] = useState<"new" | "existing">("new");
+  const [selectedListId, setSelectedListId] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     loadData();
+    loadExistingLists();
   }, [navigate]);
+
+  const loadExistingLists = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data } = await supabase
+      .from("grocery_lists")
+      .select("id, name")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setExistingLists(data);
+    }
+  };
 
   const loadData = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -149,10 +173,28 @@ const MiPlan = () => {
   };
 
   const handleAddToShoppingList = async () => {
-    if (!selectedRecipe || selectedIngredients.size === 0 || !listName.trim()) {
+    if (!selectedRecipe || selectedIngredients.size === 0) {
       toast({
         title: "Error",
-        description: "Por favor selecciona ingredientes y un nombre para la lista",
+        description: "Por favor selecciona ingredientes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (listChoice === "new" && !listName.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor ingresa un nombre para la lista",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (listChoice === "existing" && !selectedListId) {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona una lista existente",
         variant: "destructive",
       });
       return;
@@ -163,27 +205,165 @@ const MiPlan = () => {
 
     const selectedItems = Array.from(selectedIngredients).map(idx => selectedRecipe.ingredients[idx]);
 
-    const { error } = await supabase.from("grocery_lists").insert({
-      user_id: session.user.id,
-      name: listName,
-      items: selectedItems,
-    });
+    if (listChoice === "new") {
+      const { error } = await supabase.from("grocery_lists").insert({
+        user_id: session.user.id,
+        name: listName,
+        items: selectedItems,
+      });
 
-    if (error) {
+      if (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo crear la lista",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // Add to existing list
+      const { data: existingList } = await supabase
+        .from("grocery_lists")
+        .select("items")
+        .eq("id", selectedListId)
+        .single();
+
+      if (existingList) {
+        const currentItems = Array.isArray(existingList.items) ? existingList.items : [];
+        const { error } = await supabase
+          .from("grocery_lists")
+          .update({ items: [...currentItems, ...selectedItems] })
+          .eq("id", selectedListId);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar la lista",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
+    toast({
+      title: "¡Ingredientes agregados!",
+      description: listChoice === "new" ? "Lista creada exitosamente" : "Ingredientes agregados a la lista",
+    });
+    setShowAddToList(false);
+    setSelectedIngredients(new Set());
+    setListName("");
+    setListChoice("new");
+    setSelectedListId("");
+    loadExistingLists();
+  };
+
+  const handleBulkAddToList = async () => {
+    if (listChoice === "new" && !listName.trim()) {
       toast({
         title: "Error",
-        description: "No se pudo crear la lista",
+        description: "Por favor ingresa un nombre para la lista",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "¡Lista creada!",
-        description: "Los ingredientes fueron agregados a tu lista",
-      });
-      setShowAddToList(false);
-      setSelectedIngredients(new Set());
-      setListName("");
+      return;
     }
+
+    if (listChoice === "existing" && !selectedListId) {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona una lista existente",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Collect all ingredients from selected recipes
+    const allIngredients: any[] = [];
+    selectedRecipeIds.forEach(recipeId => {
+      const recipe = recipes[recipeId];
+      if (recipe && recipe.ingredients) {
+        recipe.ingredients.forEach(ing => {
+          allIngredients.push({
+            name: ing.item,
+            brand: "",
+            amount: ing.amount,
+            unit: ing.unit
+          });
+        });
+      }
+    });
+
+    if (allIngredients.length === 0) {
+      toast({
+        title: "Error",
+        description: "No hay ingredientes para agregar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (listChoice === "new") {
+      const { error } = await supabase.from("grocery_lists").insert({
+        user_id: session.user.id,
+        name: listName,
+        items: allIngredients,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo crear la lista",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      const { data: existingList } = await supabase
+        .from("grocery_lists")
+        .select("items")
+        .eq("id", selectedListId)
+        .single();
+
+      if (existingList) {
+        const currentItems = Array.isArray(existingList.items) ? existingList.items : [];
+        const { error } = await supabase
+          .from("grocery_lists")
+          .update({ items: [...currentItems, ...allIngredients] })
+          .eq("id", selectedListId);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: "No se pudo actualizar la lista",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
+    toast({
+      title: "¡Lista creada!",
+      description: `${allIngredients.length} ingredientes agregados`,
+    });
+    setShowBulkAddDialog(false);
+    setSelectedRecipeIds(new Set());
+    setSelectionMode(false);
+    setListName("");
+    setListChoice("new");
+    setSelectedListId("");
+    loadExistingLists();
+  };
+
+  const handleSelectAllRecipes = () => {
+    const allRecipeIds = new Set<string>();
+    mealPlan.days?.forEach((day: any) => {
+      [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach(id => allRecipeIds.add(id));
+    });
+    setSelectedRecipeIds(allRecipeIds);
   };
 
   const handleEditPreferences = () => {
@@ -243,10 +423,45 @@ const MiPlan = () => {
               <span className="text-lg font-bold">Mi Plan de {daysCount} Días</span>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleEditPreferences}>
-            <Settings className="h-4 w-4 mr-2" />
-            Editar Preferencias
-          </Button>
+          <div className="flex gap-2">
+            {!selectionMode ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => {
+                  handleSelectAllRecipes();
+                  setShowBulkAddDialog(true);
+                }}>
+                  <ListPlus className="h-4 w-4 mr-2" />
+                  Plan Completo a Lista
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setSelectionMode(true)}>
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Seleccionar Recetas
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleEditPreferences}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Editar Preferencias
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => setShowBulkAddDialog(true)}
+                  disabled={selectedRecipeIds.size === 0}
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Crear Lista ({selectedRecipeIds.size})
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setSelectionMode(false);
+                  setSelectedRecipeIds(new Set());
+                }}>
+                  Cancelar
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -281,28 +496,71 @@ const MiPlan = () => {
                         const isLiked = recipePrefs[recipeId];
 
                         return (
-                          <Card key={idx} className="p-4">
+                          <Card 
+                            key={idx} 
+                            className={`p-4 transition-all cursor-pointer ${
+                              selectionMode && selectedRecipeIds.has(recipeId) 
+                                ? 'border-2 border-primary bg-primary/5' 
+                                : ''
+                            }`}
+                            onClick={() => {
+                              if (selectionMode) {
+                                const newSet = new Set(selectedRecipeIds);
+                                if (newSet.has(recipeId)) {
+                                  newSet.delete(recipeId);
+                                } else {
+                                  newSet.add(recipeId);
+                                }
+                                setSelectedRecipeIds(newSet);
+                              }
+                            }}
+                          >
                             <div className="flex justify-between items-start mb-2">
-                              <div className="flex-1">
-                                <h3 className="font-bold text-lg">{recipe.name}</h3>
-                                <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                              <div className="flex-1 flex items-start gap-3">
+                                {selectionMode && (
+                                  <Checkbox 
+                                    checked={selectedRecipeIds.has(recipeId)}
+                                    onCheckedChange={(checked) => {
+                                      const newSet = new Set(selectedRecipeIds);
+                                      if (checked) {
+                                        newSet.add(recipeId);
+                                      } else {
+                                        newSet.delete(recipeId);
+                                      }
+                                      setSelectedRecipeIds(newSet);
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <h3 className="font-bold text-lg">{recipe.name}</h3>
+                                  <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                                </div>
                               </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant={isLiked === true ? "default" : "outline"}
-                                  size="icon"
-                                  onClick={() => handleRecipePreference(recipe.id, true)}
-                                >
-                                  <ThumbsUp className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant={isLiked === false ? "destructive" : "outline"}
-                                  size="icon"
-                                  onClick={() => handleRecipePreference(recipe.id, false)}
-                                >
-                                  <ThumbsDown className="h-4 w-4" />
-                                </Button>
-                              </div>
+                              {!selectionMode && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant={isLiked === true ? "default" : "outline"}
+                                    size="icon"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRecipePreference(recipe.id, true);
+                                    }}
+                                  >
+                                    <ThumbsUp className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant={isLiked === false ? "destructive" : "outline"}
+                                    size="icon"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRecipePreference(recipe.id, false);
+                                    }}
+                                  >
+                                    <ThumbsDown className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                             
                             <div className="flex gap-4 text-sm text-muted-foreground mb-3">
@@ -316,16 +574,19 @@ const MiPlan = () => {
                               </span>
                             </div>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRecipe(recipe);
-                                setSelectedIngredients(new Set());
-                              }}
-                            >
-                              Ver Receta Completa
-                            </Button>
+                            {!selectionMode && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedRecipe(recipe);
+                                  setSelectedIngredients(new Set());
+                                }}
+                              >
+                                Ver Receta Completa
+                              </Button>
+                            )}
                           </Card>
                         );
                       })}
@@ -396,21 +657,53 @@ const MiPlan = () => {
 
       {/* Add to Shopping List Dialog */}
       <Dialog open={showAddToList} onOpenChange={setShowAddToList}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Agregar a Lista de Compras</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
-              <Label htmlFor="list-name">Nombre de la Lista</Label>
-              <Input
-                id="list-name"
-                placeholder="Mi lista de compras"
-                value={listName}
-                onChange={(e) => setListName(e.target.value)}
-              />
+              <Label className="mb-3 block">¿Nueva lista o agregar a existente?</Label>
+              <RadioGroup value={listChoice} onValueChange={(value: "new" | "existing") => setListChoice(value)}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="new" id="new" />
+                  <Label htmlFor="new" className="cursor-pointer">Crear nueva lista</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="existing" id="existing" />
+                  <Label htmlFor="existing" className="cursor-pointer">Agregar a lista existente</Label>
+                </div>
+              </RadioGroup>
             </div>
+
+            {listChoice === "new" ? (
+              <div>
+                <Label htmlFor="list-name">Nombre de la Lista</Label>
+                <Input
+                  id="list-name"
+                  placeholder="Mi lista de compras"
+                  value={listName}
+                  onChange={(e) => setListName(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="existing-list">Selecciona una lista</Label>
+                <Select value={selectedListId} onValueChange={setSelectedListId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Elige una lista" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {existingLists.map((list) => (
+                      <SelectItem key={list.id} value={list.id}>
+                        {list.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label>Selecciona ingredientes:</Label>
@@ -447,7 +740,76 @@ const MiPlan = () => {
               Cancelar
             </Button>
             <Button onClick={handleAddToShoppingList}>
-              Crear Lista
+              {listChoice === "new" ? "Crear Lista" : "Agregar a Lista"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Add Dialog */}
+      <Dialog open={showBulkAddDialog} onOpenChange={setShowBulkAddDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Crear Lista de Compras</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {selectedRecipeIds.size === 0 
+                ? "Se agregarán todos los ingredientes del plan completo"
+                : `Se agregarán ingredientes de ${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? 's' : ''} seleccionada${selectedRecipeIds.size > 1 ? 's' : ''}`
+              }
+            </p>
+
+            <div>
+              <Label className="mb-3 block">¿Nueva lista o agregar a existente?</Label>
+              <RadioGroup value={listChoice} onValueChange={(value: "new" | "existing") => setListChoice(value)}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="new" id="bulk-new" />
+                  <Label htmlFor="bulk-new" className="cursor-pointer">Crear nueva lista</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="existing" id="bulk-existing" />
+                  <Label htmlFor="bulk-existing" className="cursor-pointer">Agregar a lista existente</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {listChoice === "new" ? (
+              <div>
+                <Label htmlFor="bulk-list-name">Nombre de la Lista</Label>
+                <Input
+                  id="bulk-list-name"
+                  placeholder="Mi lista de compras"
+                  value={listName}
+                  onChange={(e) => setListName(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="bulk-existing-list">Selecciona una lista</Label>
+                <Select value={selectedListId} onValueChange={setSelectedListId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Elige una lista" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {existingLists.map((list) => (
+                      <SelectItem key={list.id} value={list.id}>
+                        {list.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkAddDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleBulkAddToList}>
+              {listChoice === "new" ? "Crear Lista" : "Agregar a Lista"}
             </Button>
           </DialogFooter>
         </DialogContent>
