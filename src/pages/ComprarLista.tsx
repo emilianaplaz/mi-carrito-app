@@ -105,16 +105,24 @@ const ComprarLista = () => {
       // Get all product prices for items in the list
       const itemNames = groceryList.items.map(item => item.name);
       
+      // Get product IDs for the items in the list
+      const { data: productData } = await supabase
+        .from("products")
+        .select("id, name")
+        .in("name", itemNames);
+
+      const productIds = productData?.map(p => p.id) || [];
+      
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
         .select(`
-          product_name,
           price,
           unit,
+          products (name),
           supermarkets (name),
           brands (name)
         `)
-        .in("product_name", itemNames);
+        .in("product_id", productIds);
 
       if (pricesError) throw pricesError;
 

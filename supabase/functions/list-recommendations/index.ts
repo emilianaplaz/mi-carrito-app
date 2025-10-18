@@ -25,14 +25,17 @@ serve(async (req) => {
     
     availablePrices.forEach((price: any) => {
       const supermarketName = price.supermarkets?.name || "Desconocido";
-      const productKey = `${price.product_name}-${price.brands?.name || 'sin marca'}`;
+      const productName = price.products?.name;
+      if (!productName) return; // Skip if no product name
+      
+      const productKey = `${productName}-${price.brands?.name || 'sin marca'}`;
       
       if (!pricesBySupermarket[supermarketName]) {
         pricesBySupermarket[supermarketName] = [];
       }
       
       const priceInfo = {
-        product: price.product_name,
+        product: productName,
         brand: price.brands?.name,
         price: parseFloat(price.price),
         unit: price.unit,

@@ -58,20 +58,22 @@ const Listas = () => {
     try {
       const { data, error } = await supabase
         .from("product_prices")
-        .select("product_name, brands(name)");
+        .select("products(name), brands(name)");
       
       if (error) throw error;
 
       // Group products and their available brands
       const productMap = new Map<string, Set<string>>();
       data?.forEach((item: any) => {
-        const productName = item.product_name;
+        const productName = item.products?.name;
         const brandName = item.brands?.name || "Sin marca";
         
-        if (!productMap.has(productName)) {
-          productMap.set(productName, new Set());
+        if (productName) {
+          if (!productMap.has(productName)) {
+            productMap.set(productName, new Set());
+          }
+          productMap.get(productName)!.add(brandName);
         }
-        productMap.get(productName)!.add(brandName);
       });
 
       const products = Array.from(productMap.entries()).map(([name, brands]) => ({

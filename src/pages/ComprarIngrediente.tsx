@@ -58,6 +58,19 @@ const ComprarIngrediente = () => {
       setBrands(brandsData || []);
 
       // Load prices for this product
+      // First get the product ID
+      const { data: productData } = await supabase
+        .from("products")
+        .select("id, name")
+        .eq("name", productName)
+        .maybeSingle();
+
+      if (!productData) {
+        setPrices([]);
+        setLoading(false);
+        return;
+      }
+
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
         .select(`
@@ -66,10 +79,11 @@ const ComprarIngrediente = () => {
           unit,
           supermarket_id,
           brand_id,
+          products (name),
           supermarkets (name),
           brands (name)
         `)
-        .eq("product_name", productName);
+        .eq("product_id", productData.id);
 
       if (pricesError) throw pricesError;
 
