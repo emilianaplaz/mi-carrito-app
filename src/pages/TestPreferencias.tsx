@@ -237,8 +237,17 @@ const TestPreferencias = () => {
         body: { preferences: validated },
       });
 
-      if (planGenError) throw planGenError;
-      if (!planData?.success) throw new Error("Failed to generate meal plan");
+      console.log("Plan generation response:", { planData, planGenError });
+
+      if (planGenError) {
+        console.error("Plan generation error:", planGenError);
+        throw new Error(`Error generando plan: ${planGenError.message || 'Error desconocido'}`);
+      }
+      
+      if (!planData?.success) {
+        console.error("Plan generation failed:", planData);
+        throw new Error(planData?.error || "No se pudo generar el plan de comidas");
+      }
 
       // Save meal plan with recipe IDs
       const { error: planError } = await supabase.from("meal_plans").upsert({
@@ -247,11 +256,14 @@ const TestPreferencias = () => {
         recipe_ids: planData.plan,
       });
 
-      if (planError) throw planError;
+      if (planError) {
+        console.error("Error saving plan:", planError);
+        throw planError;
+      }
 
       toast({
-        title: "¡Preferencias guardadas!",
-        description: "Tu plan personalizado está listo.",
+        title: "¡Plan creado exitosamente!",
+        description: "Tu plan personalizado está listo",
       });
 
       navigate("/mi-plan");
@@ -264,9 +276,10 @@ const TestPreferencias = () => {
         });
       } else {
         console.error("Error saving preferences:", error);
+        const errorMessage = error instanceof Error ? error.message : "No se pudieron guardar tus preferencias";
         toast({
           title: "Error",
-          description: "No se pudieron guardar tus preferencias",
+          description: errorMessage,
           variant: "destructive",
         });
       }

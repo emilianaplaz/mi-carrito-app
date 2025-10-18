@@ -42,35 +42,65 @@ serve(async (req) => {
     const lunchOptions = preferences.lunchOptions || preferences.lunch_options || 3;
     const dinnerOptions = preferences.dinnerOptions || preferences.dinner_options || 3;
 
-    // Build dietary restrictions string
-    const dietaryInfo = [];
-    if (dietaryRestrictions.length > 0) {
-      dietaryInfo.push(`Dietary restrictions: ${dietaryRestrictions.join(", ")}`);
-    }
-    if (allergies.length > 0) {
-      dietaryInfo.push(`Allergies: ${allergies.join(", ")}`);
-    }
-    if (cuisinePreferences.length > 0) {
-      dietaryInfo.push(`Cuisine preferences: ${cuisinePreferences.join(", ")}`);
-    }
-
     const days = planDuration === "2_weeks" ? 14 : 7;
 
-    const systemPrompt = `You are a professional nutritionist and chef. Generate meal plans that strictly follow dietary restrictions and preferences.`;
+    // Build detailed prompt in Spanish
+    const dietaryInfo = [];
+    if (dietaryRestrictions.length > 0 && !dietaryRestrictions.includes("ninguna")) {
+      dietaryInfo.push(`Restricciones dietéticas: ${dietaryRestrictions.join(", ")}`);
+    }
+    if (allergies.length > 0 && !allergies.includes("ninguna")) {
+      dietaryInfo.push(`Alergias: ${allergies.join(", ")}`);
+    }
+    if (cuisinePreferences.length > 0 && !cuisinePreferences.includes("todas")) {
+      dietaryInfo.push(`Preferencias de cocina: ${cuisinePreferences.join(", ")}`);
+    }
 
-    const userPrompt = `Create a ${days}-day meal plan with the following requirements:
+    const prompt = `Eres un nutricionista profesional y chef experto. Crea un plan de comidas detallado de ${days} días en ESPAÑOL.
+
+REQUISITOS:
 ${dietaryInfo.join("\n")}
-Cooking time preference: ${cookingTime}
-Health goals: ${healthGoals.join(", ") || "general health"}
+Tiempo de cocción preferido: ${cookingTime}
+Objetivos de salud: ${healthGoals.join(", ") || "salud general"}
 
-For each day, provide:
-- ${breakfastOptions} breakfast options
-- ${lunchOptions} lunch options  
-- ${dinnerOptions} dinner options
+Para cada día, proporciona:
+- ${breakfastOptions} opciones de desayuno
+- ${lunchOptions} opciones de almuerzo
+- ${dinnerOptions} opciones de cena
 
-CRITICAL: All recipes MUST strictly follow these dietary restrictions: ${dietaryRestrictions.join(", ") || "none"}. For example, if paleo is specified, NO grains, dairy, legumes, or processed foods are allowed.`;
+IMPORTANTE: 
+- TODOS los nombres de recetas, descripciones e instrucciones deben estar en ESPAÑOL
+- Las recetas DEBEN seguir estrictamente las restricciones dietéticas: ${dietaryRestrictions.join(", ") || "ninguna"}
+- Cada receta debe incluir ingredientes detallados con cantidades
+- Las instrucciones deben ser claras y paso a paso
 
-    console.log("Calling AI gateway with structured output...");
+Responde SOLO con un objeto JSON válido en este formato exacto:
+{
+  "days": [
+    {
+      "day": 1,
+      "breakfast": [
+        {
+          "name": "Nombre de la receta en español",
+          "description": "Descripción breve en español",
+          "ingredients": [
+            {"item": "ingrediente", "amount": "cantidad", "unit": "unidad"}
+          ],
+          "instructions": ["Paso 1 en español", "Paso 2 en español"],
+          "prep_time": 10,
+          "cook_time": 20,
+          "servings": 4,
+          "cuisine_type": "tipo de cocina",
+          "dietary_tags": ["etiquetas"]
+        }
+      ],
+      "lunch": [...],
+      "dinner": [...]
+    }
+  ]
+}`;
+
+    console.log("Calling Lovable AI...");
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -80,141 +110,9 @@ CRITICAL: All recipes MUST strictly follow these dietary restrictions: ${dietary
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "user", content: prompt }
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "create_meal_plan",
-              description: "Create a structured meal plan with recipes",
-              parameters: {
-                type: "object",
-                properties: {
-                  days: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        day: { type: "number" },
-                        breakfast: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              name: { type: "string" },
-                              description: { type: "string" },
-                              ingredients: {
-                                type: "array",
-                                items: {
-                                  type: "object",
-                                  properties: {
-                                    item: { type: "string" },
-                                    amount: { type: "string" },
-                                    unit: { type: "string" }
-                                  },
-                                  required: ["item", "amount", "unit"]
-                                }
-                              },
-                              instructions: {
-                                type: "array",
-                                items: { type: "string" }
-                              },
-                              prep_time: { type: "number" },
-                              cook_time: { type: "number" },
-                              servings: { type: "number" },
-                              cuisine_type: { type: "string" },
-                              dietary_tags: {
-                                type: "array",
-                                items: { type: "string" }
-                              }
-                            },
-                            required: ["name", "description", "ingredients", "instructions", "prep_time", "cook_time", "servings"]
-                          }
-                        },
-                        lunch: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              name: { type: "string" },
-                              description: { type: "string" },
-                              ingredients: {
-                                type: "array",
-                                items: {
-                                  type: "object",
-                                  properties: {
-                                    item: { type: "string" },
-                                    amount: { type: "string" },
-                                    unit: { type: "string" }
-                                  },
-                                  required: ["item", "amount", "unit"]
-                                }
-                              },
-                              instructions: {
-                                type: "array",
-                                items: { type: "string" }
-                              },
-                              prep_time: { type: "number" },
-                              cook_time: { type: "number" },
-                              servings: { type: "number" },
-                              cuisine_type: { type: "string" },
-                              dietary_tags: {
-                                type: "array",
-                                items: { type: "string" }
-                              }
-                            },
-                            required: ["name", "description", "ingredients", "instructions", "prep_time", "cook_time", "servings"]
-                          }
-                        },
-                        dinner: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              name: { type: "string" },
-                              description: { type: "string" },
-                              ingredients: {
-                                type: "array",
-                                items: {
-                                  type: "object",
-                                  properties: {
-                                    item: { type: "string" },
-                                    amount: { type: "string" },
-                                    unit: { type: "string" }
-                                  },
-                                  required: ["item", "amount", "unit"]
-                                }
-                              },
-                              instructions: {
-                                type: "array",
-                                items: { type: "string" }
-                              },
-                              prep_time: { type: "number" },
-                              cook_time: { type: "number" },
-                              servings: { type: "number" },
-                              cuisine_type: { type: "string" },
-                              dietary_tags: {
-                                type: "array",
-                                items: { type: "string" }
-                              }
-                            },
-                            required: ["name", "description", "ingredients", "instructions", "prep_time", "cook_time", "servings"]
-                          }
-                        }
-                      },
-                      required: ["day", "breakfast", "lunch", "dinner"]
-                    }
-                  }
-                },
-                required: ["days"],
-                additionalProperties: false
-              }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "create_meal_plan" } }
+        temperature: 0.7,
       }),
     });
 
@@ -227,12 +125,29 @@ CRITICAL: All recipes MUST strictly follow these dietary restrictions: ${dietary
     const aiData = await aiResponse.json();
     console.log("AI response received");
     
-    const toolCall = aiData.choices[0].message.tool_calls?.[0];
-    if (!toolCall) {
-      throw new Error("No tool call in AI response");
+    if (!aiData.choices || !aiData.choices[0] || !aiData.choices[0].message) {
+      throw new Error("Invalid AI response structure");
     }
+
+    const content = aiData.choices[0].message.content;
     
-    const mealPlanData = JSON.parse(toolCall.function.arguments);
+    // Extract JSON from the response (handle markdown code blocks)
+    let mealPlanData;
+    try {
+      const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+      if (jsonMatch) {
+        mealPlanData = JSON.parse(jsonMatch[1]);
+      } else {
+        mealPlanData = JSON.parse(content);
+      }
+    } catch (e) {
+      console.error("Failed to parse AI response:", content);
+      throw new Error("Failed to parse meal plan data from AI response");
+    }
+
+    if (!mealPlanData.days || !Array.isArray(mealPlanData.days)) {
+      throw new Error("Invalid meal plan structure from AI");
+    }
 
     console.log("Saving recipes to database...");
     
