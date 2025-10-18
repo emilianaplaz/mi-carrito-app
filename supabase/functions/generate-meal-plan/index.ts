@@ -199,9 +199,27 @@ Responde SOLO con un objeto JSON válido en este formato exacto:
       const dayData: any = { day: day.day, breakfast: [], lunch: [], dinner: [] };
       
       for (const mealType of ['breakfast', 'lunch', 'dinner']) {
-        const meals = day[mealType] || [];
+        let meals = day[mealType];
+        
+        // Ensure meals is an array
+        if (!meals) {
+          console.log(`No ${mealType} data for day ${day.day}`);
+          continue;
+        }
+        
+        // If meals is not an array, wrap it in an array
+        if (!Array.isArray(meals)) {
+          console.log(`${mealType} for day ${day.day} is not an array, wrapping it`);
+          meals = [meals];
+        }
         
         for (const recipe of meals) {
+          // Validate recipe has required fields
+          if (!recipe || !recipe.name || !recipe.ingredients || !recipe.instructions) {
+            console.log(`Skipping invalid recipe in ${mealType} for day ${day.day}`);
+            continue;
+          }
+          
           // Insert recipe
           const { data: insertedRecipe, error: recipeError } = await supabase
             .from('recipes')
