@@ -121,7 +121,7 @@ const Auth = () => {
           <div className="flex items-center gap-2 mb-2">
             <ChefHat className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              NutriRuta
+              MiCarrito
             </span>
           </div>
           <p className="text-muted-foreground text-center">

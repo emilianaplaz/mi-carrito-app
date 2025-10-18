@@ -48,7 +48,7 @@ const Landing = () => {
           <div className="flex items-center gap-2">
             <ChefHat className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              NutriRuta
+              MiCarrito
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -162,10 +162,10 @@ const Landing = () => {
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <ChefHat className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">NutriRuta</span>
+            <span className="text-xl font-bold">MiCarrito</span>
           </div>
           <p className="text-muted-foreground">
-            © 2025 NutriRuta. Todos los derechos reservados.
+            © 2025 MiCarrito. Todos los derechos reservados.
           </p>
         </div>
       </footer>

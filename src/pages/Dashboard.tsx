@@ -64,7 +64,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-2">
             <ChefHat className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              NutriRuta
+              MiCarrito
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -82,7 +82,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 animate-fade-in">
           <h1 className="text-4xl font-bold mb-2">
-            Bienvenido a NutriRuta
+            Bienvenido a MiCarrito
           </h1>
           <p className="text-muted-foreground text-lg">
             Comienza a planificar tu alimentación y optimizar tus compras
