@@ -40,7 +40,7 @@ serve(async (req) => {
     const lunchOptions = preferences.lunch_options || 3;
     const dinnerOptions = preferences.dinner_options || 3;
 
-    const systemPrompt = `You are a professional nutritionist and chef. Generate meal plans that strictly follow dietary restrictions and preferences. Return ONLY valid JSON, no markdown formatting or code blocks.`;
+    const systemPrompt = `You are a professional nutritionist and chef. Generate meal plans that strictly follow dietary restrictions and preferences.`;
 
     const userPrompt = `Create a ${days}-day meal plan with the following requirements:
 ${dietaryInfo.join("\n")}
@@ -52,33 +52,9 @@ For each day, provide:
 - ${lunchOptions} lunch options  
 - ${dinnerOptions} dinner options
 
-CRITICAL: All recipes MUST strictly follow these dietary restrictions: ${preferences.dietary_restrictions?.join(", ") || "none"}. For example, if paleo is specified, NO grains, dairy, legumes, or processed foods are allowed.
+CRITICAL: All recipes MUST strictly follow these dietary restrictions: ${preferences.dietary_restrictions?.join(", ") || "none"}. For example, if paleo is specified, NO grains, dairy, legumes, or processed foods are allowed.`;
 
-For each recipe, provide:
-- name: recipe name
-- description: brief description
-- ingredients: array of {item: string, amount: string, unit: string}
-- instructions: array of step strings
-- prep_time: minutes
-- cook_time: minutes
-- servings: number
-- cuisine_type: cuisine style
-- dietary_tags: array of applicable diet tags
-- meal_type: "breakfast", "lunch", or "dinner"
-
-Return ONLY this JSON structure with no markdown:
-{
-  "days": [
-    {
-      "day": 1,
-      "breakfast": [recipe objects],
-      "lunch": [recipe objects],
-      "dinner": [recipe objects]
-    }
-  ]
-}`;
-
-    console.log("Calling AI gateway...");
+    console.log("Calling AI gateway with structured output...");
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -91,6 +67,138 @@ Return ONLY this JSON structure with no markdown:
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "create_meal_plan",
+              description: "Create a structured meal plan with recipes",
+              parameters: {
+                type: "object",
+                properties: {
+                  days: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        day: { type: "number" },
+                        breakfast: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              name: { type: "string" },
+                              description: { type: "string" },
+                              ingredients: {
+                                type: "array",
+                                items: {
+                                  type: "object",
+                                  properties: {
+                                    item: { type: "string" },
+                                    amount: { type: "string" },
+                                    unit: { type: "string" }
+                                  },
+                                  required: ["item", "amount", "unit"]
+                                }
+                              },
+                              instructions: {
+                                type: "array",
+                                items: { type: "string" }
+                              },
+                              prep_time: { type: "number" },
+                              cook_time: { type: "number" },
+                              servings: { type: "number" },
+                              cuisine_type: { type: "string" },
+                              dietary_tags: {
+                                type: "array",
+                                items: { type: "string" }
+                              }
+                            },
+                            required: ["name", "description", "ingredients", "instructions", "prep_time", "cook_time", "servings"]
+                          }
+                        },
+                        lunch: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              name: { type: "string" },
+                              description: { type: "string" },
+                              ingredients: {
+                                type: "array",
+                                items: {
+                                  type: "object",
+                                  properties: {
+                                    item: { type: "string" },
+                                    amount: { type: "string" },
+                                    unit: { type: "string" }
+                                  },
+                                  required: ["item", "amount", "unit"]
+                                }
+                              },
+                              instructions: {
+                                type: "array",
+                                items: { type: "string" }
+                              },
+                              prep_time: { type: "number" },
+                              cook_time: { type: "number" },
+                              servings: { type: "number" },
+                              cuisine_type: { type: "string" },
+                              dietary_tags: {
+                                type: "array",
+                                items: { type: "string" }
+                              }
+                            },
+                            required: ["name", "description", "ingredients", "instructions", "prep_time", "cook_time", "servings"]
+                          }
+                        },
+                        dinner: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              name: { type: "string" },
+                              description: { type: "string" },
+                              ingredients: {
+                                type: "array",
+                                items: {
+                                  type: "object",
+                                  properties: {
+                                    item: { type: "string" },
+                                    amount: { type: "string" },
+                                    unit: { type: "string" }
+                                  },
+                                  required: ["item", "amount", "unit"]
+                                }
+                              },
+                              instructions: {
+                                type: "array",
+                                items: { type: "string" }
+                              },
+                              prep_time: { type: "number" },
+                              cook_time: { type: "number" },
+                              servings: { type: "number" },
+                              cuisine_type: { type: "string" },
+                              dietary_tags: {
+                                type: "array",
+                                items: { type: "string" }
+                              }
+                            },
+                            required: ["name", "description", "ingredients", "instructions", "prep_time", "cook_time", "servings"]
+                          }
+                        }
+                      },
+                      required: ["day", "breakfast", "lunch", "dinner"]
+                    }
+                  }
+                },
+                required: ["days"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "create_meal_plan" } }
       }),
     });
 
@@ -101,11 +209,14 @@ Return ONLY this JSON structure with no markdown:
     }
 
     const aiData = await aiResponse.json();
-    const content = aiData.choices[0].message.content;
+    console.log("AI response received");
     
-    // Remove markdown code blocks if present
-    const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const mealPlanData = JSON.parse(cleanedContent);
+    const toolCall = aiData.choices[0].message.tool_calls?.[0];
+    if (!toolCall) {
+      throw new Error("No tool call in AI response");
+    }
+    
+    const mealPlanData = JSON.parse(toolCall.function.arguments);
 
     console.log("Saving recipes to database...");
     
