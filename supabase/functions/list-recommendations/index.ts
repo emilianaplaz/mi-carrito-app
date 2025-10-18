@@ -64,9 +64,16 @@ serve(async (req) => {
       return {
         name: item.name,
         brand: item.brand,
-        availablePrices: prices
+        availablePrices: prices,
+        hasPrices: prices.length > 0
       };
     });
+
+    // Track all items - both with and without prices
+    const itemsWithoutPrices = itemsWithPrices.filter((it: any) => !it.hasPrices).map((it: any) => ({
+      name: it.name,
+      brand: it.brand
+    }));
 
     // Calculate best options
     const supermarketOptions: any[] = [];
@@ -184,6 +191,7 @@ serve(async (req) => {
     // Return structured data with all available prices
     const response = {
       allPrices: itemsWithPrices,
+      itemsWithoutPrices: itemsWithoutPrices,
       recommendations: supermarketOptions.map((opt, index) => {
         const marketsCount = opt.isCombination ? new Set(opt.items.map((i: any) => i.supermarket)).size : 1;
         const missingNote = opt.missingCount && opt.missingCount > 0 ? ` Faltan precios para ${opt.missingCount} artículo(s).` : '';
@@ -197,7 +205,8 @@ serve(async (req) => {
         ? (() => {
             const best = supermarketOptions[0];
             const marketsCount = best.isCombination ? new Set(best.items.map((i: any) => i.supermarket)).size : 1;
-            const missingNote = best.missingCount && best.missingCount > 0 ? ` Faltan precios para ${best.missingCount} artículo(s).` : '';
+            const missingCount = itemsWithoutPrices.length;
+            const missingNote = missingCount > 0 ? ` No hay precios disponibles para ${missingCount} artículo(s).` : '';
             return best.isCombination
               ? `La opción más económica es una combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por €${best.totalPrice.toFixed(2)}.${missingNote}`
               : `La mejor opción es ${best.supermarket} por €${best.totalPrice.toFixed(2)}.${missingNote}`;

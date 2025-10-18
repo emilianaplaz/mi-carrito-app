@@ -44,6 +44,12 @@ type ItemPriceComparison = {
     unit: string;
     supermarket: string;
   }[];
+  hasPrices?: boolean;
+};
+
+type MissingItem = {
+  name: string;
+  brand?: string;
 };
 
 const ComprarLista = () => {
@@ -54,6 +60,7 @@ const ComprarLista = () => {
   const [list, setList] = useState<GroceryList | null>(null);
   const [recommendations, setRecommendations] = useState<SupermarketRecommendation[]>([]);
   const [allPrices, setAllPrices] = useState<ItemPriceComparison[]>([]);
+  const [itemsWithoutPrices, setItemsWithoutPrices] = useState<MissingItem[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [aiSummary, setAiSummary] = useState("");
   const navigate = useNavigate();
@@ -168,6 +175,7 @@ const ComprarLista = () => {
       
       setRecommendations(data.recommendations || []);
       setAllPrices(data.allPrices || []);
+      setItemsWithoutPrices(data.itemsWithoutPrices || []);
       setAiSummary(data.summary || "");
     } catch (error: any) {
       console.error("Error loading recommendations:", error);
@@ -253,6 +261,27 @@ const ComprarLista = () => {
             <p className="text-sm text-foreground whitespace-pre-wrap">{aiSummary}</p>
           </Card>
         ) : null}
+
+        {/* Items without prices */}
+        {itemsWithoutPrices.length > 0 && (
+          <Card className="p-6 mb-6 border-2 border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20">
+            <h2 className="text-xl font-semibold mb-4 text-orange-700 dark:text-orange-400">
+              Artículos sin Precios Disponibles
+            </h2>
+            <p className="text-sm text-muted-foreground mb-3">
+              Los siguientes artículos no tienen precios registrados en la base de datos:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {itemsWithoutPrices.map((item, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm p-2 rounded-lg bg-background/50">
+                  <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  <span className="font-medium">{item.name}</span>
+                  {item.brand && <span className="text-muted-foreground">({item.brand})</span>}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Supermarket Recommendations */}
         {recommendations.length > 0 ? (
