@@ -44,6 +44,20 @@ serve(async (req) => {
 
     const days = planDuration === "2_weeks" ? 14 : 7;
 
+    // Fetch available products from database
+    console.log("Fetching available products...");
+    const { data: productsData, error: productsError } = await supabase
+      .from('products')
+      .select('name');
+    
+    if (productsError) {
+      console.error("Error fetching products:", productsError);
+      throw new Error("Failed to fetch available products");
+    }
+    
+    const availableProducts = productsData?.map(p => p.name).join(", ") || "";
+    console.log("Available products:", availableProducts);
+
     // Build detailed prompt in Spanish
     const dietaryInfo = [];
     if (dietaryRestrictions.length > 0 && !dietaryRestrictions.includes("ninguna")) {
@@ -72,12 +86,8 @@ INSTRUCCIONES IMPORTANTES SOBRE OPCIONES:
 
 FORMATO DE INGREDIENTES (CRÍTICO):
 
-PRODUCTOS DISPONIBLES - Basa las recetas en estos productos de la base de datos:
-- Proteínas: huevos, pechugas de pollo, carne picada, pescado, atún
-- Lácteos: leche entera, yogur griego, queso
-- Vegetales: tomate, cebolla, pimiento, ajo, espinacas, brócoli, calabacín, lechuga, zanahoria
-- Carbohidratos: arroz, pasta, patatas, pan integral, avena
-- Otros: aceite de oliva, aceitunas, frutos secos
+PRODUCTOS DISPONIBLES EN LA BASE DE DATOS - USA ÚNICAMENTE ESTOS PRODUCTOS:
+${availableProducts}
 
 REGLAS IMPORTANTES:
 1. INCLUYE en las recetas: agua, sal, pimienta, aceite de oliva (son necesarios para cocinar)
