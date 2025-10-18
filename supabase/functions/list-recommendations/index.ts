@@ -188,28 +188,57 @@ serve(async (req) => {
     // Sort by price
     supermarketOptions.sort((a, b) => a.totalPrice - b.totalPrice);
     
+    // CRITICAL: Prioritize complete coverage over price
+    // Move options with all items to the front
+    supermarketOptions.sort((a, b) => {
+      const aMissing = a.missingCount || 0;
+      const bMissing = b.missingCount || 0;
+      
+      // If one has all items and other doesn't, prioritize the complete one
+      if (aMissing === 0 && bMissing > 0) return -1;
+      if (bMissing === 0 && aMissing > 0) return 1;
+      
+      // If both complete or both incomplete, sort by price
+      return a.totalPrice - b.totalPrice;
+    });
+    
     // Return structured data with all available prices
     const response = {
       allPrices: itemsWithPrices,
       itemsWithoutPrices: itemsWithoutPrices,
       recommendations: supermarketOptions.map((opt, index) => {
         const marketsCount = opt.isCombination ? new Set(opt.items.map((i: any) => i.supermarket)).size : 1;
-        const missingNote = opt.missingCount && opt.missingCount > 0 ? ` Faltan precios para ${opt.missingCount} artículo(s).` : '';
+        const hasAllItems = (opt.missingCount || 0) === 0;
+        const missingNote = opt.missingCount && opt.missingCount > 0 ? ` Faltan ${opt.missingCount} producto(s).` : ' ¡Todos los productos disponibles!';
+        
         const base = opt.isCombination
           ? `Combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por €${opt.totalPrice.toFixed(2)}.`
-          : `${opt.supermarket} por €${opt.totalPrice.toFixed(2)}${opt.missingCount ? ' (parcial)' : ''}.`;
-        const prefix = index === 0 ? 'Mejor opción: ' : 'Alternativa: ';
+          : `${opt.supermarket} por €${opt.totalPrice.toFixed(2)}.`;
+        
+        let prefix = '';
+        if (index === 0 && hasAllItems) {
+          prefix = '✓ RECOMENDADO: ';
+        } else if (index === 0) {
+          prefix = 'Mejor opción parcial: ';
+        } else {
+          prefix = 'Alternativa: ';
+        }
+        
         return { ...opt, reasoning: prefix + base + missingNote };
       }),
       summary: supermarketOptions.length > 0
         ? (() => {
             const best = supermarketOptions[0];
             const marketsCount = best.isCombination ? new Set(best.items.map((i: any) => i.supermarket)).size : 1;
-            const missingCount = itemsWithoutPrices.length;
-            const missingNote = missingCount > 0 ? ` No hay precios disponibles para ${missingCount} artículo(s).` : '';
+            const hasAllItems = (best.missingCount || 0) === 0;
+            
+            if (!hasAllItems) {
+              return `Ningún supermercado tiene todos los productos. La mejor opción parcial es ${best.supermarket} con ${best.items.length} de ${items.length} artículos por €${best.totalPrice.toFixed(2)}.`;
+            }
+            
             return best.isCombination
-              ? `La opción más económica es una combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por €${best.totalPrice.toFixed(2)}.${missingNote}`
-              : `La mejor opción es ${best.supermarket} por €${best.totalPrice.toFixed(2)}.${missingNote}`;
+              ? `¡Puedes conseguir TODOS los productos! La opción más completa es combinar ${marketsCount} supermercados por €${best.totalPrice.toFixed(2)}.`
+              : `¡Puedes conseguir TODOS los productos en ${best.supermarket} por €${best.totalPrice.toFixed(2)}!`;
           })()
         : "No se encontraron precios suficientes para hacer recomendaciones."
     };
