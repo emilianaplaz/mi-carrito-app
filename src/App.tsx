@@ -8,6 +8,10 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Pantry from "./pages/Pantry";
+import MiPlan from "./pages/MiPlan";
+import Listas from "./pages/Listas";
+import Recetas from "./pages/Recetas";
+import TestPreferencias from "./pages/TestPreferencias";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -32,6 +36,10 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/pantry" element={<Pantry />} />
+            <Route path="/mi-plan" element={<MiPlan />} />
+            <Route path="/listas" element={<Listas />} />
+            <Route path="/recetas" element={<Recetas />} />
+            <Route path="/test-preferencias" element={<TestPreferencias />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
