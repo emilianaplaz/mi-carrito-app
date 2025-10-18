@@ -22,13 +22,15 @@ serve(async (req) => {
     // Group prices by supermarket and product for detailed calculation
     const pricesBySupermarket: Record<string, any[]> = {};
     const productPriceMap: Record<string, any[]> = {};
+    const productOnlyMap: Record<string, any[]> = {};
     
     availablePrices.forEach((price: any) => {
       const supermarketName = price.supermarkets?.name || "Desconocido";
       const productName = price.products?.name;
       if (!productName) return; // Skip if no product name
       
-      const productKey = `${productName}-${price.brands?.name || 'sin marca'}`;
+      const brandName = price.brands?.name || undefined;
+      const productKey = `${productName}-${brandName || 'sin marca'}`;
       
       if (!pricesBySupermarket[supermarketName]) {
         pricesBySupermarket[supermarketName] = [];
@@ -36,7 +38,7 @@ serve(async (req) => {
       
       const priceInfo = {
         product: productName,
-        brand: price.brands?.name,
+        brand: brandName,
         price: parseFloat(price.price),
         unit: price.unit,
         supermarket: supermarketName,
@@ -48,12 +50,17 @@ serve(async (req) => {
         productPriceMap[productKey] = [];
       }
       productPriceMap[productKey].push(priceInfo);
+
+      if (!productOnlyMap[productName]) {
+        productOnlyMap[productName] = [];
+      }
+      productOnlyMap[productName].push(priceInfo);
     });
 
     // Build detailed price comparison for each item
     const itemsWithPrices = items.map((item: any) => {
       const productKey = `${item.name}-${item.brand || 'sin marca'}`;
-      const prices = productPriceMap[productKey] || [];
+      const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
       return {
         name: item.name,
         brand: item.brand,
@@ -70,10 +77,17 @@ serve(async (req) => {
       let hasAllItems = true;
       
       for (const item of items) {
-        const productKey = `${item.name}-${item.brand || 'sin marca'}`;
-        const priceInSupermarket = supermarketPrices.find(
-          (p: any) => `${p.product}-${p.brand || 'sin marca'}` === productKey
-        );
+        let priceInSupermarket: any | undefined;
+        if (item.brand) {
+          // Match exact brand when provided
+          priceInSupermarket = (supermarketPrices as any[]).find(
+            (p: any) => p.product === item.name && (p.brand || 'sin marca') === (item.brand || 'sin marca')
+          );
+        } else {
+          // If no brand specified, take the cheapest option for that product in this supermarket
+          const candidates = (supermarketPrices as any[]).filter((p: any) => p.product === item.name);
+          priceInSupermarket = candidates.sort((a, b) => a.price - b.price)[0];
+        }
         
         if (priceInSupermarket) {
           itemsInSupermarket.push({
@@ -106,10 +120,10 @@ serve(async (req) => {
     
     for (const item of items) {
       const productKey = `${item.name}-${item.brand || 'sin marca'}`;
-      const prices = productPriceMap[productKey] || [];
+      const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
       
       if (prices.length > 0) {
-        const cheapest = prices.reduce((min, p) => p.price < min.price ? p : min);
+        const cheapest = prices.reduce((min: any, p: any) => p.price < min.price ? p : min);
         cheapestCombination.push({
           item: item.name,
           price: cheapest.price,

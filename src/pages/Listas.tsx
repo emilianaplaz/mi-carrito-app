@@ -56,29 +56,31 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch all products from the database (use only products that exist)
+      const { data: productsData, error: productsError } = await supabase
+        .from("products")
+        .select("name")
+        .order("name", { ascending: true });
+      if (productsError) throw productsError;
+
+      // Fetch brand availability per product based on existing price records
+      const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
         .select("products(name), brands(name)");
-      
-      if (error) throw error;
+      if (pricesError) throw pricesError;
 
-      // Group products and their available brands
-      const productMap = new Map<string, Set<string>>();
-      data?.forEach((item: any) => {
-        const productName = item.products?.name;
-        const brandName = item.brands?.name || "Sin marca";
-        
-        if (productName) {
-          if (!productMap.has(productName)) {
-            productMap.set(productName, new Set());
-          }
-          productMap.get(productName)!.add(brandName);
-        }
+      const brandMap = new Map<string, Set<string>>();
+      pricesData?.forEach((row: any) => {
+        const productName = row.products?.name;
+        const brandName = row.brands?.name || "Sin marca";
+        if (!productName) return;
+        if (!brandMap.has(productName)) brandMap.set(productName, new Set());
+        brandMap.get(productName)!.add(brandName);
       });
 
-      const products = Array.from(productMap.entries()).map(([name, brands]) => ({
-        name,
-        brands: Array.from(brands),
+      const products = (productsData || []).map((p: any) => ({
+        name: p.name,
+        brands: Array.from(brandMap.get(p.name) || []),
       }));
 
       setAvailableProducts(products);
@@ -173,7 +175,13 @@ const Listas = () => {
 
   const updateItemField = (index: number, field: keyof GroceryItem, value: string) => {
     const updated = [...newItems];
-    updated[index][field] = value;
+    if (field === "name") {
+      updated[index].name = value;
+      // Reset brand when product changes to avoid invalid brand selection
+      updated[index].brand = "";
+    } else {
+      (updated[index] as any)[field] = value;
+    }
     setNewItems(updated);
   };
 
@@ -241,7 +249,20 @@ const Listas = () => {
   const handleEditList = (list: GroceryList) => {
     setEditingList(list);
     setNewListName(list.name);
-    setNewItems(list.items.length > 0 ? list.items : [{ name: "", brand: "" }]);
+
+    // Map existing items to closest matching product names in the catalog
+    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
+    const mappedItems = (list.items.length > 0 ? list.items : [{ name: "", brand: "" }]).map((it) => {
+      if (!it.name) return it;
+      const exact = availableProducts.find((p) => norm(p.name) === norm(it.name));
+      const fuzzy = exact || availableProducts.find((p) => norm(p.name).includes(norm(it.name)) || norm(it.name).includes(norm(p.name)));
+      const chosenName = fuzzy ? fuzzy.name : it.name;
+      const validBrands = availableProducts.find((p) => p.name === chosenName)?.brands || [];
+      const chosenBrand = validBrands.includes(it.brand) ? it.brand : "";
+      return { ...it, name: chosenName, brand: chosenBrand };
+    });
+
+    setNewItems(mappedItems as GroceryItem[]);
     setIsEditDialogOpen(true);
   };
 

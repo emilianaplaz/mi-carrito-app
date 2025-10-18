@@ -102,17 +102,44 @@ const ComprarLista = () => {
   const loadRecommendations = async (groceryList: GroceryList) => {
     setLoadingRecommendations(true);
     try {
-      // Get all product prices for items in the list
       const itemNames = groceryList.items.map(item => item.name);
-      
-      // Get product IDs for the items in the list
-      const { data: productData } = await supabase
+
+      // Step 1: Try exact match on product names
+      const { data: productDataExact } = await supabase
         .from("products")
         .select("id, name")
         .in("name", itemNames);
 
-      const productIds = productData?.map(p => p.id) || [];
-      
+      const exactNames = new Set((productDataExact || []).map(p => p.name));
+
+      // Step 2: Fuzzy map missing items to closest product names
+      let nameMap: Record<string, string> = {};
+      if ((productDataExact?.length || 0) < itemNames.length) {
+        const { data: allProducts } = await supabase
+          .from("products")
+          .select("id, name");
+
+        const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
+        const productByName = new Map((allProducts || []).map(p => [p.name, p]));
+        const allNames = (allProducts || []).map(p => p.name);
+
+        for (const name of itemNames) {
+          if (exactNames.has(name)) continue;
+          const n = norm(name);
+          const exact = allNames.find(an => norm(an) === n);
+          const fuzzy = exact || allNames.find(an => norm(an).includes(n) || n.includes(norm(an)));
+          if (fuzzy) nameMap[name] = fuzzy;
+        }
+      }
+
+      // Collect final product ids to fetch prices
+      const finalNames = Array.from(new Set([...(productDataExact?.map(p => p.name) || []), ...Object.values(nameMap)]));
+      const { data: finalProducts } = finalNames.length > 0
+        ? await supabase.from("products").select("id, name").in("name", finalNames)
+        : { data: [] as any[] } as any;
+
+      const productIds = (finalProducts || []).map(p => p.id);
+
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
         .select(`
@@ -126,11 +153,13 @@ const ComprarLista = () => {
 
       if (pricesError) throw pricesError;
 
-      // Call edge function to get AI recommendations
+      // Prepare items for AI: use mapped names when available
+      const itemsForAI = groceryList.items.map(it => ({ ...it, name: nameMap[it.name] || it.name }));
+
       const { data, error } = await supabase.functions.invoke('list-recommendations', {
         body: {
           listName: groceryList.name,
-          items: groceryList.items,
+          items: itemsForAI,
           availablePrices: pricesData || [],
         }
       });
