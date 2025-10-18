@@ -19,19 +19,32 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Group prices by supermarket and product
+    // Group prices by supermarket and product for detailed calculation
     const pricesBySupermarket: Record<string, any[]> = {};
+    const productPriceMap: Record<string, any[]> = {};
+    
     availablePrices.forEach((price: any) => {
       const supermarketName = price.supermarkets?.name || "Desconocido";
+      const productKey = `${price.product_name}-${price.brands?.name || 'sin marca'}`;
+      
       if (!pricesBySupermarket[supermarketName]) {
         pricesBySupermarket[supermarketName] = [];
       }
-      pricesBySupermarket[supermarketName].push({
+      
+      const priceInfo = {
         product: price.product_name,
         brand: price.brands?.name,
         price: parseFloat(price.price),
         unit: price.unit,
-      });
+        supermarket: supermarketName,
+      };
+      
+      pricesBySupermarket[supermarketName].push(priceInfo);
+      
+      if (!productPriceMap[productKey]) {
+        productPriceMap[productKey] = [];
+      }
+      productPriceMap[productKey].push(priceInfo);
     });
 
     // Build the prompt
@@ -46,7 +59,7 @@ serve(async (req) => {
       pricesInfo += '\n';
     }
 
-    const prompt = `Eres un experto en optimización de compras de supermercado. Analiza la siguiente lista de compras y recomienda la mejor estrategia para comprar todos los artículos.
+    const prompt = `Eres un experto en optimización de compras de supermercado. Analiza la siguiente lista de compras y usa ÚNICAMENTE los precios reales de la base de datos para hacer recomendaciones precisas.
 
 Lista de compras: "${listName}"
 Artículos necesarios:
@@ -54,26 +67,34 @@ ${itemsList}
 
 ${pricesInfo}
 
-IMPORTANTE:
-1. Si un solo supermercado tiene TODOS los artículos, recomienda ese supermercado
-2. Si ningún supermercado tiene todos los artículos, DEBES sugerir COMBINACIONES de supermercados
-3. Para combinaciones, muestra claramente qué comprar en cada supermercado y el costo total de la combinación
-4. Compara el precio total de cada opción (supermercado único vs combinaciones)
-5. Ordena las recomendaciones de más económica a más cara
-6. Para cada recomendación, especifica qué artículos comprar y por qué
+REGLAS CRÍTICAS:
+1. SOLO usa los precios exactos de la base de datos proporcionados arriba
+2. Calcula el precio total REAL sumando los precios individuales de cada producto
+3. Si un supermercado tiene TODOS los artículos, esa puede ser la mejor opción (considera la comodidad)
+4. Si ningún supermercado tiene todos los artículos, DEBES sugerir COMBINACIONES
+5. Para combinaciones, calcula el precio EXACTO sumando precios de diferentes supermercados
+6. Compara: a veces pagar un poco más por conveniencia (un solo lugar) es mejor que ahorrar €1-2 visitando múltiples tiendas
+7. Ordena las recomendaciones considerando PRECIO y CONVENIENCIA
 
-Responde en formato JSON con esta estructura exacta:
+FORMATO DE RESPUESTA OBLIGATORIO (JSON):
 {
   "recommendations": [
     {
       "supermarket": "Nombre del supermercado O 'Combinación: Super1 + Super2'",
-      "items": ["item1", "item2"],
-      "totalPrice": 0.00,
-      "reasoning": "Explicación detallada. Si es combinación, explica qué comprar en cada lugar",
+      "items": [
+        {
+          "item": "nombre del producto",
+          "price": precio_exacto_en_euros,
+          "brand": "marca",
+          "supermarket": "donde comprarlo si es combinación"
+        }
+      ],
+      "totalPrice": suma_exacta_de_todos_los_precios,
+      "reasoning": "Explica claramente por qué esta opción. Si es combinación, detalla el plan y el ahorro vs comprar todo en un lugar",
       "isCombination": true/false
     }
   ],
-  "summary": "Resumen general de la mejor estrategia de compra en español. Si recomiendas combinación, explica claramente el plan de compra y el ahorro estimado comparado con comprar todo en un solo lugar"
+  "summary": "Resumen en español: explica la mejor estrategia considerando precio Y conveniencia. Si recomiendas combinación, justifica que el ahorro vale la pena visitar múltiples tiendas"
 }`;
 
     console.log('Calling AI with prompt length:', prompt.length);

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from "lucide-react";
 
@@ -33,6 +34,7 @@ const Listas = () => {
   const [viewingList, setViewingList] = useState<GroceryList | null>(null);
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [availableProducts, setAvailableProducts] = useState<{ name: string; brands: string[] }[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -44,10 +46,42 @@ const Listas = () => {
         return;
       }
       await loadLists();
+      await loadAvailableProducts();
       setLoading(false);
     };
     checkUserAndLoadLists();
   }, [navigate]);
+
+  const loadAvailableProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("product_prices")
+        .select("product_name, brands(name)");
+      
+      if (error) throw error;
+
+      // Group products and their available brands
+      const productMap = new Map<string, Set<string>>();
+      data?.forEach((item: any) => {
+        const productName = item.product_name;
+        const brandName = item.brands?.name || "Sin marca";
+        
+        if (!productMap.has(productName)) {
+          productMap.set(productName, new Set());
+        }
+        productMap.get(productName)!.add(brandName);
+      });
+
+      const products = Array.from(productMap.entries()).map(([name, brands]) => ({
+        name,
+        brands: Array.from(brands),
+      }));
+
+      setAvailableProducts(products);
+    } catch (error) {
+      console.error("Error loading products:", error);
+    }
+  };
 
   const loadLists = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -311,18 +345,39 @@ const Listas = () => {
                   <Label>Artículos</Label>
                   {newItems.map((item, index) => (
                     <div key={index} className="flex gap-2">
-                      <Input
-                        placeholder="Nombre del producto"
+                      <Select
                         value={item.name}
-                        onChange={(e) => updateItemField(index, "name", e.target.value)}
-                        className="flex-1"
-                      />
-                      <Input
-                        placeholder="Marca (opcional)"
+                        onValueChange={(value) => updateItemField(index, "name", value)}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Selecciona producto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableProducts.map((product) => (
+                            <SelectItem key={product.name} value={product.name}>
+                              {product.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
                         value={item.brand}
-                        onChange={(e) => updateItemField(index, "brand", e.target.value)}
-                        className="flex-1"
-                      />
+                        onValueChange={(value) => updateItemField(index, "brand", value)}
+                        disabled={!item.name}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Selecciona marca" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableProducts
+                            .find((p) => p.name === item.name)
+                            ?.brands.map((brand) => (
+                              <SelectItem key={brand} value={brand}>
+                                {brand}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                       {newItems.length > 1 && (
                         <Button
                           variant="ghost"
@@ -513,18 +568,39 @@ const Listas = () => {
               <Label>Artículos</Label>
               {newItems.map((item, index) => (
                 <div key={index} className="flex gap-2">
-                  <Input
-                    placeholder="Nombre del producto"
+                  <Select
                     value={item.name}
-                    onChange={(e) => updateItemField(index, "name", e.target.value)}
-                    className="flex-1"
-                  />
-                  <Input
-                    placeholder="Marca (opcional)"
+                    onValueChange={(value) => updateItemField(index, "name", value)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecciona producto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProducts.map((product) => (
+                        <SelectItem key={product.name} value={product.name}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
                     value={item.brand}
-                    onChange={(e) => updateItemField(index, "brand", e.target.value)}
-                    className="flex-1"
-                  />
+                    onValueChange={(value) => updateItemField(index, "brand", value)}
+                    disabled={!item.name}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecciona marca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProducts
+                        .find((p) => p.name === item.name)
+                        ?.brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>
+                            {brand}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                   {newItems.length > 1 && (
                     <Button
                       variant="ghost"

@@ -17,9 +17,16 @@ type GroceryList = {
   items: GroceryItem[];
 };
 
+type ItemWithPrice = {
+  item: string;
+  price: number;
+  brand?: string;
+  supermarket?: string;
+};
+
 type SupermarketRecommendation = {
   supermarket: string;
-  items: (string | { item: string; price?: number; supermarket?: string })[];
+  items: ItemWithPrice[];
   totalPrice: number;
   reasoning: string;
   isCombination?: boolean;
@@ -231,17 +238,23 @@ const ComprarLista = () => {
 
                 {/* Items to buy at this supermarket */}
                 <div className="mb-4">
-                  <p className="text-sm font-medium mb-2">Comprar aquí:</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {rec.items.map((item, idx) => {
-                      const itemName = typeof item === 'string' ? item : item.item;
-                      return (
-                        <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <p className="text-sm font-medium mb-2">Artículos y precios:</p>
+                  <div className="space-y-2">
+                    {rec.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30">
+                        <div className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                          <span>{itemName}</span>
+                          <div>
+                            <span className="font-medium">{item.item}</span>
+                            {item.brand && <span className="text-muted-foreground ml-1">({item.brand})</span>}
+                            {item.supermarket && rec.isCombination && (
+                              <span className="text-xs ml-2 text-primary">en {item.supermarket}</span>
+                            )}
+                          </div>
                         </div>
-                      );
-                    })}
+                        <span className="font-semibold text-primary">€{item.price.toFixed(2)}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
