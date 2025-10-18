@@ -70,28 +70,33 @@ INSTRUCCIONES IMPORTANTES SOBRE OPCIONES:
 - Distribuye y repite estas recetas a lo largo de los ${days} días
 - Máximo 1 receta nueva por día
 
-FORMATO DE INGREDIENTES (MUY IMPORTANTE):
-- NUNCA incluyas agua, sal ni pimienta en los ingredientes
-- Usa nombres de ingredientes BASE sin preparación (ejemplo: "cebolla" en vez de "cebolla picada")
-- Usa nombres CONSISTENTES para ingredientes similares:
-  * "berries" en vez de "frutas del bosque", "frutos rojos", "bayas"
-  * "tomate" en vez de "jitomate"
-  * "patatas" en vez de "papas" o "papa"
-  * "pimiento" en vez de "ají", "chile", "pimentón"
-- OBLIGATORIO: TODOS los ingredientes DEBEN tener cantidades NUMÉRICAS específicas:
-  * Huevos: "12" con unidad "huevos" o "6" con unidad "huevos"
-  * Ajo: "5" con unidad "dientes" o "8" con unidad "dientes"
-  * Carnes: "500" con unidad "g" o "1.5" con unidad "kg" o "4" con unidad "pechugas de pollo"
-  * Vegetales contables: "2" con unidad "cebollas", "3" con unidad "tomates", "1" con unidad "pimiento"
-  * Vegetales por peso: "250" con unidad "g" o "0.5" con unidad "kg"
-  * Líquidos (excepto agua): "200" con unidad "ml" o "1" con unidad "l"
-  * Especias/condimentos: "2" con unidad "cucharadas", "1" con unidad "cucharadita"
-  * Quesos: "150" con unidad "g" o "200" con unidad "g"
-  * Lácteos: "250" con unidad "ml" o "500" con unidad "ml"
-- El campo "amount" SIEMPRE debe ser un NÚMERO (1, 2, 3, 0.5, 1.5, etc)
-- El campo "unit" debe especificar la unidad (huevos, dientes, g, kg, ml, l, cucharadas, cucharaditas, unidad, piezas)
-- NO uses cantidades vagas como "al gusto", "suficiente", o sin número
-- Agrupa cantidades del mismo ingrediente
+FORMATO DE INGREDIENTES (CRÍTICO - SEGUIR ESTRICTAMENTE):
+- NUNCA NUNCA incluyas estos items: agua, sal, pimienta, aceite de oliva
+- Usa nombres de ingredientes BASE sin preparación (ejemplo: "ajo" NO "ajo picado")
+- Usa nombres CONSISTENTES:
+  * "berries" (NO frutas del bosque, frutos rojos, bayas)
+  * "tomate" (NO jitomate)
+  * "patatas" (NO papas, papa)
+  * "pimiento" (NO ají, chile, pimentón)
+  * "huevos" (siempre plural, NO huevo)
+  * "dientes de ajo" (NO dientes, NO ajo)
+
+- CANTIDADES ESPECÍFICAS OBLIGATORIAS (números grandes para toda la semana):
+  * Huevos: Mínimo "12" con unidad "huevos" (NO menos de 6)
+  * Ajo: Mínimo "8" con unidad "dientes" (NO menos de 5)
+  * Carnes: Mínimo "500" con unidad "g" o "1" con unidad "kg"
+  * Vegetales contables: "4" con unidad "tomates", "3" con unidad "cebollas"
+  * Vegetales peso: "300" con unidad "g" mínimo
+  * Líquidos: "250" con unidad "ml" mínimo
+  * Quesos: "200" con unidad "g" mínimo
+  * Frutos secos: "100" con unidad "g" mínimo
+
+- FORMATO JSON EXACTO:
+  * Campo "item": nombre del ingrediente base
+  * Campo "amount": SIEMPRE número (entero o decimal: 1, 2, 12, 0.5, 1.5)
+  * Campo "unit": unidad específica (huevos, dientes, g, kg, ml, l, cucharadas, cucharaditas)
+
+- NO uses: "al gusto", "suficiente", "a gusto", sin número
 
 IMPORTANTE: 
 - TODOS los nombres de recetas, descripciones e instrucciones deben estar en ESPAÑOL

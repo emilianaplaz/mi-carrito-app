@@ -198,11 +198,18 @@ const MiPlan = () => {
   };
 
   const combineItems = (items: any[]): any[] => {
+    const excludedItems = ['agua', 'sal', 'pimienta', 'pimienta negra', 'aceite de oliva', 'aceite de oliva virgen extra'];
     const itemMap = new Map<string, any>();
     
     items.forEach(item => {
       const originalName = item.item || item.name;
       if (!originalName) return;
+      
+      const lowerName = originalName.toLowerCase().trim();
+      // Skip excluded items
+      if (excludedItems.some(excluded => lowerName.includes(excluded))) {
+        return;
+      }
       
       const normalizedKey = normalizeIngredientName(originalName);
       
