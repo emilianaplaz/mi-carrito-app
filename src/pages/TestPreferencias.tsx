@@ -3,12 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChefHat, ArrowLeft, Leaf, Apple, Clock, Target, Utensils, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ChefHat, ArrowLeft, Leaf, Apple, Clock, Target, Utensils, Check, Calendar, UtensilsCrossed } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
 
 const preferencesSchema = z.object({
+  planDuration: z.string(),
+  breakfastOptions: z.number().min(1).max(5),
+  lunchOptions: z.number().min(1).max(5),
+  dinnerOptions: z.number().min(1).max(5),
   dietaryRestrictions: z.array(z.string()),
   allergies: z.array(z.string()),
   cookingTime: z.string().min(1, "Por favor selecciona un tiempo de cocina"),
@@ -24,6 +30,10 @@ const TestPreferencias = () => {
   const { toast } = useToast();
 
   const [preferences, setPreferences] = useState({
+    planDuration: "1_week",
+    breakfastOptions: 3,
+    lunchOptions: 3,
+    dinnerOptions: 3,
     dietaryRestrictions: [] as string[],
     allergies: [] as string[],
     cookingTime: "",
@@ -32,6 +42,25 @@ const TestPreferencias = () => {
   });
 
   const steps = [
+    {
+      title: "Duración del Plan",
+      icon: Calendar,
+      description: "¿Cuánto tiempo quieres planificar?",
+      field: "planDuration" as const,
+      single: true,
+      options: [
+        { value: "1_week", label: "1 Semana", icon: "📅" },
+        { value: "2_weeks", label: "2 Semanas", icon: "🗓️" },
+      ],
+    },
+    {
+      title: "Opciones de Comidas",
+      icon: UtensilsCrossed,
+      description: "¿Cuántas opciones diferentes quieres para cada comida?",
+      field: "planDuration" as const,
+      isNumberInput: true,
+      options: [],
+    },
     {
       title: "Restricciones Dietéticas",
       icon: Leaf,
@@ -131,6 +160,13 @@ const TestPreferencias = () => {
     }
   };
 
+  const handleNumberChange = (field: string, value: number) => {
+    setPreferences({
+      ...preferences,
+      [field]: value,
+    });
+  };
+
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -143,6 +179,34 @@ const TestPreferencias = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const generateMealPlan = (duration: string, breakfast: number, lunch: number, dinner: number) => {
+    const days = duration === "2_weeks" ? 14 : 7;
+    const plan = [];
+
+    const sampleMeals = {
+      breakfast: ["Avena con frutas", "Tostadas con aguacate", "Yogurt con granola", "Huevos revueltos", "Smoothie bowl"],
+      lunch: ["Ensalada César", "Pasta primavera", "Pollo a la plancha", "Sopa de verduras", "Bowl de quinoa"],
+      dinner: ["Salmón al horno", "Tacos de pescado", "Curry de lentejas", "Pizza casera", "Stir-fry de verduras"],
+    };
+
+    for (let i = 0; i < days; i++) {
+      plan.push({
+        day: i + 1,
+        breakfast: Array.from({ length: breakfast }, (_, idx) => 
+          sampleMeals.breakfast[idx % sampleMeals.breakfast.length]
+        ),
+        lunch: Array.from({ length: lunch }, (_, idx) => 
+          sampleMeals.lunch[idx % sampleMeals.lunch.length]
+        ),
+        dinner: Array.from({ length: dinner }, (_, idx) => 
+          sampleMeals.dinner[idx % sampleMeals.dinner.length]
+        ),
+      });
+    }
+
+    return plan;
   };
 
   const handleSubmit = async () => {
@@ -160,25 +224,43 @@ const TestPreferencias = () => {
         return;
       }
 
-      const { error } = await supabase.from("user_preferences").insert({
+      // Save preferences
+      const { error: prefsError } = await supabase.from("user_preferences").upsert({
         user_id: session.user.id,
         dietary_restrictions: validated.dietaryRestrictions,
         allergies: validated.allergies,
         cooking_time: validated.cookingTime,
         health_goals: validated.healthGoals,
         cuisine_preferences: validated.cuisinePreferences,
+        plan_duration: validated.planDuration,
+        breakfast_options: validated.breakfastOptions,
+        lunch_options: validated.lunchOptions,
+        dinner_options: validated.dinnerOptions,
       });
 
-      if (error) throw error;
+      if (prefsError) throw prefsError;
+
+      // Generate and save meal plan
+      const mealPlan = generateMealPlan(
+        validated.planDuration,
+        validated.breakfastOptions,
+        validated.lunchOptions,
+        validated.dinnerOptions
+      );
+      
+      const { error: planError } = await supabase.from("meal_plans").upsert({
+        user_id: session.user.id,
+        plan_data: mealPlan,
+      });
+
+      if (planError) throw planError;
 
       toast({
         title: "¡Preferencias guardadas!",
-        description: "Generando tu plan personalizado...",
+        description: "Tu plan personalizado está listo.",
       });
 
-      setTimeout(() => {
-        navigate("/mi-plan");
-      }, 1500);
+      navigate("/mi-plan");
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
@@ -247,38 +329,76 @@ const TestPreferencias = () => {
             </div>
           </div>
 
-          {/* Options Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {currentStepData.options.map((option) => {
-              const isSelected = currentStepData.single
-                ? preferences[currentStepData.field] === option.value
-                : (preferences[currentStepData.field] as string[]).includes(option.value);
+          {/* Options Grid or Number Inputs */}
+          {currentStepData.isNumberInput ? (
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="space-y-2">
+                <Label htmlFor="breakfast">Desayuno</Label>
+                <Input
+                  id="breakfast"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={preferences.breakfastOptions}
+                  onChange={(e) => handleNumberChange("breakfastOptions", parseInt(e.target.value) || 1)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lunch">Comida</Label>
+                <Input
+                  id="lunch"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={preferences.lunchOptions}
+                  onChange={(e) => handleNumberChange("lunchOptions", parseInt(e.target.value) || 1)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dinner">Cena</Label>
+                <Input
+                  id="dinner"
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={preferences.dinnerOptions}
+                  onChange={(e) => handleNumberChange("dinnerOptions", parseInt(e.target.value) || 1)}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {currentStepData.options.map((option) => {
+                const isSelected = currentStepData.single
+                  ? preferences[currentStepData.field] === option.value
+                  : (preferences[currentStepData.field] as string[]).includes(option.value);
 
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => toggleOption(currentStepData.field, option.value, currentStepData.single)}
-                  className={`
-                    relative p-4 rounded-lg border-2 transition-all duration-300
-                    ${isSelected
-                      ? "border-primary bg-primary/10 shadow-md"
-                      : "border-border hover:border-primary/50 hover:bg-accent/50"
-                    }
-                  `}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{option.icon}</span>
-                    <span className="font-medium text-left">{option.label}</span>
-                  </div>
-                  {isSelected && (
-                    <div className="absolute top-2 right-2">
-                      <Check className="h-5 w-5 text-primary" />
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => toggleOption(currentStepData.field, option.value, currentStepData.single)}
+                    className={`
+                      relative p-4 rounded-lg border-2 transition-all duration-300
+                      ${isSelected
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/50 hover:bg-accent/50"
+                      }
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{option.icon}</span>
+                      <span className="font-medium text-left">{option.label}</span>
                     </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                    {isSelected && (
+                      <div className="absolute top-2 right-2">
+                        <Check className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </Card>
 
         {/* Navigation Buttons */}

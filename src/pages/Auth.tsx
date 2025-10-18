@@ -78,6 +78,7 @@ const Auth = () => {
           title: "¡Registro exitoso!",
           description: "Ahora puedes iniciar sesión con tu cuenta.",
         });
+        navigate("/test-preferencias");
       }
     } catch (error: any) {
       toast({
@@ -112,7 +113,21 @@ const Auth = () => {
           throw error;
         }
       } else {
-        navigate("/dashboard");
+        // Check if user has completed preferences
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: prefs } = await supabase
+            .from("user_preferences")
+            .select("id")
+            .eq("user_id", user.id)
+            .single();
+          
+          if (prefs) {
+            navigate("/dashboard");
+          } else {
+            navigate("/test-preferencias");
+          }
+        }
       }
     } catch (error: any) {
       toast({

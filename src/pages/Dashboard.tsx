@@ -22,27 +22,37 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const initAuth = async () => {
+      // Set up auth state listener FIRST
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        setUser(session?.user ?? null);
+      });
+
+      // THEN check for existing session
+      const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
+
       if (!session) {
         navigate("/auth");
       } else {
-        setLoading(false);
+        // Check if user has completed preferences
+        const { data: prefs } = await supabase
+          .from("user_preferences")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        
+        if (!prefs) {
+          navigate("/test-preferencias");
+        } else {
+          setLoading(false);
+        }
       }
-    });
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setLoading(false);
-      }
-    });
+      return () => subscription.unsubscribe();
+    };
 
-    return () => subscription.unsubscribe();
+    initAuth();
   }, [navigate]);
 
   const handleSignOut = async () => {

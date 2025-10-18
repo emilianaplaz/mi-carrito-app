@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      meal_plans: {
+        Row: {
+          created_at: string
+          id: string
+          plan_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_data: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pantry_items: {
         Row: {
           category: string | null
@@ -56,37 +80,49 @@ export type Database = {
       user_preferences: {
         Row: {
           allergies: string[] | null
+          breakfast_options: number | null
           completed_at: string | null
           cooking_time: string | null
           created_at: string
           cuisine_preferences: string[] | null
           dietary_restrictions: string[] | null
+          dinner_options: number | null
           health_goals: string[] | null
           id: string
+          lunch_options: number | null
+          plan_duration: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           allergies?: string[] | null
+          breakfast_options?: number | null
           completed_at?: string | null
           cooking_time?: string | null
           created_at?: string
           cuisine_preferences?: string[] | null
           dietary_restrictions?: string[] | null
+          dinner_options?: number | null
           health_goals?: string[] | null
           id?: string
+          lunch_options?: number | null
+          plan_duration?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           allergies?: string[] | null
+          breakfast_options?: number | null
           completed_at?: string | null
           cooking_time?: string | null
           created_at?: string
           cuisine_preferences?: string[] | null
           dietary_restrictions?: string[] | null
+          dinner_options?: number | null
           health_goals?: string[] | null
           id?: string
+          lunch_options?: number | null
+          plan_duration?: string | null
           updated_at?: string
           user_id?: string
         }
