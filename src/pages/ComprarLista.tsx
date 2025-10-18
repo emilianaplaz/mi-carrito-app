@@ -190,56 +190,6 @@ const ComprarLista = () => {
           </div>
         </Card>
 
-        {/* Price Comparison Table */}
-        {allPrices.length > 0 && !loadingRecommendations && (
-          <Card className="p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Comparación de Precios</h2>
-            <div className="space-y-4">
-              {allPrices.map((item, index) => (
-                <div key={index} className="border-b border-border pb-4 last:border-0">
-                  <h3 className="font-medium mb-2">
-                    {item.name}
-                    {item.brand && <span className="text-muted-foreground ml-1">({item.brand})</span>}
-                  </h3>
-                  {item.availablePrices.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {item.availablePrices
-                        .sort((a, b) => a.price - b.price)
-                        .map((price, pidx) => (
-                          <div
-                            key={pidx}
-                            className={`p-3 rounded-lg border ${
-                              pidx === 0
-                                ? "border-green-500 bg-green-50 dark:bg-green-950/20"
-                                : "border-border bg-muted/30"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium text-sm">{price.supermarket}</p>
-                                {price.brand && (
-                                  <p className="text-xs text-muted-foreground">{price.brand}</p>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <p className={`font-bold ${pidx === 0 ? "text-green-600 dark:text-green-400" : "text-primary"}`}>
-                                  €{price.price.toFixed(2)}
-                                </p>
-                                <p className="text-xs text-muted-foreground">por {price.unit}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No hay precios disponibles</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
         {/* AI Summary */}
         {loadingRecommendations ? (
           <Card className="p-6 mb-6">
