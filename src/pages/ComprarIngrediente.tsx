@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Store, TrendingDown, Sparkles, Loader2 } from "lucide-react";
+import { ChefHat, ArrowLeft, Store, TrendingDown, Sparkles, Loader2, Truck } from "lucide-react";
 
 type Brand = {
   id: string;
@@ -205,6 +205,31 @@ const ComprarIngrediente = () => {
             ) : (
               <p className="text-sm text-foreground whitespace-pre-wrap">{recommendation}</p>
             )}
+          </Card>
+        )}
+
+        {/* Delivery Option */}
+        {selectedBrand && filteredPrices.length > 0 && (
+          <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Truck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <h3 className="font-bold text-lg">¿Necesitas Delivery?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Recibe tus productos en Caracas en 1-3 horas
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="lg"
+                className="rounded-full"
+                onClick={() => navigate("/delivery-order")}
+              >
+                <Truck className="mr-2 h-5 w-5" />
+                Comprar por Delivery
+              </Button>
+            </div>
           </Card>
         )}
 
