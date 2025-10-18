@@ -12,7 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    const { preferences } = await req.json();
+    const body = await req.json();
+    console.log("Received body:", JSON.stringify(body));
+    
+    const { preferences } = body;
+    
+    if (!preferences) {
+      throw new Error("No preferences provided in request body");
+    }
+    
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -23,36 +31,44 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Support both camelCase (from frontend) and snake_case (from database)
+    const dietaryRestrictions = preferences.dietaryRestrictions || preferences.dietary_restrictions || [];
+    const allergies = preferences.allergies || [];
+    const cuisinePreferences = preferences.cuisinePreferences || preferences.cuisine_preferences || [];
+    const cookingTime = preferences.cookingTime || preferences.cooking_time || "30-min";
+    const healthGoals = preferences.healthGoals || preferences.health_goals || [];
+    const planDuration = preferences.planDuration || preferences.plan_duration || "1_week";
+    const breakfastOptions = preferences.breakfastOptions || preferences.breakfast_options || 3;
+    const lunchOptions = preferences.lunchOptions || preferences.lunch_options || 3;
+    const dinnerOptions = preferences.dinnerOptions || preferences.dinner_options || 3;
+
     // Build dietary restrictions string
     const dietaryInfo = [];
-    if (preferences.dietary_restrictions?.length > 0) {
-      dietaryInfo.push(`Dietary restrictions: ${preferences.dietary_restrictions.join(", ")}`);
+    if (dietaryRestrictions.length > 0) {
+      dietaryInfo.push(`Dietary restrictions: ${dietaryRestrictions.join(", ")}`);
     }
-    if (preferences.allergies?.length > 0) {
-      dietaryInfo.push(`Allergies: ${preferences.allergies.join(", ")}`);
+    if (allergies.length > 0) {
+      dietaryInfo.push(`Allergies: ${allergies.join(", ")}`);
     }
-    if (preferences.cuisine_preferences?.length > 0) {
-      dietaryInfo.push(`Cuisine preferences: ${preferences.cuisine_preferences.join(", ")}`);
+    if (cuisinePreferences.length > 0) {
+      dietaryInfo.push(`Cuisine preferences: ${cuisinePreferences.join(", ")}`);
     }
 
-    const days = preferences.plan_duration === "2_weeks" ? 14 : 7;
-    const breakfastOptions = preferences.breakfast_options || 3;
-    const lunchOptions = preferences.lunch_options || 3;
-    const dinnerOptions = preferences.dinner_options || 3;
+    const days = planDuration === "2_weeks" ? 14 : 7;
 
     const systemPrompt = `You are a professional nutritionist and chef. Generate meal plans that strictly follow dietary restrictions and preferences.`;
 
     const userPrompt = `Create a ${days}-day meal plan with the following requirements:
 ${dietaryInfo.join("\n")}
-Cooking time preference: ${preferences.cooking_time || "30 minutes"}
-Health goals: ${preferences.health_goals?.join(", ") || "general health"}
+Cooking time preference: ${cookingTime}
+Health goals: ${healthGoals.join(", ") || "general health"}
 
 For each day, provide:
 - ${breakfastOptions} breakfast options
 - ${lunchOptions} lunch options  
 - ${dinnerOptions} dinner options
 
-CRITICAL: All recipes MUST strictly follow these dietary restrictions: ${preferences.dietary_restrictions?.join(", ") || "none"}. For example, if paleo is specified, NO grains, dairy, legumes, or processed foods are allowed.`;
+CRITICAL: All recipes MUST strictly follow these dietary restrictions: ${dietaryRestrictions.join(", ") || "none"}. For example, if paleo is specified, NO grains, dairy, legumes, or processed foods are allowed.`;
 
     console.log("Calling AI gateway with structured output...");
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
