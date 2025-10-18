@@ -22,6 +22,7 @@ type SupermarketRecommendation = {
   items: (string | { item: string; price?: number; supermarket?: string })[];
   totalPrice: number;
   reasoning: string;
+  isCombination?: boolean;
 };
 
 const ComprarLista = () => {
@@ -204,9 +205,16 @@ const ComprarLista = () => {
                     <Store className="h-10 w-10 text-primary" />
                     <div>
                       <h3 className="font-semibold text-xl">{rec.supermarket}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {rec.items.length} {rec.items.length === 1 ? "artículo" : "artículos"}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-muted-foreground">
+                          {rec.items.length} {rec.items.length === 1 ? "artículo" : "artículos"}
+                        </p>
+                        {rec.isCombination && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                            Combinación
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">

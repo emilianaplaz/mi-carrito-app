@@ -55,22 +55,25 @@ ${itemsList}
 ${pricesInfo}
 
 IMPORTANTE:
-1. Calcula el costo total por supermercado si se compran TODOS los artículos disponibles allí
-2. Si un artículo no está disponible en un supermercado, no lo incluyas en esa opción
-3. Recomienda la estrategia más económica (puede ser un solo supermercado o una combinación)
-4. Sé específico sobre qué comprar en cada lugar y por qué
+1. Si un solo supermercado tiene TODOS los artículos, recomienda ese supermercado
+2. Si ningún supermercado tiene todos los artículos, DEBES sugerir COMBINACIONES de supermercados
+3. Para combinaciones, muestra claramente qué comprar en cada supermercado y el costo total de la combinación
+4. Compara el precio total de cada opción (supermercado único vs combinaciones)
+5. Ordena las recomendaciones de más económica a más cara
+6. Para cada recomendación, especifica qué artículos comprar y por qué
 
 Responde en formato JSON con esta estructura exacta:
 {
   "recommendations": [
     {
-      "supermarket": "Nombre del supermercado",
+      "supermarket": "Nombre del supermercado O 'Combinación: Super1 + Super2'",
       "items": ["item1", "item2"],
       "totalPrice": 0.00,
-      "reasoning": "Explicación breve"
+      "reasoning": "Explicación detallada. Si es combinación, explica qué comprar en cada lugar",
+      "isCombination": true/false
     }
   ],
-  "summary": "Resumen general de la mejor estrategia de compra en español, incluyendo el ahorro total estimado"
+  "summary": "Resumen general de la mejor estrategia de compra en español. Si recomiendas combinación, explica claramente el plan de compra y el ahorro estimado comparado con comprar todo en un solo lugar"
 }`;
 
     console.log('Calling AI with prompt length:', prompt.length);
