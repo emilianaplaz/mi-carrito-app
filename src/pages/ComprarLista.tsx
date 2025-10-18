@@ -19,7 +19,7 @@ type GroceryList = {
 
 type SupermarketRecommendation = {
   supermarket: string;
-  items: string[];
+  items: (string | { item: string; price?: number; supermarket?: string })[];
   totalPrice: number;
   reasoning: string;
 };
@@ -225,12 +225,15 @@ const ComprarLista = () => {
                 <div className="mb-4">
                   <p className="text-sm font-medium mb-2">Comprar aquí:</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {rec.items.map((itemName, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                        <span>{itemName}</span>
-                      </div>
-                    ))}
+                    {rec.items.map((item, idx) => {
+                      const itemName = typeof item === 'string' ? item : item.item;
+                      return (
+                        <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                          <span>{itemName}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
