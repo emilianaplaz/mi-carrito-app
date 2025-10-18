@@ -28,23 +28,23 @@ const Landing = () => {
     },
     {
       icon: ShoppingCart,
-      title: "Comparador de Tiendas",
+      title: "Comparador de Precios",
       description: "Encuentra los mejores precios comparando entre múltiples supermercados locales en tiempo real.",
     },
     {
       icon: TrendingDown,
       title: "Optimización de Costos",
-      description: "Reduce tu gasto en alimentos hasta un 30% con carritos divididos por tienda.",
+      description: "Reduce tu gasto en alimentos con carritos divididos por tienda.",
     },
     {
       icon: Home,
-      title: "Gestión de Despensa",
-      description: "Actualiza tu inventario usando lenguaje natural y recibe sugerencias inteligentes.",
+      title: "Gestión de listas de compra",
+      description: "Crea listas de compra y recibe recomendaciones de nuevos productos por mejores precios.",
     },
     {
       icon: Bell,
-      title: "Alertas Inteligentes",
-      description: "Notificaciones de bajas de precio, reabastecimiento y ofertas personalizadas.",
+      title: "Mercado inteligente",
+      description: "Automatiza la compra de tu mercado según tus necesidades.",
     },
     {
       icon: Sparkles,
