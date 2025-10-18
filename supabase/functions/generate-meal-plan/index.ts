@@ -71,20 +71,27 @@ INSTRUCCIONES IMPORTANTES SOBRE OPCIONES:
 - Máximo 1 receta nueva por día
 
 FORMATO DE INGREDIENTES (MUY IMPORTANTE):
+- NUNCA incluyas agua, sal ni pimienta en los ingredientes
 - Usa nombres de ingredientes BASE sin preparación (ejemplo: "cebolla" en vez de "cebolla picada")
 - Usa nombres CONSISTENTES para ingredientes similares:
   * "berries" en vez de "frutas del bosque", "frutos rojos", "bayas"
   * "tomate" en vez de "jitomate"
   * "patatas" en vez de "papas" o "papa"
   * "pimiento" en vez de "ají", "chile", "pimentón"
-- SIEMPRE incluye cantidades específicas y realistas:
-  * Carnes: usa "kg" o "g" o unidades específicas (ejemplo: "500" con unidad "g", o "4" con unidad "pechugas de pollo")
-  * Vegetales contables: usa unidades específicas (ejemplo: "2" con unidad "cebollas", "3" con unidad "tomates")
-  * Vegetales por peso: usa "g" o "kg" (ejemplo: "250" con unidad "g")
-  * Líquidos: usa "ml" o "l"
-  * Especias/condimentos: usa "cucharadas", "cucharaditas" o "g"
+- OBLIGATORIO: TODOS los ingredientes DEBEN tener cantidades NUMÉRICAS específicas:
+  * Huevos: "12" con unidad "huevos" o "6" con unidad "huevos"
+  * Ajo: "5" con unidad "dientes" o "8" con unidad "dientes"
+  * Carnes: "500" con unidad "g" o "1.5" con unidad "kg" o "4" con unidad "pechugas de pollo"
+  * Vegetales contables: "2" con unidad "cebollas", "3" con unidad "tomates", "1" con unidad "pimiento"
+  * Vegetales por peso: "250" con unidad "g" o "0.5" con unidad "kg"
+  * Líquidos (excepto agua): "200" con unidad "ml" o "1" con unidad "l"
+  * Especias/condimentos: "2" con unidad "cucharadas", "1" con unidad "cucharadita"
+  * Quesos: "150" con unidad "g" o "200" con unidad "g"
+  * Lácteos: "250" con unidad "ml" o "500" con unidad "ml"
+- El campo "amount" SIEMPRE debe ser un NÚMERO (1, 2, 3, 0.5, 1.5, etc)
+- El campo "unit" debe especificar la unidad (huevos, dientes, g, kg, ml, l, cucharadas, cucharaditas, unidad, piezas)
+- NO uses cantidades vagas como "al gusto", "suficiente", o sin número
 - Agrupa cantidades del mismo ingrediente
-- NO uses cantidades vagas como "al gusto" o sin número
 
 IMPORTANTE: 
 - TODOS los nombres de recetas, descripciones e instrucciones deben estar en ESPAÑOL
