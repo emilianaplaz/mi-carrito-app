@@ -13,6 +13,8 @@ import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from
 type GroceryItem = {
   name: string;
   brand: string;
+  amount?: string;
+  unit?: string;
 };
 
 type GroceryList = {
@@ -520,7 +522,14 @@ const Listas = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold">{item.name}</h4>
+                      <div className="flex items-baseline gap-2">
+                        <h4 className="font-semibold">{item.name}</h4>
+                        {item.amount && item.unit && (
+                          <span className="text-sm text-muted-foreground">
+                            {item.amount} {item.unit}
+                          </span>
+                        )}
+                      </div>
                       {item.brand && (
                         <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>
                       )}

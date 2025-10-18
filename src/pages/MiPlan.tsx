@@ -172,22 +172,63 @@ const MiPlan = () => {
     }
   };
 
+  const normalizeIngredientName = (name: string): string => {
+    const synonyms: Record<string, string> = {
+      'frutas del bosque': 'berries',
+      'frutos del bosque': 'berries',
+      'frutos rojos': 'berries',
+      'bayas': 'berries',
+      'tomate': 'tomate',
+      'jitomate': 'tomate',
+      'papas': 'patatas',
+      'patata': 'patatas',
+      'papa': 'patatas',
+      'ají': 'pimiento',
+      'chile': 'pimiento',
+      'pimentón': 'pimiento',
+      'cebolleta': 'cebolla',
+      'cebollín': 'cebolla',
+      'zanahoria': 'zanahoria',
+      'azúcar': 'azúcar',
+      'azucar': 'azúcar',
+    };
+    
+    const lowerName = name.toLowerCase().trim();
+    return synonyms[lowerName] || lowerName;
+  };
+
   const combineItems = (items: any[]): any[] => {
     const itemMap = new Map<string, any>();
     
     items.forEach(item => {
-      const key = item.item || item.name;
-      if (!key) return;
+      const originalName = item.item || item.name;
+      if (!originalName) return;
       
-      if (itemMap.has(key)) {
-        const existing = itemMap.get(key);
-        // Try to parse and add numeric amounts
-        const existingAmount = parseFloat(existing.amount) || 0;
-        const newAmount = parseFloat(item.amount) || 0;
-        existing.amount = String(existingAmount + newAmount);
+      const normalizedKey = normalizeIngredientName(originalName);
+      
+      if (itemMap.has(normalizedKey)) {
+        const existing = itemMap.get(normalizedKey);
+        // Only combine if units match
+        const itemUnit = (item.unit || "unidad").toLowerCase();
+        const existingUnit = (existing.unit || "unidad").toLowerCase();
+        
+        if (itemUnit === existingUnit) {
+          const existingAmount = parseFloat(existing.amount) || 0;
+          const newAmount = parseFloat(item.amount) || 0;
+          existing.amount = String(existingAmount + newAmount);
+        } else {
+          // Different units, create a new entry with a modified key
+          const newKey = `${normalizedKey}_${itemUnit}`;
+          itemMap.set(newKey, {
+            name: originalName,
+            brand: item.brand || "",
+            amount: item.amount || "1",
+            unit: item.unit || "unidad"
+          });
+        }
       } else {
-        itemMap.set(key, {
-          name: key,
+        itemMap.set(normalizedKey, {
+          name: originalName,
           brand: item.brand || "",
           amount: item.amount || "1",
           unit: item.unit || "unidad"

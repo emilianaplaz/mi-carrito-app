@@ -72,11 +72,17 @@ INSTRUCCIONES IMPORTANTES SOBRE OPCIONES:
 
 FORMATO DE INGREDIENTES (MUY IMPORTANTE):
 - Usa nombres de ingredientes BASE sin preparación (ejemplo: "cebolla" en vez de "cebolla picada")
+- Usa nombres CONSISTENTES para ingredientes similares:
+  * "berries" en vez de "frutas del bosque", "frutos rojos", "bayas"
+  * "tomate" en vez de "jitomate"
+  * "patatas" en vez de "papas" o "papa"
+  * "pimiento" en vez de "ají", "chile", "pimentón"
 - SIEMPRE incluye cantidades específicas y realistas:
-  * Carnes: usa "kg" o "unidad" (ejemplo: "500" con unidad "g", o "4" con unidad "pechugas de pollo")
-  * Vegetales: usa cantidades contables o peso (ejemplo: "2" con unidad "cebollas", "3" con unidad "tomates", "250" con unidad "g")
+  * Carnes: usa "kg" o "g" o unidades específicas (ejemplo: "500" con unidad "g", o "4" con unidad "pechugas de pollo")
+  * Vegetales contables: usa unidades específicas (ejemplo: "2" con unidad "cebollas", "3" con unidad "tomates")
+  * Vegetales por peso: usa "g" o "kg" (ejemplo: "250" con unidad "g")
   * Líquidos: usa "ml" o "l"
-  * Especias/condimentos: usa "cucharadas" o "g"
+  * Especias/condimentos: usa "cucharadas", "cucharaditas" o "g"
 - Agrupa cantidades del mismo ingrediente
 - NO uses cantidades vagas como "al gusto" o sin número
 
