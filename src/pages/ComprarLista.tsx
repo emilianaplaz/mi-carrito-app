@@ -1,0 +1,261 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart } from "lucide-react";
+
+type GroceryItem = {
+  name: string;
+  brand: string;
+};
+
+type GroceryList = {
+  id: string;
+  name: string;
+  items: GroceryItem[];
+};
+
+type SupermarketRecommendation = {
+  supermarket: string;
+  items: string[];
+  totalPrice: number;
+  reasoning: string;
+};
+
+const ComprarLista = () => {
+  const [searchParams] = useSearchParams();
+  const listId = searchParams.get("id") || "";
+  
+  const [loading, setLoading] = useState(true);
+  const [list, setList] = useState<GroceryList | null>(null);
+  const [recommendations, setRecommendations] = useState<SupermarketRecommendation[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadList();
+  }, [listId]);
+
+  const loadList = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("grocery_lists")
+        .select("*")
+        .eq("id", listId)
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (error) throw error;
+
+      const formattedList: GroceryList = {
+        ...data,
+        items: Array.isArray(data.items) ? data.items as GroceryItem[] : []
+      };
+
+      setList(formattedList);
+      await loadRecommendations(formattedList);
+    } catch (error: any) {
+      console.error("Error loading list:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar la lista",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRecommendations = async (groceryList: GroceryList) => {
+    setLoadingRecommendations(true);
+    try {
+      // Get all product prices for items in the list
+      const itemNames = groceryList.items.map(item => item.name);
+      
+      const { data: pricesData, error: pricesError } = await supabase
+        .from("product_prices")
+        .select(`
+          product_name,
+          price,
+          unit,
+          supermarkets (name),
+          brands (name)
+        `)
+        .in("product_name", itemNames);
+
+      if (pricesError) throw pricesError;
+
+      // Call edge function to get AI recommendations
+      const { data, error } = await supabase.functions.invoke('list-recommendations', {
+        body: {
+          listName: groceryList.name,
+          items: groceryList.items,
+          availablePrices: pricesData || [],
+        }
+      });
+
+      if (error) throw error;
+      
+      setRecommendations(data.recommendations || []);
+      setAiSummary(data.summary || "");
+    } catch (error: any) {
+      console.error("Error loading recommendations:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las recomendaciones",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <ChefHat className="h-12 w-12 text-primary animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!list) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-2">Lista no encontrada</h2>
+          <Button onClick={() => navigate("/listas")}>Volver a Listas</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3 flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/listas")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5 text-primary" />
+            <span className="text-lg font-bold">Comprar: {list.name}</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* List Items Summary */}
+        <Card className="p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Artículos en tu lista</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {list.items.map((item, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span>{item.name}</span>
+                {item.brand && <span className="text-muted-foreground">({item.brand})</span>}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* AI Summary */}
+        {loadingRecommendations ? (
+          <Card className="p-6 mb-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Analizando mejores opciones de compra...</span>
+            </div>
+          </Card>
+        ) : aiSummary ? (
+          <Card className="p-6 mb-6 bg-gradient-to-br from-primary/5 to-secondary/5">
+            <div className="flex items-start gap-3 mb-3">
+              <Sparkles className="h-6 w-6 text-primary mt-1" />
+              <h2 className="text-xl font-semibold">Recomendación Inteligente</h2>
+            </div>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{aiSummary}</p>
+          </Card>
+        ) : null}
+
+        {/* Supermarket Recommendations */}
+        {recommendations.length > 0 ? (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold mb-4">Plan de Compra Recomendado</h2>
+            {recommendations.map((rec, index) => (
+              <Card
+                key={index}
+                className={`p-6 transition-all ${
+                  index === 0
+                    ? "border-2 border-green-500 shadow-lg"
+                    : "hover:shadow-md"
+                }`}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <Store className="h-10 w-10 text-primary" />
+                    <div>
+                      <h3 className="font-semibold text-xl">{rec.supermarket}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {rec.items.length} {rec.items.length === 1 ? "artículo" : "artículos"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-primary">
+                      €{rec.totalPrice.toFixed(2)}
+                    </p>
+                    {index === 0 && (
+                      <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
+                        ¡Mejor Opción!
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Items to buy at this supermarket */}
+                <div className="mb-4">
+                  <p className="text-sm font-medium mb-2">Comprar aquí:</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {rec.items.map((itemName, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                        <span>{itemName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reasoning */}
+                {rec.reasoning && (
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground">{rec.reasoning}</p>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        ) : !loadingRecommendations ? (
+          <Card className="p-8 text-center">
+            <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No hay recomendaciones disponibles</h3>
+            <p className="text-muted-foreground mb-4">
+              No se encontraron precios suficientes para los artículos de tu lista
+            </p>
+            <Button onClick={() => navigate("/listas")}>Volver a Listas</Button>
+          </Card>
+        ) : null}
+      </main>
+    </div>
+  );
+};
+
+export default ComprarLista;

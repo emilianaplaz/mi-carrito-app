@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye } from "lucide-react";
+import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from "lucide-react";
 
 type GroceryItem = {
   name: string;
@@ -31,6 +31,8 @@ const Listas = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [newItems, setNewItems] = useState<GroceryItem[]>([{ name: "", brand: "" }]);
   const [viewingList, setViewingList] = useState<GroceryList | null>(null);
+  const [editingList, setEditingList] = useState<GroceryList | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -198,6 +200,69 @@ const Listas = () => {
     }
   };
 
+  const handleEditList = (list: GroceryList) => {
+    setEditingList(list);
+    setNewListName(list.name);
+    setNewItems(list.items.length > 0 ? list.items : [{ name: "", brand: "" }]);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateList = async () => {
+    if (!editingList) return;
+    
+    if (!newListName.trim()) {
+      toast({
+        title: "Error",
+        description: "Por favor ingresa un nombre para la lista",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validItems = newItems.filter(item => item.name.trim() !== "");
+    if (validItems.length === 0) {
+      toast({
+        title: "Error",
+        description: "Por favor agrega al menos un artículo",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const { error } = await supabase
+        .from("grocery_lists")
+        .update({
+          name: newListName,
+          items: validItems,
+        })
+        .eq("id", editingList.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "¡Lista actualizada!",
+        description: "Tu lista ha sido actualizada exitosamente",
+      });
+
+      setNewListName("");
+      setNewItems([{ name: "", brand: "" }]);
+      setIsEditDialogOpen(false);
+      setEditingList(null);
+      await loadLists();
+    } catch (error) {
+      console.error("Error updating list:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la lista",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -313,11 +378,15 @@ const Listas = () => {
         ) : (
           <div className="grid gap-4">
             {lists.map((list) => (
-              <Card key={list.id} className="p-6 hover:shadow-lg transition-shadow">
+              <Card 
+                key={list.id} 
+                className="p-6 hover:shadow-lg transition-all cursor-pointer group"
+                onClick={() => navigate(`/comprar-lista?id=${list.id}`)}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl font-semibold">{list.name}</h3>
+                      <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{list.name}</h3>
                       {list.is_favorite && (
                         <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                       )}
@@ -334,7 +403,7 @@ const Listas = () => {
                     </p>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="outline"
                       size="sm"
@@ -342,6 +411,13 @@ const Listas = () => {
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Artículos
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleEditList(list)}
+                    >
+                      <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -406,6 +482,84 @@ const Listas = () => {
               Esta lista no tiene artículos
             </p>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit List Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (!open) {
+          setEditingList(null);
+          setNewListName("");
+          setNewItems([{ name: "", brand: "" }]);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Lista</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-list-name">Nombre de la Lista</Label>
+              <Input
+                id="edit-list-name"
+                placeholder="Ej: Compras de la semana"
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Artículos</Label>
+              {newItems.map((item, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    placeholder="Nombre del producto"
+                    value={item.name}
+                    onChange={(e) => updateItemField(index, "name", e.target.value)}
+                    className="flex-1"
+                  />
+                  <Input
+                    placeholder="Marca (opcional)"
+                    value={item.brand}
+                    onChange={(e) => updateItemField(index, "brand", e.target.value)}
+                    className="flex-1"
+                  />
+                  {newItems.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItemField(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addItemField}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar Artículo
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsEditDialogOpen(false);
+              setEditingList(null);
+              setNewListName("");
+              setNewItems([{ name: "", brand: "" }]);
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateList} disabled={isCreating}>
+              {isCreating ? "Actualizando..." : "Actualizar Lista"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

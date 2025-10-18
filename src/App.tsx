@@ -13,6 +13,7 @@ import Listas from "./pages/Listas";
 import Recetas from "./pages/Recetas";
 import TestPreferencias from "./pages/TestPreferencias";
 import ComprarIngrediente from "./pages/ComprarIngrediente";
+import ComprarLista from "./pages/ComprarLista";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="/listas" element={<Listas />} />
             <Route path="/recetas" element={<Recetas />} />
             <Route path="/comprar-ingrediente" element={<ComprarIngrediente />} />
+            <Route path="/comprar-lista" element={<ComprarLista />} />
             <Route path="/test-preferencias" element={<TestPreferencias />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
