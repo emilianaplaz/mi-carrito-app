@@ -9,6 +9,8 @@ import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart } from "luci
 type GroceryItem = {
   name: string;
   brand: string;
+  amount?: string;
+  unit?: string;
 };
 
 type GroceryList = {
@@ -183,7 +185,14 @@ const ComprarLista = () => {
             {list.items.map((item, index) => (
               <div key={index} className="flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 rounded-full bg-primary" />
-                <span>{item.name}</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-medium">{item.name}</span>
+                  {item.amount && item.unit && (
+                    <span className="text-primary font-semibold">
+                      {item.amount} {item.unit}
+                    </span>
+                  )}
+                </div>
                 {item.brand && <span className="text-muted-foreground">({item.brand})</span>}
               </div>
             ))}
