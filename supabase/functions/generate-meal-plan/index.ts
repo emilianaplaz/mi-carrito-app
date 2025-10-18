@@ -63,16 +63,22 @@ ${dietaryInfo.join("\n")}
 Tiempo de cocción preferido: ${cookingTime}
 Objetivos de salud: ${healthGoals.join(", ") || "salud general"}
 
-Para cada día, proporciona:
-- ${breakfastOptions} opciones de desayuno
-- ${lunchOptions} opciones de almuerzo
-- ${dinnerOptions} opciones de cena
+INSTRUCCIONES IMPORTANTES SOBRE OPCIONES:
+- Crea un TOTAL de ${breakfastOptions} recetas DIFERENTES de desayuno para TODA la semana (no por día)
+- Crea un TOTAL de ${lunchOptions} recetas DIFERENTES de almuerzo para TODA la semana (no por día)
+- Crea un TOTAL de ${dinnerOptions} recetas DIFERENTES de cena para TODA la semana (no por día)
+- Distribuye y repite estas recetas a lo largo de los ${days} días
+- Máximo 1 receta nueva por día
+
+FORMATO DE INGREDIENTES:
+- Usa nombres de ingredientes BASE sin preparación (ejemplo: "cebolla" en vez de "cebolla picada")
+- Incluye cantidades específicas y unidades claras
+- Agrupa cantidades del mismo ingrediente
 
 IMPORTANTE: 
 - TODOS los nombres de recetas, descripciones e instrucciones deben estar en ESPAÑOL
 - Las recetas DEBEN seguir estrictamente las restricciones dietéticas: ${dietaryRestrictions.join(", ") || "ninguna"}
-- Cada receta debe incluir ingredientes detallados con cantidades
-- Las instrucciones deben ser claras y paso a paso
+- Las instrucciones deben ser claras y paso a paso, incluyendo cómo preparar los ingredientes
 
 Responde SOLO con un objeto JSON válido en este formato exacto:
 {
@@ -84,9 +90,10 @@ Responde SOLO con un objeto JSON válido en este formato exacto:
           "name": "Nombre de la receta en español",
           "description": "Descripción breve en español",
           "ingredients": [
-            {"item": "ingrediente", "amount": "cantidad", "unit": "unidad"}
+            {"item": "cebolla", "amount": "1", "unit": "unidad"},
+            {"item": "tomate", "amount": "200", "unit": "g"}
           ],
-          "instructions": ["Paso 1 en español", "Paso 2 en español"],
+          "instructions": ["Paso 1: Picar la cebolla finamente", "Paso 2 en español"],
           "prep_time": 10,
           "cook_time": 20,
           "servings": 4,
