@@ -47,108 +47,113 @@ serve(async (req) => {
       productPriceMap[productKey].push(priceInfo);
     });
 
-    // Build the prompt
-    const itemsList = items.map((item: any) => `- ${item.name}${item.brand ? ` (marca: ${item.brand})` : ''}`).join('\n');
-    
-    let pricesInfo = "Precios disponibles por supermercado:\n\n";
-    for (const [supermarket, products] of Object.entries(pricesBySupermarket)) {
-      pricesInfo += `${supermarket}:\n`;
-      products.forEach(p => {
-        pricesInfo += `  - ${p.product}${p.brand ? ` (${p.brand})` : ''}: €${p.price.toFixed(2)} por ${p.unit}\n`;
-      });
-      pricesInfo += '\n';
-    }
-
-    const prompt = `Eres un experto en optimización de compras de supermercado. Analiza la siguiente lista de compras y usa ÚNICAMENTE los precios reales de la base de datos para hacer recomendaciones precisas.
-
-Lista de compras: "${listName}"
-Artículos necesarios:
-${itemsList}
-
-${pricesInfo}
-
-REGLAS CRÍTICAS:
-1. SOLO usa los precios exactos de la base de datos proporcionados arriba
-2. Calcula el precio total REAL sumando los precios individuales de cada producto
-3. Si un supermercado tiene TODOS los artículos, esa puede ser la mejor opción (considera la comodidad)
-4. Si ningún supermercado tiene todos los artículos, DEBES sugerir COMBINACIONES
-5. Para combinaciones, calcula el precio EXACTO sumando precios de diferentes supermercados
-6. Compara: a veces pagar un poco más por conveniencia (un solo lugar) es mejor que ahorrar €1-2 visitando múltiples tiendas
-7. Ordena las recomendaciones considerando PRECIO y CONVENIENCIA
-
-FORMATO DE RESPUESTA OBLIGATORIO (JSON):
-{
-  "recommendations": [
-    {
-      "supermarket": "Nombre del supermercado O 'Combinación: Super1 + Super2'",
-      "items": [
-        {
-          "item": "nombre del producto",
-          "price": precio_exacto_en_euros,
-          "brand": "marca",
-          "supermarket": "donde comprarlo si es combinación"
-        }
-      ],
-      "totalPrice": suma_exacta_de_todos_los_precios,
-      "reasoning": "Explica claramente por qué esta opción. Si es combinación, detalla el plan y el ahorro vs comprar todo en un lugar",
-      "isCombination": true/false
-    }
-  ],
-  "summary": "Resumen en español: explica la mejor estrategia considerando precio Y conveniencia. Si recomiendas combinación, justifica que el ahorro vale la pena visitar múltiples tiendas"
-}`;
-
-    console.log('Calling AI with prompt length:', prompt.length);
-
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "Eres un asistente experto en optimización de compras. Siempre respondes en formato JSON válido." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7,
-      }),
+    // Build detailed price comparison for each item
+    const itemsWithPrices = items.map((item: any) => {
+      const productKey = `${item.name}-${item.brand || 'sin marca'}`;
+      const prices = productPriceMap[productKey] || [];
+      return {
+        name: item.name,
+        brand: item.brand,
+        availablePrices: prices
+      };
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    console.log('AI response received');
+    // Calculate best options
+    const supermarketOptions: any[] = [];
     
-    const content = aiData.choices[0].message.content;
-    
-    // Try to extract JSON from the response
-    let parsedContent;
-    try {
-      // Try to find JSON in markdown code blocks
-      const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-      if (jsonMatch) {
-        parsedContent = JSON.parse(jsonMatch[1]);
-      } else {
-        parsedContent = JSON.parse(content);
+    // Option 1: Check each supermarket to see if they have all items
+    for (const [supermarket, supermarketPrices] of Object.entries(pricesBySupermarket)) {
+      const itemsInSupermarket: any[] = [];
+      let hasAllItems = true;
+      
+      for (const item of items) {
+        const productKey = `${item.name}-${item.brand || 'sin marca'}`;
+        const priceInSupermarket = supermarketPrices.find(
+          (p: any) => `${p.product}-${p.brand || 'sin marca'}` === productKey
+        );
+        
+        if (priceInSupermarket) {
+          itemsInSupermarket.push({
+            item: item.name,
+            price: priceInSupermarket.price,
+            brand: priceInSupermarket.brand,
+            supermarket: supermarket
+          });
+        } else {
+          hasAllItems = false;
+          break;
+        }
       }
-    } catch (e) {
-      console.error("Failed to parse AI response as JSON:", content);
-      // Fallback response
-      parsedContent = {
-        recommendations: [],
-        summary: "No se pudo generar una recomendación en este momento. Por favor, intenta nuevamente."
-      };
+      
+      if (hasAllItems) {
+        const totalPrice = itemsInSupermarket.reduce((sum, item) => sum + item.price, 0);
+        supermarketOptions.push({
+          supermarket: supermarket,
+          items: itemsInSupermarket,
+          totalPrice: totalPrice,
+          isCombination: false
+        });
+      }
     }
+    
+    // Option 2: Find cheapest combination
+    const cheapestCombination: any[] = [];
+    let combinationTotal = 0;
+    const usedSupermarkets = new Set<string>();
+    
+    for (const item of items) {
+      const productKey = `${item.name}-${item.brand || 'sin marca'}`;
+      const prices = productPriceMap[productKey] || [];
+      
+      if (prices.length > 0) {
+        const cheapest = prices.reduce((min, p) => p.price < min.price ? p : min);
+        cheapestCombination.push({
+          item: item.name,
+          price: cheapest.price,
+          brand: cheapest.brand,
+          supermarket: cheapest.supermarket
+        });
+        combinationTotal += cheapest.price;
+        usedSupermarkets.add(cheapest.supermarket);
+      }
+    }
+    
+    if (cheapestCombination.length === items.length && usedSupermarkets.size > 1) {
+      supermarketOptions.push({
+        supermarket: `Combinación: ${Array.from(usedSupermarkets).join(' + ')}`,
+        items: cheapestCombination,
+        totalPrice: combinationTotal,
+        isCombination: true
+      });
+    }
+    
+    // Sort by price
+    supermarketOptions.sort((a, b) => a.totalPrice - b.totalPrice);
+    
+    // Return structured data with all available prices
+    const response = {
+      allPrices: itemsWithPrices,
+      recommendations: supermarketOptions.map((opt, index) => ({
+        ...opt,
+        reasoning: index === 0 
+          ? (opt.isCombination 
+            ? `Esta combinación ofrece el precio más bajo (€${opt.totalPrice.toFixed(2)}). Tendrás que visitar ${usedSupermarkets.size} supermercados diferentes.`
+            : `${opt.supermarket} tiene todos los artículos en un solo lugar por €${opt.totalPrice.toFixed(2)}.`)
+          : (opt.isCombination
+            ? `Combinación alternativa por €${opt.totalPrice.toFixed(2)}.`
+            : `En ${opt.supermarket} pagarías €${opt.totalPrice.toFixed(2)} comprando todo en un solo lugar.`)
+      })),
+      summary: supermarketOptions.length > 0
+        ? (supermarketOptions[0].isCombination
+          ? `La opción más económica es combinar supermercados (€${supermarketOptions[0].totalPrice.toFixed(2)}), pero ${supermarketOptions.find(o => !o.isCombination) ? `si prefieres comodidad, puedes comprar todo en ${supermarketOptions.find(o => !o.isCombination)?.supermarket} por €${supermarketOptions.find(o => !o.isCombination)?.totalPrice.toFixed(2)}` : 'no hay un solo supermercado con todos los artículos'}.`
+          : `La mejor opción es ${supermarketOptions[0].supermarket} donde puedes comprar todo por €${supermarketOptions[0].totalPrice.toFixed(2)}.`)
+        : "No se encontraron precios suficientes para hacer recomendaciones."
+    };
 
-    console.log('Successfully parsed recommendations:', parsedContent.recommendations?.length || 0);
+    console.log('Calculated recommendations:', response.recommendations.length);
 
     return new Response(
-      JSON.stringify(parsedContent),
+      JSON.stringify(response),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
