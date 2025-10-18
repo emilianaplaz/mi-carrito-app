@@ -1,4 +1,7 @@
 project_id = "wfkfncbdarqahgqpmukv"
 
 [functions.generate-meal-plan]
-verify_jwt = true
+verify_jwt = false
+
+[functions.product-recommendations]
+verify_jwt = false

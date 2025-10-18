@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      brands: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       grocery_lists: {
         Row: {
           created_at: string
@@ -110,6 +128,54 @@ export type Database = {
         }
         Relationships: []
       }
+      product_prices: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          price: number
+          product_name: string
+          supermarket_id: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          price: number
+          product_name: string
+          supermarket_id: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          price?: number
+          product_name?: string
+          supermarket_id?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_prices_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_prices_supermarket_id_fkey"
+            columns: ["supermarket_id"]
+            isOneToOne: false
+            referencedRelation: "supermarkets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipes: {
         Row: {
           cook_time: number | null
@@ -152,6 +218,27 @@ export type Database = {
           name?: string
           prep_time?: number | null
           servings?: number | null
+        }
+        Relationships: []
+      }
+      supermarkets: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
         }
         Relationships: []
       }

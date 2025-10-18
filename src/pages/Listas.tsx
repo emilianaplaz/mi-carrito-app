@@ -7,12 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart } from "lucide-react";
+import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye } from "lucide-react";
+
+type GroceryItem = {
+  name: string;
+  brand: string;
+};
 
 type GroceryList = {
   id: string;
   name: string;
-  items: any;
+  items: GroceryItem[];
   is_favorite: boolean;
   created_at: string;
   updated_at: string;
@@ -24,6 +29,8 @@ const Listas = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [newItems, setNewItems] = useState<GroceryItem[]>([{ name: "", brand: "" }]);
+  const [viewingList, setViewingList] = useState<GroceryList | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -58,7 +65,11 @@ const Listas = () => {
         variant: "destructive",
       });
     } else {
-      setLists(data || []);
+      const formattedLists = (data || []).map(list => ({
+        ...list,
+        items: Array.isArray(list.items) ? list.items as GroceryItem[] : []
+      }));
+      setLists(formattedLists);
     }
   };
 
@@ -72,6 +83,16 @@ const Listas = () => {
       return;
     }
 
+    const validItems = newItems.filter(item => item.name.trim() !== "");
+    if (validItems.length === 0) {
+      toast({
+        title: "Error",
+        description: "Por favor agrega al menos un artículo",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -80,7 +101,7 @@ const Listas = () => {
       const { error } = await supabase.from("grocery_lists").insert({
         user_id: session.user.id,
         name: newListName,
-        items: [],
+        items: validItems,
       });
 
       if (error) throw error;
@@ -91,6 +112,7 @@ const Listas = () => {
       });
 
       setNewListName("");
+      setNewItems([{ name: "", brand: "" }]);
       setIsDialogOpen(false);
       await loadLists();
     } catch (error) {
@@ -102,6 +124,22 @@ const Listas = () => {
       });
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const addItemField = () => {
+    setNewItems([...newItems, { name: "", brand: "" }]);
+  };
+
+  const updateItemField = (index: number, field: keyof GroceryItem, value: string) => {
+    const updated = [...newItems];
+    updated[index][field] = value;
+    setNewItems(updated);
+  };
+
+  const removeItemField = (index: number) => {
+    if (newItems.length > 1) {
+      setNewItems(newItems.filter((_, i) => i !== index));
     }
   };
 
@@ -189,7 +227,7 @@ const Listas = () => {
                 Nueva Lista
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Crear Nueva Lista</DialogTitle>
               </DialogHeader>
@@ -201,12 +239,53 @@ const Listas = () => {
                     placeholder="Ej: Compras de la semana"
                     value={newListName}
                     onChange={(e) => setNewListName(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleCreateList()}
                   />
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Artículos</Label>
+                  {newItems.map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder="Nombre del producto"
+                        value={item.name}
+                        onChange={(e) => updateItemField(index, "name", e.target.value)}
+                        className="flex-1"
+                      />
+                      <Input
+                        placeholder="Marca (opcional)"
+                        value={item.brand}
+                        onChange={(e) => updateItemField(index, "brand", e.target.value)}
+                        className="flex-1"
+                      />
+                      {newItems.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeItemField(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addItemField}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Artículo
+                  </Button>
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button variant="outline" onClick={() => {
+                  setIsDialogOpen(false);
+                  setNewListName("");
+                  setNewItems([{ name: "", brand: "" }]);
+                }}>
                   Cancelar
                 </Button>
                 <Button onClick={handleCreateList} disabled={isCreating}>
@@ -257,6 +336,14 @@ const Listas = () => {
                   
                   <div className="flex items-center gap-2">
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setViewingList(list)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Artículos
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleToggleFavorite(list.id, list.is_favorite)}
@@ -281,6 +368,46 @@ const Listas = () => {
           </div>
         )}
       </main>
+
+      {/* View Items Dialog */}
+      <Dialog open={!!viewingList} onOpenChange={(open) => !open && setViewingList(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{viewingList?.name}</DialogTitle>
+          </DialogHeader>
+          
+          {viewingList && Array.isArray(viewingList.items) && viewingList.items.length > 0 ? (
+            <div className="space-y-2">
+              {viewingList.items.map((item: GroceryItem, index: number) => (
+                <Card
+                  key={index}
+                  className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => {
+                    setViewingList(null);
+                    navigate(`/comprar-ingrediente?producto=${encodeURIComponent(item.name)}&lista=${viewingList.id}`);
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold">{item.name}</h4>
+                      {item.brand && (
+                        <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>
+                      )}
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      Ver Precios →
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-4">
+              Esta lista no tiene artículos
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
