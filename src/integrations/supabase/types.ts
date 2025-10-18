@@ -32,6 +32,24 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       grocery_lists: {
         Row: {
           created_at: string
@@ -133,31 +151,31 @@ export type Database = {
           brand_id: string
           created_at: string
           id: string
+          last_updated: string
           price: number
-          product_name: string
+          product_id: string
           supermarket_id: string
           unit: string
-          updated_at: string
         }
         Insert: {
           brand_id: string
           created_at?: string
           id?: string
+          last_updated?: string
           price: number
-          product_name: string
+          product_id: string
           supermarket_id: string
           unit: string
-          updated_at?: string
         }
         Update: {
           brand_id?: string
           created_at?: string
           id?: string
+          last_updated?: string
           price?: number
-          product_name?: string
+          product_id?: string
           supermarket_id?: string
           unit?: string
-          updated_at?: string
         }
         Relationships: [
           {
@@ -168,10 +186,49 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "product_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "product_prices_supermarket_id_fkey"
             columns: ["supermarket_id"]
             isOneToOne: false
             referencedRelation: "supermarkets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
