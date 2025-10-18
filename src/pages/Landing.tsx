@@ -29,7 +29,7 @@ const Landing = () => {
   }, {
     icon: ShoppingCart,
     title: "Comparador de Tiendas",
-    description: "Encuentra los mejores precios comparando entre múltiples tiendas locales en tiempo real."
+    description: "Encuentra los mejores precios comparando entre múltiples supermercados locales en tiempo real."
   }, {
     icon: TrendingDown,
     title: "Optimización de Costos",
