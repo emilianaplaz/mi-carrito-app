@@ -398,11 +398,11 @@ const Dashboard = () => {
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex-1 inline-flex items-center whitespace-nowrap max-w-xs">
+          <div className="flex-1">
             <BCVRate />
           </div>
 
-          <div className="flex items-center justify-center">
+          <div className="absolute left-1/2 transform -translate-x-1/2">
             <img src={logo} alt="MiCarrit" className="h-28" />
           </div>
 
