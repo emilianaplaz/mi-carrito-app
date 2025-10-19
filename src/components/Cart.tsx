@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import cartIcon from "@/assets/loading-cart.png";
+import cartIcon from "@/assets/cart-icon.png";
 
 export const CartButton = () => {
   const { items, totalItems } = useCart();

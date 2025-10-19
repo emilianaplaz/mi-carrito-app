@@ -8,7 +8,7 @@ import { ChefHat, ArrowLeft, Calendar as CalendarIcon, Clock, ShoppingCart } fro
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
-import cartIcon from "@/assets/loading-cart.png";
+import cartIcon from "@/assets/cart-icon.png";
 import { CartButton } from "@/components/Cart";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addDays, addWeeks, isWithinInterval, isBefore, isAfter, getDay, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";

@@ -12,7 +12,7 @@ import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
-import cartIcon from "@/assets/loading-cart.png";
+import cartIcon from "@/assets/cart-icon.png";
 type PriceInfo = {
   id: string;
   price: number;

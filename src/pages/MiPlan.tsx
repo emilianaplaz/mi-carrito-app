@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
-import cartIcon from "@/assets/loading-cart.png";
+import cartIcon from "@/assets/cart-icon.png";
 import { CartButton } from "@/components/Cart";
 
 type Recipe = {

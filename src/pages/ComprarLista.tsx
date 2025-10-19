@@ -22,7 +22,7 @@ import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
-import cartIcon from "@/assets/loading-cart.png";
+import cartIcon from "@/assets/cart-icon.png";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
