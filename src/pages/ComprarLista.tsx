@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { CartButton } from "@/components/Cart";
 
 type GroceryItem = {
   name: string;
@@ -201,8 +202,14 @@ const ComprarLista = () => {
 
       if (error) throw error;
       
+      // Sort each item's available prices by price (cheapest first)
+      const sortedAllPrices = (data.allPrices || []).map((item: ItemPriceComparison) => ({
+        ...item,
+        availablePrices: [...item.availablePrices].sort((a, b) => a.price - b.price)
+      }));
+
       setRecommendations(data.recommendations || []);
-      setAllPrices(data.allPrices || []);
+      setAllPrices(sortedAllPrices);
       setItemsWithoutPrices(data.itemsWithoutPrices || []);
       setAiSummary(data.summary || "");
     } catch (error: any) {
@@ -239,14 +246,17 @@ const ComprarLista = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/listas")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5 text-primary" />
-            <span className="text-lg font-bold">Comprar: {list.name}</span>
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/listas")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold">Comprar: {list.name}</span>
+            </div>
           </div>
+          <CartButton />
         </div>
       </header>
 
@@ -345,26 +355,30 @@ const ComprarLista = () => {
 
               <div className="space-y-4">
                 {allPrices.length > 0 && (() => {
-                  // Build supermarket breakdown
+                  // Build supermarket breakdown - pick the cheapest option for each item per supermarket
                   const supermarketMap = new Map<string, { available: any[], missing: string[], total: number }>();
                   
                   allPrices.forEach((item) => {
+                    // Group prices by supermarket and pick the cheapest for each
+                    const bySupermarket = new Map<string, any>();
                     item.availablePrices.forEach((price: any) => {
-                      if (!supermarketMap.has(price.supermarket)) {
-                        supermarketMap.set(price.supermarket, { available: [], missing: [], total: 0 });
+                      if (!bySupermarket.has(price.supermarket) || bySupermarket.get(price.supermarket).price > price.price) {
+                        bySupermarket.set(price.supermarket, price);
                       }
-                      const existing = supermarketMap.get(price.supermarket)!.available.find(
-                        (a: any) => a.name === item.name && a.brand === price.brand
-                      );
-                      if (!existing) {
-                        supermarketMap.get(price.supermarket)!.available.push({
-                          name: item.name,
-                          brand: price.brand,
-                          price: price.price,
-                          unit: price.unit
-                        });
-                        supermarketMap.get(price.supermarket)!.total += price.price;
+                    });
+
+                    // Add the cheapest option to each supermarket
+                    bySupermarket.forEach((price, supermarketName) => {
+                      if (!supermarketMap.has(supermarketName)) {
+                        supermarketMap.set(supermarketName, { available: [], missing: [], total: 0 });
                       }
+                      supermarketMap.get(supermarketName)!.available.push({
+                        name: item.name,
+                        brand: price.brand,
+                        price: price.price,
+                        unit: price.unit
+                      });
+                      supermarketMap.get(supermarketName)!.total += price.price;
                     });
                   });
 
@@ -455,6 +469,57 @@ const ComprarLista = () => {
                 })()}
               </div>
             </Card>
+
+            {/* Individual Item Price Comparison */}
+            {allPrices.length > 0 && (
+              <Card className="p-6 mb-6">
+                <h2 className="text-2xl font-bold mb-4">Comparación de Precios por Artículo</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Compara precios de cada producto en diferentes supermercados (ordenado de más barato a más caro)
+                </p>
+                <div className="space-y-6">
+                  {allPrices.map((item, index) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <h3 className="font-bold text-lg mb-3">{item.name}</h3>
+                      {item.availablePrices.length > 0 ? (
+                        <div className="space-y-2">
+                          {item.availablePrices.map((price: any, priceIndex: number) => (
+                            <div 
+                              key={priceIndex} 
+                              className={`flex items-center justify-between p-3 rounded-lg border ${
+                                priceIndex === 0 
+                                  ? 'bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-700' 
+                                  : 'bg-card border-border'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Store className={`h-5 w-5 ${priceIndex === 0 ? 'text-green-600' : 'text-muted-foreground'}`} />
+                                <div>
+                                  <p className="font-semibold">{price.supermarket}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {price.brand && `${price.brand} • `}{price.unit}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className={`text-xl font-bold ${priceIndex === 0 ? 'text-green-600' : 'text-primary'}`}>
+                                  €{price.price.toFixed(2)}
+                                </p>
+                                {priceIndex === 0 && (
+                                  <p className="text-xs font-semibold text-green-600">¡Más barato!</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">No hay precios disponibles para este artículo</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             {/* Items without any prices */}
             {itemsWithoutPrices.length > 0 && (

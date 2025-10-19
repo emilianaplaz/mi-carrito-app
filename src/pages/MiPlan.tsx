@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { useToast } from "@/hooks/use-toast";
 import {
   ChefHat,
@@ -864,24 +864,34 @@ const MiPlan = () => {
 
           <div className="space-y-4">
             <div>
-              <Label className="mb-3 block">¿Nueva lista o agregar a existente?</Label>
-              <RadioGroup value={listChoice} onValueChange={(value: "new" | "existing") => setListChoice(value)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="new" id="new" />
-                  <Label htmlFor="new" className="cursor-pointer">
-                    Crear nueva lista
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="existing" id="existing" />
-                  <Label htmlFor="existing" className="cursor-pointer">
-                    Agregar a lista existente
-                  </Label>
-                </div>
-              </RadioGroup>
+              <Label htmlFor="list-select" className="mb-3 block">Selecciona o crea una lista</Label>
+              <Select 
+                value={listChoice === "new" ? "new" : selectedListId} 
+                onValueChange={(value) => {
+                  if (value === "new") {
+                    setListChoice("new");
+                    setSelectedListId("");
+                  } else {
+                    setListChoice("existing");
+                    setSelectedListId(value);
+                  }
+                }}
+              >
+                <SelectTrigger id="list-select">
+                  <SelectValue placeholder="Elige una opción" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">➕ Crear nueva lista</SelectItem>
+                  {existingLists.map((list) => (
+                    <SelectItem key={list.id} value={list.id}>
+                      {list.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {listChoice === "new" ? (
+            {listChoice === "new" && (
               <div>
                 <Label htmlFor="list-name">Nombre de la Lista</Label>
                 <Input
@@ -890,22 +900,6 @@ const MiPlan = () => {
                   value={listName}
                   onChange={(e) => setListName(e.target.value)}
                 />
-              </div>
-            ) : (
-              <div>
-                <Label htmlFor="existing-list">Selecciona una lista</Label>
-                <Select value={selectedListId} onValueChange={setSelectedListId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Elige una lista" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {existingLists.map((list) => (
-                      <SelectItem key={list.id} value={list.id}>
-                        {list.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             )}
 
@@ -962,24 +956,34 @@ const MiPlan = () => {
             </p>
 
             <div>
-              <Label className="mb-3 block">¿Nueva lista o agregar a existente?</Label>
-              <RadioGroup value={listChoice} onValueChange={(value: "new" | "existing") => setListChoice(value)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="new" id="bulk-new" />
-                  <Label htmlFor="bulk-new" className="cursor-pointer">
-                    Crear nueva lista
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="existing" id="bulk-existing" />
-                  <Label htmlFor="bulk-existing" className="cursor-pointer">
-                    Agregar a lista existente
-                  </Label>
-                </div>
-              </RadioGroup>
+              <Label htmlFor="bulk-list-select" className="mb-3 block">Selecciona o crea una lista</Label>
+              <Select 
+                value={listChoice === "new" ? "new" : selectedListId} 
+                onValueChange={(value) => {
+                  if (value === "new") {
+                    setListChoice("new");
+                    setSelectedListId("");
+                  } else {
+                    setListChoice("existing");
+                    setSelectedListId(value);
+                  }
+                }}
+              >
+                <SelectTrigger id="bulk-list-select">
+                  <SelectValue placeholder="Elige una opción" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">➕ Crear nueva lista</SelectItem>
+                  {existingLists.map((list) => (
+                    <SelectItem key={list.id} value={list.id}>
+                      {list.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {listChoice === "new" ? (
+            {listChoice === "new" && (
               <div>
                 <Label htmlFor="bulk-list-name">Nombre de la Lista</Label>
                 <Input
@@ -988,22 +992,6 @@ const MiPlan = () => {
                   value={listName}
                   onChange={(e) => setListName(e.target.value)}
                 />
-              </div>
-            ) : (
-              <div>
-                <Label htmlFor="bulk-existing-list">Selecciona una lista</Label>
-                <Select value={selectedListId} onValueChange={setSelectedListId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Elige una lista" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {existingLists.map((list) => (
-                      <SelectItem key={list.id} value={list.id}>
-                        {list.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             )}
           </div>
