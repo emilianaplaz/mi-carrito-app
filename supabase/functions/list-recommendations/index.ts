@@ -419,12 +419,22 @@ serve(async (req) => {
      // Return structured data with all available prices
     // Ensure we show both strategies if available
     // CRITICAL: fewest-stores should be labeled "Mejor Opción", cheapest should be "Opción Más Barata"
-    const fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores' && (opt.missingCount || 0) === 0);
-    const cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest' && (opt.missingCount || 0) === 0);
+    
+    // First, try to find COMPLETE coverage options (missingCount === 0)
+    let fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores' && (opt.missingCount || 0) === 0);
+    let cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest' && (opt.missingCount || 0) === 0);
+    
+    // If no complete options, fall back to best partial options for each strategy
+    if (!fewestStoresOption) {
+      fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores');
+    }
+    if (!cheapestOption) {
+      cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest');
+    }
     
     console.log('Found options:', {
-      fewestStores: fewestStoresOption ? `${fewestStoresOption.supermarket} - $${fewestStoresOption.totalPrice}` : 'none',
-      cheapest: cheapestOption ? `${cheapestOption.supermarket} - $${cheapestOption.totalPrice}` : 'none'
+      fewestStores: fewestStoresOption ? `${fewestStoresOption.supermarket} - $${fewestStoresOption.totalPrice} (missing: ${fewestStoresOption.missingCount || 0})` : 'none',
+      cheapest: cheapestOption ? `${cheapestOption.supermarket} - $${cheapestOption.totalPrice} (missing: ${cheapestOption.missingCount || 0})` : 'none'
     });
     
     // Build final recommendations list with both strategies
@@ -450,7 +460,7 @@ serve(async (req) => {
       });
     }
     
-    // Second position: Opción Más Barata (cheapest strategy)
+    // Second position: Opción Más Barata (cheapest strategy) - only if different from first
     if (cheapestOption && cheapestOption !== fewestStoresOption) {
       const cleanedName = cleanSupermarketName(cheapestOption.supermarket);
       finalRecommendations.push({
@@ -461,10 +471,10 @@ serve(async (req) => {
       });
     }
     
-    // If we don't have 2 complete options, add other options with appropriate labels
+    // If we still don't have 2 options, add other top options
     if (finalRecommendations.length < 2) {
       const remainingOptions = withinBudget.filter(opt => 
-        !finalRecommendations.includes(opt) && opt !== fewestStoresOption && opt !== cheapestOption
+        opt !== fewestStoresOption && opt !== cheapestOption
       );
       
       for (let i = 0; i < Math.min(remainingOptions.length, 2 - finalRecommendations.length); i++) {
@@ -483,7 +493,7 @@ serve(async (req) => {
     // Final sort to ensure correct order
     finalRecommendations.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
     
-    console.log(`Final recommendations order:`, finalRecommendations.map((r, i) => `${i}: ${r.displayLabel} - ${r.supermarket} - $${r.totalPrice}`));
+    console.log(`Final recommendations (${finalRecommendations.length}):`, finalRecommendations.map((r, i) => `${i}: ${r.displayLabel} - ${r.supermarket} - $${r.totalPrice} (missing: ${r.missingCount || 0})`));
     
     const response = {
       allPrices: itemsWithPrices,
