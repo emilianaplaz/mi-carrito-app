@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
+import cartIcon from "@/assets/loading-cart.png";
 import { CartButton } from "@/components/Cart";
 
 type Recipe = {
@@ -690,7 +691,7 @@ const MiPlan = () => {
                     className="group relative overflow-hidden disabled:opacity-50"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <ShoppingCart className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+                    <img src={cartIcon} alt="Cart" className="h-5 w-5 mr-2 object-contain relative z-10 group-hover:scale-110 transition-transform" />
                     <div className="relative z-10">
                       <div className="font-semibold">Crear Lista de Compras</div>
                       <div className="text-xs opacity-90">
@@ -951,7 +952,7 @@ const MiPlan = () => {
               </div>
 
               <Button onClick={() => setShowAddToList(true)} className="w-full">
-                <ShoppingCart className="h-4 w-4 mr-2" />
+                <img src={cartIcon} alt="Cart" className="h-4 w-4 mr-2 object-contain" />
                 Agregar a Lista de Compras
               </Button>
             </div>

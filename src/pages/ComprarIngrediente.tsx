@@ -12,6 +12,7 @@ import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
+import cartIcon from "@/assets/loading-cart.png";
 type PriceInfo = {
   id: string;
   price: number;
@@ -251,7 +252,7 @@ const ComprarIngrediente = () => {
                         handleAddToCart();
                       }}
                     >
-                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      <img src={cartIcon} alt="Cart" className="mr-2 h-5 w-5 object-contain" />
                       Agregar al Carrito
                     </Button>
                   )}
