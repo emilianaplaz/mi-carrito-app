@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -647,48 +648,50 @@ const Listas = () => {
 
       {/* View Items Dialog */}
       <Dialog open={!!viewingList} onOpenChange={(open) => !open && setViewingList(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{viewingList?.name}</DialogTitle>
           </DialogHeader>
           
-          {viewingList && Array.isArray(viewingList.items) && viewingList.items.length > 0 ? (
-            <div className="space-y-2">
-              {viewingList.items.map((item: GroceryItem, index: number) => (
-                <Card
-                  key={index}
-                  className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => {
-                    setViewingList(null);
-                    navigate(`/comprar-ingrediente?producto=${encodeURIComponent(item.name)}&lista=${viewingList.id}`);
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-baseline gap-2">
-                        <h4 className="font-semibold">{item.name}</h4>
-                        {item.amount && item.unit && (
-                          <span className="text-sm text-muted-foreground">
-                            {item.amount} {item.unit}
-                          </span>
+          <ScrollArea className="flex-1 pr-4">
+            {viewingList && Array.isArray(viewingList.items) && viewingList.items.length > 0 ? (
+              <div className="space-y-2">
+                {viewingList.items.map((item: GroceryItem, index: number) => (
+                  <Card
+                    key={index}
+                    className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => {
+                      setViewingList(null);
+                      navigate(`/comprar-ingrediente?producto=${encodeURIComponent(item.name)}&lista=${viewingList.id}`);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-baseline gap-2">
+                          <h4 className="font-semibold">{item.name}</h4>
+                          {item.amount && item.unit && (
+                            <span className="text-sm text-muted-foreground">
+                              {item.amount} {item.unit}
+                            </span>
+                          )}
+                        </div>
+                        {item.brand && (
+                          <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>
                         )}
                       </div>
-                      {item.brand && (
-                        <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>
-                      )}
+                      <Button variant="ghost" size="sm">
+                        Ver Precios →
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      Ver Precios →
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-4">
-              Esta lista no tiene artículos
-            </p>
-          )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">
+                Esta lista no tiene artículos
+              </p>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
