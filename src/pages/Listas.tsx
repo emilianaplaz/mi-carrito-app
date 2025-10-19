@@ -40,8 +40,8 @@ const Listas = () => {
   const [viewingList, setViewingList] = useState<GroceryList | null>(null);
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [subcategoryBrands, setSubcategoryBrands] = useState<Map<string, string[]>>(new Map());
+  const [products, setProducts] = useState<string[]>([]);
+  const [productBrands, setProductBrands] = useState<Map<string, string[]>>(new Map());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -53,24 +53,15 @@ const Listas = () => {
         return;
       }
       await loadLists();
-      await loadSubcategoriesAndBrands();
+      await loadProductsAndBrands();
       setLoading(false);
     };
     checkUserAndLoadLists();
   }, [navigate]);
 
-  const loadSubcategoriesAndBrands = async () => {
+  const loadProductsAndBrands = async () => {
     try {
-      // Fetch subcategories
-      const { data: subcatsData, error: subcatsError } = await supabase
-        .from("subcategories")
-        .select("name")
-        .order("name", { ascending: true });
-      
-      if (subcatsError) throw subcatsError;
-      setSubcategories((subcatsData || []).map((s: any) => s.name));
-      
-      // Fetch all product prices to build subcategory -> brands mapping
+      // Fetch all product prices to build producto -> brands mapping
       const brandMap = new Map<string, Set<string>>();
       const pageSize = 1000;
       let from = 0;
@@ -78,39 +69,43 @@ const Listas = () => {
       while (true) {
         const { data: pricesPage, error: pricesError } = await supabase
           .from("product_prices")
-          .select("subcategoria, marca")
+          .select("producto, marca")
           .range(from, from + pageSize - 1);
         
         if (pricesError) throw pricesError;
         if (!pricesPage || pricesPage.length === 0) break;
 
         pricesPage.forEach((row: any) => {
-          const subcat = row.subcategoria;
+          const product = row.producto;
           const brand = row.marca;
-          if (!subcat || !brand) return;
+          if (!product || !brand) return;
           
-          if (!brandMap.has(subcat)) {
-            brandMap.set(subcat, new Set());
+          if (!brandMap.has(product)) {
+            brandMap.set(product, new Set());
           }
-          brandMap.get(subcat)!.add(brand);
+          brandMap.get(product)!.add(brand);
         });
 
         if (pricesPage.length < pageSize) break;
         from += pageSize;
       }
 
-      // Convert Set to Array and create final map
+      // Convert to arrays and create final map
       const finalMap = new Map<string, string[]>();
-      brandMap.forEach((brands, subcat) => {
-        finalMap.set(subcat, Array.from(brands).sort());
+      const productList: string[] = [];
+      
+      brandMap.forEach((brands, product) => {
+        productList.push(product);
+        finalMap.set(product, Array.from(brands).sort());
       });
       
-      setSubcategoryBrands(finalMap);
+      setProducts(productList.sort());
+      setProductBrands(finalMap);
     } catch (error) {
-      console.error("Error loading subcategories and brands:", error);
+      console.error("Error loading products and brands:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar las categorías",
+        description: "No se pudieron cargar los productos",
         variant: "destructive",
       });
     }
@@ -406,19 +401,19 @@ const Listas = () => {
                               <CommandList>
                                 <CommandEmpty>No se encontró el producto.</CommandEmpty>
                                 <CommandGroup>
-                                  {subcategories.map((subcat) => (
+                                  {products.map((product) => (
                                     <CommandItem
-                                      key={subcat}
-                                      value={subcat}
-                                      onSelect={() => updateItemField(index, "name", subcat)}
+                                      key={product}
+                                      value={product}
+                                      onSelect={() => updateItemField(index, "name", product)}
                                     >
                                       <Check
                                         className={cn(
                                           "mr-2 h-4 w-4",
-                                          item.name === subcat ? "opacity-100" : "opacity-0"
+                                          item.name === product ? "opacity-100" : "opacity-0"
                                         )}
                                       />
-                                      {subcat}
+                                      {product}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -460,7 +455,7 @@ const Listas = () => {
                                     />
                                     CUALQUIER MARCA
                                   </CommandItem>
-                                  {(subcategoryBrands.get(item.name) || []).map((brand) => (
+                                  {(productBrands.get(item.name) || []).map((brand) => (
                                     <CommandItem
                                       key={brand}
                                       value={brand}
@@ -699,19 +694,19 @@ const Listas = () => {
                         <CommandList>
                           <CommandEmpty>No se encontró el producto.</CommandEmpty>
                           <CommandGroup>
-                            {subcategories.map((subcat) => (
+                            {products.map((product) => (
                               <CommandItem
-                                key={subcat}
-                                value={subcat}
-                                onSelect={() => updateItemField(index, "name", subcat)}
+                                key={product}
+                                value={product}
+                                onSelect={() => updateItemField(index, "name", product)}
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    item.name === subcat ? "opacity-100" : "opacity-0"
+                                    item.name === product ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {subcat}
+                                {product}
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -753,7 +748,7 @@ const Listas = () => {
                               />
                               CUALQUIER MARCA
                             </CommandItem>
-                            {(subcategoryBrands.get(item.name) || []).map((brand) => (
+                            {(productBrands.get(item.name) || []).map((brand) => (
                               <CommandItem
                                 key={brand}
                                 value={brand}

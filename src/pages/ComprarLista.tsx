@@ -142,7 +142,7 @@ const ComprarLista = () => {
           precio,
           presentacion,
           marca,
-          subcategoria,
+          producto,
           mercado
         `);
       if (pricesError) throw pricesError;
@@ -155,28 +155,28 @@ const ComprarLista = () => {
           .replace(/\s+/g, ' ')
           .trim();
 
-      const fuzzyMatch = (searchTerm: string, subcategoria: string): boolean => {
+      const fuzzyMatch = (searchTerm: string, productName: string): boolean => {
         const normSearch = normalize(searchTerm);
-        const normSub = normalize(subcategoria);
+        const normProduct = normalize(productName);
         
         // Direct match
-        if (normSub.includes(normSearch) || normSearch.includes(normSub)) return true;
+        if (normProduct.includes(normSearch) || normSearch.includes(normProduct)) return true;
         
         // Split and check each word
         const searchWords = normSearch.split(' ');
-        const subWords = normSub.split(' ');
+        const productWords = normProduct.split(' ');
         
         // Check if any word matches (length >= 3 for meaningful matches)
         return searchWords.some(sw => 
-          sw.length >= 3 && subWords.some(subw => 
-            subw.includes(sw) || sw.includes(subw)
+          sw.length >= 3 && productWords.some(pw => 
+            pw.includes(sw) || sw.includes(pw)
           )
         );
       };
 
-      // Filter prices to only matching items using fuzzy matching
+      // Filter prices to only matching items using fuzzy matching on producto
       const matchedPrices = (allPricesData || []).filter((price: any) => 
-        groceryList.items.some(item => fuzzyMatch(item.name, price.subcategoria))
+        groceryList.items.some(item => fuzzyMatch(item.name, price.producto))
       );
 
       // Fetch ALL supermarkets to show complete breakdown
