@@ -486,6 +486,7 @@ const ComprarLista = () => {
                       <SelectItem value="weekly">Semanal</SelectItem>
                       <SelectItem value="bi-weekly">Quincenal (cada 2 semanas)</SelectItem>
                       <SelectItem value="monthly">Mensual</SelectItem>
+                      <SelectItem value="buy_once">Una Vez</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

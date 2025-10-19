@@ -61,6 +61,21 @@ const Listas = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const getFrequencyLabel = (frequency: string) => {
+    switch (frequency) {
+      case "weekly":
+        return "Semanal";
+      case "bi-weekly":
+        return "Quincenal";
+      case "monthly":
+        return "Mensual";
+      case "buy_once":
+        return "Una Vez";
+      default:
+        return frequency;
+    }
+  };
+
   useEffect(() => {
     const checkUserAndLoadLists = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -693,11 +708,7 @@ const Listas = () => {
                         <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
                           <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                           <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                            {list.automation_frequency === "weekly"
-                              ? "Semanal"
-                              : list.automation_frequency === "bi-weekly"
-                              ? "Quincenal"
-                              : "Mensual"}
+                            {getFrequencyLabel(list.automation_frequency || "")}
                           </span>
                         </div>
                       )}
@@ -1029,6 +1040,7 @@ const Listas = () => {
                         <SelectItem value="weekly">Semanal</SelectItem>
                         <SelectItem value="bi-weekly">Quincenal (cada 2 semanas)</SelectItem>
                         <SelectItem value="monthly">Mensual</SelectItem>
+                        <SelectItem value="buy_once">Una Vez</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

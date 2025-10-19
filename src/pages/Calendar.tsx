@@ -8,7 +8,7 @@ import { ChefHat, ArrowLeft, Calendar as CalendarIcon, Clock, ShoppingCart } fro
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/mi-carrit-logo.png";
 import { CartButton } from "@/components/Cart";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addDays, addWeeks, isWithinInterval, isBefore, isAfter } from "date-fns";
 import { es } from "date-fns/locale";
 
 type AutomatedList = {
@@ -40,16 +40,12 @@ const Calendar = () => {
         return;
       }
 
-      const start = startOfMonth(currentMonth);
-      const end = endOfMonth(currentMonth);
-
+      // Load ALL automated lists, not just those in current month
       const { data, error } = await supabase
         .from("grocery_lists")
-        .select("id, name, next_scheduled_date, automation_frequency, items")
+        .select("id, name, next_scheduled_date, automation_frequency, items, last_executed_date")
         .eq("user_id", session.user.id)
         .eq("is_automated", true)
-        .gte("next_scheduled_date", start.toISOString())
-        .lte("next_scheduled_date", end.toISOString())
         .order("next_scheduled_date", { ascending: true });
 
       if (error) throw error;
@@ -69,10 +65,72 @@ const Calendar = () => {
     }
   };
 
+  // Calculate all occurrences of a list within the current month based on frequency
+  const getListOccurrencesInMonth = (list: AutomatedList) => {
+    const occurrences: Date[] = [];
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    
+    if (!list.next_scheduled_date || !list.automation_frequency) return occurrences;
+    
+    let currentDate = parseISO(list.next_scheduled_date);
+    
+    // If next_scheduled_date is after the month, check if there were previous occurrences
+    // by going backwards from next_scheduled_date
+    if (isAfter(currentDate, monthEnd)) {
+      let backwardDate = currentDate;
+      while (isAfter(backwardDate, monthStart)) {
+        if (list.automation_frequency === "weekly") {
+          backwardDate = addDays(backwardDate, -7);
+        } else if (list.automation_frequency === "bi-weekly") {
+          backwardDate = addDays(backwardDate, -14);
+        } else if (list.automation_frequency === "monthly") {
+          backwardDate = addDays(backwardDate, -30);
+        } else if (list.automation_frequency === "buy_once") {
+          break; // No recurrence for buy_once
+        }
+        
+        if (isWithinInterval(backwardDate, { start: monthStart, end: monthEnd })) {
+          occurrences.push(backwardDate);
+        }
+      }
+      return occurrences.sort((a, b) => a.getTime() - b.getTime());
+    }
+    
+    // Add occurrences starting from next_scheduled_date and going forward
+    while (isBefore(currentDate, monthEnd) || isSameDay(currentDate, monthEnd)) {
+      if (isWithinInterval(currentDate, { start: monthStart, end: monthEnd })) {
+        occurrences.push(currentDate);
+      }
+      
+      // Calculate next occurrence based on frequency
+      if (list.automation_frequency === "weekly") {
+        currentDate = addDays(currentDate, 7);
+      } else if (list.automation_frequency === "bi-weekly") {
+        currentDate = addDays(currentDate, 14);
+      } else if (list.automation_frequency === "monthly") {
+        currentDate = addDays(currentDate, 30);
+      } else if (list.automation_frequency === "buy_once") {
+        break; // Only one occurrence
+      } else {
+        break; // Unknown frequency
+      }
+    }
+    
+    return occurrences;
+  };
+
   const getListsForDay = (day: Date) => {
-    return automatedLists.filter((list) =>
-      isSameDay(parseISO(list.next_scheduled_date), day)
-    );
+    const listsForThisDay: AutomatedList[] = [];
+    
+    automatedLists.forEach(list => {
+      const occurrences = getListOccurrencesInMonth(list);
+      if (occurrences.some(occurrence => isSameDay(occurrence, day))) {
+        listsForThisDay.push(list);
+      }
+    });
+    
+    return listsForThisDay;
   };
 
   const daysInMonth = eachDayOfInterval({
@@ -96,8 +154,25 @@ const Calendar = () => {
         return "bg-purple-500";
       case "monthly":
         return "bg-green-500";
+      case "buy_once":
+        return "bg-orange-500";
       default:
         return "bg-gray-500";
+    }
+  };
+
+  const frequencyLabel = (frequency: string) => {
+    switch (frequency) {
+      case "weekly":
+        return "Semanal";
+      case "bi-weekly":
+        return "Quincenal";
+      case "monthly":
+        return "Mensual";
+      case "buy_once":
+        return "Una Vez";
+      default:
+        return frequency;
     }
   };
 
@@ -184,11 +259,7 @@ const Calendar = () => {
                         <Badge
                           className={`text-xs ${frequencyBadgeColor(list.automation_frequency)}`}
                         >
-                          {list.automation_frequency === "weekly"
-                            ? "Semanal"
-                            : list.automation_frequency === "bi-weekly"
-                            ? "Quincenal"
-                            : "Mensual"}
+                          {frequencyLabel(list.automation_frequency)}
                         </Badge>
                       </div>
                     ))}
@@ -211,6 +282,10 @@ const Calendar = () => {
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-green-500"></div>
               <span className="text-sm">Mensual</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-orange-500"></div>
+              <span className="text-sm">Una Vez</span>
             </div>
           </div>
         </Card>
@@ -240,11 +315,7 @@ const Calendar = () => {
                       {format(parseISO(list.next_scheduled_date), "d MMM yyyy", { locale: es })}
                     </div>
                     <Badge className={frequencyBadgeColor(list.automation_frequency)}>
-                      {list.automation_frequency === "weekly"
-                        ? "Semanal"
-                        : list.automation_frequency === "bi-weekly"
-                        ? "Quincenal"
-                        : "Mensual"}
+                      {frequencyLabel(list.automation_frequency)}
                     </Badge>
                   </div>
                   <ShoppingCart className="h-5 w-5 ml-4 text-muted-foreground" />
