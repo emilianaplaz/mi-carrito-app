@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat, Settings, Save } from "lucide-react";
+import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat, Settings, Save, Smartphone } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
@@ -68,11 +68,32 @@ const DeliveryOrder = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState("");
+  
+  // Pago Movil state
+  const [pagoMovilCedula, setPagoMovilCedula] = useState("");
+  const [pagoMovilBank, setPagoMovilBank] = useState("");
+  const [pagoMovilPhone, setPagoMovilPhone] = useState("");
+  
+  // BCV Exchange Rate
+  const [bcvRate, setBcvRate] = useState<number | null>(null);
 
-  // Load saved payment methods
+  // Load saved payment methods and BCV rate
   useEffect(() => {
     loadSavedPaymentMethods();
+    fetchBCVRate();
   }, []);
+  
+  const fetchBCVRate = async () => {
+    try {
+      const response = await fetch("https://api.dolarvzla.com/public/exchange-rate");
+      const data = await response.json();
+      if (data && data.usd) {
+        setBcvRate(data.usd);
+      }
+    } catch (error) {
+      console.error("Error fetching BCV rate:", error);
+    }
+  };
   const loadSavedPaymentMethods = async () => {
     try {
       const {
@@ -137,6 +158,14 @@ const DeliveryOrder = () => {
       toast({
         title: "Error",
         description: "Por favor completa todos los datos de la tarjeta",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (paymentMethod === "pago_movil" && (!pagoMovilCedula.trim() || !pagoMovilBank || !pagoMovilPhone.trim())) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los datos de Pago Móvil",
         variant: "destructive"
       });
       return;
@@ -276,6 +305,11 @@ const DeliveryOrder = () => {
               <img src={logo} alt="MiCarrit" className="h-6 w-6 object-contain" />
               <span className="text-lg font-bold">Delivery en Caracas</span>
             </div>
+            {bcvRate && (
+              <div className="ml-4 text-sm bg-muted px-3 py-1 rounded-md">
+                <span className="font-semibold">BCV:</span> Bs. {bcvRate.toFixed(2)}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-center">
@@ -463,6 +497,18 @@ const DeliveryOrder = () => {
                     </div>
                   </div>
                   
+                  <div className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentMethod === "pago_movil" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`} onClick={() => {
+                  setPaymentMethod("pago_movil");
+                  setSelectedSavedCard("");
+                }}>
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="h-5 w-5" />
+                      <div>
+                        <p className="font-semibold">Pago Móvil</p>
+                        <p className="text-sm text-muted-foreground">Pago en bolívares</p>
+                      </div>
+                    </div>
+                  </div>
                   
                 </div>
 
@@ -522,6 +568,72 @@ const DeliveryOrder = () => {
                     </div>
                   </div>}
 
+                {/* Pago Movil Form - Only show if pago_movil is selected */}
+                {paymentMethod === "pago_movil" && <div className="space-y-4">
+                    {bcvRate && (
+                      <div className="bg-primary/10 rounded-lg p-4 mb-4">
+                        <p className="text-sm font-semibold">
+                          Total a pagar: Bs. {(total * bcvRate).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Tasa BCV: Bs. {bcvRate.toFixed(2)} / USD
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <Label htmlFor="pagoMovilCedula">Cédula</Label>
+                      <Input 
+                        id="pagoMovilCedula" 
+                        type="text" 
+                        placeholder="12345678" 
+                        value={pagoMovilCedula} 
+                        onChange={e => setPagoMovilCedula(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="pagoMovilBank">Banco</Label>
+                      <Select value={pagoMovilBank} onValueChange={setPagoMovilBank} required>
+                        <SelectTrigger id="pagoMovilBank">
+                          <SelectValue placeholder="Selecciona tu banco" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0102">Banco de Venezuela</SelectItem>
+                          <SelectItem value="0104">Venezolano de Crédito</SelectItem>
+                          <SelectItem value="0105">Mercantil</SelectItem>
+                          <SelectItem value="0108">BBVA Provincial</SelectItem>
+                          <SelectItem value="0114">Bancaribe</SelectItem>
+                          <SelectItem value="0115">Banco Exterior</SelectItem>
+                          <SelectItem value="0128">Banco Caroní</SelectItem>
+                          <SelectItem value="0134">Banesco</SelectItem>
+                          <SelectItem value="0138">Banco Plaza</SelectItem>
+                          <SelectItem value="0151">BFC Banco Fondo Común</SelectItem>
+                          <SelectItem value="0156">100% Banco</SelectItem>
+                          <SelectItem value="0157">Banco del Sur</SelectItem>
+                          <SelectItem value="0163">Banco del Tesoro</SelectItem>
+                          <SelectItem value="0166">Banco Agrícola de Venezuela</SelectItem>
+                          <SelectItem value="0168">Bancrecer</SelectItem>
+                          <SelectItem value="0169">Mi Banco</SelectItem>
+                          <SelectItem value="0171">Banco Activo</SelectItem>
+                          <SelectItem value="0172">Bancamiga</SelectItem>
+                          <SelectItem value="0174">Banplus</SelectItem>
+                          <SelectItem value="0175">Banco Bicentenario</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="pagoMovilPhone">Teléfono</Label>
+                      <Input 
+                        id="pagoMovilPhone" 
+                        type="tel" 
+                        placeholder="04241234567" 
+                        value={pagoMovilPhone} 
+                        onChange={e => setPagoMovilPhone(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                  </div>}
+
                 {/* Cashea Info - Only show if cashea is selected */}
                 {paymentMethod === "cashea" && <div className="bg-muted/50 rounded-lg p-4">
                     <p className="text-sm">
@@ -537,7 +649,11 @@ const DeliveryOrder = () => {
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Procesando pedido...
                   </> : <>
-                    Confirmar Pedido - ${total.toFixed(2)}
+                    {paymentMethod === "pago_movil" && bcvRate ? (
+                      <>Verificar Pago - Bs. {(total * bcvRate).toFixed(2)}</>
+                    ) : (
+                      <>Confirmar Pedido - ${total.toFixed(2)}</>
+                    )}
                   </>}
               </Button>
             </div>
