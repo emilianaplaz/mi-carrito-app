@@ -57,13 +57,6 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      // Fetch all products from the database
-      const { data: productsData, error: productsError } = await supabase
-        .from("products")
-        .select("name")
-        .order("name", { ascending: true });
-      if (productsError) throw productsError;
-
       // Fetch ALL brands from the brands table
       const { data: brandsData, error: brandsError } = await supabase
         .from("brands")
@@ -71,7 +64,7 @@ const Listas = () => {
         .order("name", { ascending: true });
       if (brandsError) throw brandsError;
 
-      // Fetch brand availability per product based on existing price records
+      // Fetch products and brands from product_prices
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
         .select("producto, marca");
@@ -86,10 +79,13 @@ const Listas = () => {
         brandMap.get(productName)!.add(brandName);
       });
 
-      const products = (productsData || []).map((p: any) => ({
-        name: p.name,
-        brands: Array.from(brandMap.get(p.name) || []),
-      }));
+      // Create products list from unique productos in product_prices
+      const products = Array.from(brandMap.keys())
+        .sort()
+        .map((productName) => ({
+          name: productName,
+          brands: Array.from(brandMap.get(productName) || []),
+        }));
 
       setAvailableProducts(products);
       setAllBrands((brandsData || []).map((b: any) => b.name));
