@@ -72,19 +72,8 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Banner Image */}
-      <section className="pt-20">
-        <div className="w-full">
-          <img
-            src={heroImage}
-            alt="Mi Carrito - Shopping Cart"
-            className="w-full h-auto object-cover"
-          />
-        </div>
-      </section>
-
       {/* Hero Section */}
-      <section className="py-20 px-4 bg-background">
+      <section className="py-20 px-4 bg-background pt-20">
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto text-center space-y-6 animate-fade-in">
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
@@ -117,6 +106,17 @@ const Landing = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Hero Banner Image */}
+      <section>
+        <div className="w-full">
+          <img
+            src={heroImage}
+            alt="Mi Carrito - Shopping Cart"
+            className="w-full h-auto object-cover"
+          />
         </div>
       </section>
 
