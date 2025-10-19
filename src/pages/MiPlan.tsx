@@ -682,7 +682,7 @@ const MiPlan = () => {
                 variant="outline"
                 size="lg"
                 onClick={() => setSelectionMode(true)}
-                className="flex-1 group hover:bg-primary/5 hover:border-primary transition-all"
+                className="flex-1 group hover:bg-primary/10 hover:border-primary transition-all"
               >
                 <CheckSquare className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
                 <div>
