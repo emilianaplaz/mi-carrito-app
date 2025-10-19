@@ -55,11 +55,11 @@ const Landing = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ChefHat className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            <span className="text-2xl font-bold text-primary">
               MiCarrito
             </span>
           </div>
@@ -73,14 +73,13 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-accent/20 to-background -z-10" />
+      <section className="pt-32 pb-20 px-4 relative overflow-hidden bg-background">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 animate-fade-in">
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 Planifica tu nutrición,{" "}
-                <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                <span className="text-primary">
                   optimiza tu presupuesto
                 </span>
               </h1>
@@ -109,7 +108,6 @@ const Landing = () => {
               </div>
             </div>
             <div className="relative animate-slide-in-left">
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-3xl blur-3xl -z-10" />
               <img
                 src={heroImage}
                 alt="Fresh healthy ingredients"
@@ -121,7 +119,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-muted/30">
+      <section className="py-20 px-4 bg-muted">
         <div className="container mx-auto">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl font-bold mb-4">Mas ahorro. Menos tiempo. Menos esfuerzo.</h2>
@@ -150,7 +148,7 @@ const Landing = () => {
       {/* CTA Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto">
-          <Card className="p-12 text-center bg-gradient-to-br from-primary/10 via-accent to-secondary/10 border-primary/20 shadow-strong">
+          <Card className="p-12 text-center bg-card border-primary shadow-strong">
             <h2 className="text-4xl font-bold mb-4">¿Listo para transformar tu alimentación?</h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Únete al equipo que ya está comiendo mejor y ahorrando dinero
@@ -163,7 +161,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-border bg-muted/30">
+      <footer className="py-12 px-4 border-t border-border bg-muted">
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <ChefHat className="h-6 w-6 text-primary" />

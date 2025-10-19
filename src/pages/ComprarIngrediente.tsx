@@ -75,8 +75,8 @@ const ComprarIngrediente = () => {
         <ChefHat className="h-12 w-12 text-primary animate-pulse" />
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+  return <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(`/listas`)}>
             <ArrowLeft className="h-5 w-5" />
@@ -109,7 +109,7 @@ const ComprarIngrediente = () => {
         {filteredPrices.length > 0}
 
         {/* Delivery Option */}
-        {filteredPrices.length > 0 && <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800">
+        {filteredPrices.length > 0 && <Card className="p-6 mb-6 bg-accent border-2 border-accent">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Truck className="h-8 w-8 text-blue-600 dark:text-blue-400" />

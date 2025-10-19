@@ -237,8 +237,8 @@ const ComprarLista = () => {
         </Card>
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+  return <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/listas")}>
@@ -297,7 +297,7 @@ const ComprarLista = () => {
             </div>
           </Card> : <>
             {/* AI Smart Recommendations - TOP PRIORITY */}
-            {aiSummary && recommendations.length > 0 && <Card className={`p-6 mb-6 border-2 ${(recommendations[0].missingCount || 0) === 0 ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-500/30' : 'bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20 border-orange-500/30'}`}>
+            {aiSummary && recommendations.length > 0 && <Card className={`p-6 mb-6 border-2 ${(recommendations[0].missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
                 <div className="flex items-start gap-3 mb-4">
                   <Sparkles className={`h-7 w-7 mt-1 flex-shrink-0 ${(recommendations[0].missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
                   <div className="flex-1">
@@ -307,7 +307,7 @@ const ComprarLista = () => {
                     <p className="text-base text-foreground mb-4">{aiSummary}</p>
                     
                     {/* Best recommendation details */}
-                    <div className={`rounded-lg p-4 border ${(recommendations[0].missingCount || 0) === 0 ? 'bg-white/60 dark:bg-black/20 border-green-200 dark:border-green-800' : 'bg-white/60 dark:bg-black/20 border-orange-200 dark:border-orange-800'}`}>
+                    <div className={`rounded-lg p-4 border ${(recommendations[0].missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <Store className={`h-8 w-8 ${(recommendations[0].missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
@@ -468,7 +468,7 @@ const ComprarLista = () => {
                   Estos productos no están en nuestra base de datos:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {itemsWithoutPrices.map((item, index) => <div key={index} className="flex items-center gap-2 text-sm p-2 rounded-lg bg-background/50 border border-red-200 dark:border-red-800">
+                  {itemsWithoutPrices.map((item, index) => <div key={index} className="flex items-center gap-2 text-sm p-2 rounded-lg bg-card border border-destructive">
                       <div className="w-2 h-2 rounded-full bg-red-500" />
                       <span className="font-medium">{item.name}</span>
                       {item.brand && <span className="text-muted-foreground">({item.brand})</span>}

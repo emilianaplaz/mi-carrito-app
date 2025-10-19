@@ -568,8 +568,8 @@ const MiPlan = () => {
 
   if (!mealPlan) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
-        <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card sticky top-0 z-50">
           <div className="container mx-auto px-4 py-3 flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
@@ -604,8 +604,8 @@ const MiPlan = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -618,8 +618,8 @@ const MiPlan = () => {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ChefHat className="h-6 w-6 text-primary" />
+                <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+                  <ChefHat className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold">Mi Plan de Comidas</h1>
@@ -706,10 +706,10 @@ const MiPlan = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20 animate-fade-in">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-primary border border-primary animate-fade-in">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                  <span className="text-sm font-medium text-primary">
+                  <Sparkles className="h-4 w-4 text-primary-foreground animate-pulse" />
+                  <span className="text-sm font-medium text-primary-foreground">
                     Modo de selección activado - Toca las recetas para seleccionarlas
                   </span>
                 </div>
@@ -769,7 +769,7 @@ const MiPlan = () => {
                             key={idx}
                             className={`p-4 transition-all cursor-pointer ${
                               selectionMode && selectedRecipeIds.has(recipeId)
-                                ? "border-2 border-primary bg-primary/5"
+                                ? "border-2 border-primary bg-primary"
                                 : ""
                             }`}
                             onClick={() => {

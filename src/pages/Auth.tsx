@@ -151,12 +151,12 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-accent/30 via-background to-secondary/20">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md p-8 shadow-strong">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2 mb-2">
             <ChefHat className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            <span className="text-2xl font-bold text-primary">
               MiCarrito
             </span>
           </div>
