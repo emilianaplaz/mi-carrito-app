@@ -186,11 +186,15 @@ const TestPreferencias = () => {
             breakfastOptions: existingPrefs.breakfast_options || 3,
             lunchOptions: existingPrefs.lunch_options || 3,
             dinnerOptions: existingPrefs.dinner_options || 3,
-            dietaryRestrictions: Array.isArray(existingPrefs.dietary_restrictions) ? existingPrefs.dietary_restrictions : [],
+            dietaryRestrictions: Array.isArray(existingPrefs.dietary_restrictions)
+              ? existingPrefs.dietary_restrictions
+              : [],
             allergies: Array.isArray(existingPrefs.allergies) ? existingPrefs.allergies : [],
             cookingTime: existingPrefs.cooking_time || "",
             healthGoals: Array.isArray(existingPrefs.health_goals) ? existingPrefs.health_goals : [],
-            cuisinePreferences: Array.isArray(existingPrefs.cuisine_preferences) ? existingPrefs.cuisine_preferences : [],
+            cuisinePreferences: Array.isArray(existingPrefs.cuisine_preferences)
+              ? existingPrefs.cuisine_preferences
+              : [],
             budget: existingPrefs.budget || undefined,
           });
 
@@ -306,9 +310,9 @@ const TestPreferencias = () => {
 
       if (planGenError) {
         console.error("Plan generation error:", planGenError);
-        throw new Error(`Error generando plan: ${planGenError.message || 'Error desconocido'}`);
+        throw new Error(`Error generando plan: ${planGenError.message || "Error desconocido"}`);
       }
-      
+
       if (!planData?.success) {
         console.error("Plan generation failed:", planData);
         throw new Error(planData?.error || "No se pudo generar el plan de comidas");
@@ -375,7 +379,7 @@ const TestPreferencias = () => {
             </Button>
             <div className="flex items-center gap-2">
               <ChefHat className="h-5 w-5 text-primary" />
-              <span className="text-lg font-bold">Test de Preferencias</span>
+              <span className="text-lg font-bold">Preferencias</span>
             </div>
           </div>
 
@@ -392,7 +396,8 @@ const TestPreferencias = () => {
         {hasExistingPreferences && currentStep === 0 && (
           <Card className="p-4 mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
             <p className="text-sm text-blue-900 dark:text-blue-100">
-              ℹ️ Estás editando tus preferencias existentes. Puedes navegar por las diferentes secciones y actualizar lo que necesites.
+              ℹ️ Estás editando tus preferencias existentes. Puedes navegar por las diferentes secciones y actualizar lo
+              que necesites.
             </p>
           </Card>
         )}
