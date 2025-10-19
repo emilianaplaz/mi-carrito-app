@@ -30,25 +30,44 @@ const ComprarIngrediente = () => {
   }, [productName]);
   const loadBrandsAndPrices = async () => {
     try {
-      // Load prices for this product by subcategoria
-      const {
-        data: pricesData,
-        error: pricesError
-      } = await supabase.from("product_prices").select(`
+      // Load prices for this product by producto (exact match, then fallback to partial)
+      const { data: exactData, error: exactError } = await supabase
+        .from("product_prices")
+        .select(`
           id,
           precio,
           presentacion,
           mercado,
           marca,
-          subcategoria
-        `).eq("subcategoria", productName);
-      if (pricesError) throw pricesError;
+          producto
+        `)
+        .eq("producto", productName);
+
+      if (exactError) throw exactError;
+
+      let pricesData = exactData;
+      if (!pricesData || pricesData.length === 0) {
+        const { data: likeData, error: likeError } = await supabase
+          .from("product_prices")
+          .select(`
+            id,
+            precio,
+            presentacion,
+            mercado,
+            marca,
+            producto
+          `)
+          .ilike("producto", `%${productName}%`);
+        if (likeError) throw likeError;
+        pricesData = likeData || [];
+      }
+
       const formattedPrices: PriceInfo[] = (pricesData || []).map((p: any) => ({
         id: p.id,
         price: parseFloat(p.precio),
         presentacion: p.presentacion,
         mercado: p.mercado || "Desconocido",
-        marca: p.marca || "Desconocida"
+        marca: p.marca || "Desconocida",
       }));
       setPrices(formattedPrices);
 
