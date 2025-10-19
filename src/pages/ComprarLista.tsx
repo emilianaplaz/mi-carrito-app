@@ -136,17 +136,17 @@ const ComprarLista = () => {
       }));
       const itemNames = groceryList.items.map(item => item.name);
 
-      // Get all prices for the items in the list by product name
+      // Get all prices for the items in the list by subcategoria
       const {
         data: pricesData,
         error: pricesError
       } = await supabase.from("product_prices").select(`
-          price,
+          precio,
           presentacion,
           marca,
-          producto,
+          subcategoria,
           mercado
-        `).in("producto", itemNames);
+        `).in("subcategoria", itemNames);
       if (pricesError) throw pricesError;
 
       // Fetch ALL supermarkets to show complete breakdown

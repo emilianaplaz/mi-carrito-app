@@ -26,7 +26,7 @@ serve(async (req) => {
     
     availablePrices.forEach((price: any) => {
       const supermarketName = price.mercado || "Desconocido";
-      const productName = price.producto;
+      const productName = price.subcategoria;
       if (!productName) return; // Skip if no product name
       
       const brandName = price.marca || undefined;
@@ -39,7 +39,7 @@ serve(async (req) => {
       const priceInfo = {
         product: productName,
         brand: brandName,
-        price: parseFloat(price.price),
+        price: parseFloat(price.precio),
         unit: price.presentacion,
         supermarket: supermarketName,
       };
