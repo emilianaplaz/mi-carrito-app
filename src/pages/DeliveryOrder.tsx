@@ -7,7 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat, Settings, Save, Smartphone } from "lucide-react";
+import {
+  ArrowLeft,
+  ShoppingCart,
+  MapPin,
+  Clock,
+  CreditCard,
+  Loader2,
+  CheckCircle,
+  Calendar,
+  ChefHat,
+  Settings,
+  Save,
+  Smartphone,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
@@ -28,26 +41,34 @@ type SavedPaymentMethod = {
 };
 
 // Caracas zones for dropdown
-const CARACAS_ZONES = ["Chacao", "Sabana Grande", "Altamira", "Las Mercedes", "El Cafetal", "Los Palos Grandes", "La California", "El Recreo", "Baruta", "El Hatillo", "Los Cortijos", "Macaracuay"];
+const CARACAS_ZONES = [
+  "Chacao",
+  "Sabana Grande",
+  "Altamira",
+  "Las Mercedes",
+  "El Cafetal",
+  "Los Palos Grandes",
+  "La California",
+  "El Recreo",
+  "Baruta",
+  "El Hatillo",
+  "Los Cortijos",
+  "Macaracuay",
+];
 
 // Caracas ZIP codes
 const CARACAS_ZIP_CODES = ["1010", "1050", "1060", "1070", "1080"];
 const DeliveryOrder = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const {
-    items: cartItems,
-    clearCart
-  } = useCart();
+  const { toast } = useToast();
+  const { items: cartItems, clearCart } = useCart();
   useEffect(() => {
     if (cartItems.length === 0) {
       toast({
         title: "Carrito vacío",
         description: "No hay productos en el carrito",
-        variant: "destructive"
+        variant: "destructive",
       });
       navigate("/listas");
     }
@@ -69,12 +90,12 @@ const DeliveryOrder = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState("");
-  
+
   // Pago Movil state
   const [pagoMovilCedula, setPagoMovilCedula] = useState("");
   const [pagoMovilBank, setPagoMovilBank] = useState("");
   const [pagoMovilPhone, setPagoMovilPhone] = useState("");
-  const [bcvRate] = useState<number>(230); // Using hardcoded value
+  const [bcvRate] = useState<number>(205); // Using hardcoded value
 
   // Load saved payment methods
   useEffect(() => {
@@ -83,23 +104,22 @@ const DeliveryOrder = () => {
   const loadSavedPaymentMethods = async () => {
     try {
       const {
-        data: {
-          session
-        }
+        data: { session },
       } = await supabase.auth.getSession();
       if (!session) return;
-      const {
-        data,
-        error
-      } = await supabase.from("payment_methods").select("id, type, last_four, card_brand, is_default").eq("user_id", session.user.id).order("is_default", {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("id, type, last_four, card_brand, is_default")
+        .eq("user_id", session.user.id)
+        .order("is_default", {
+          ascending: false,
+        });
       if (error) throw error;
       const methods = data || [];
       setSavedPaymentMethods(methods);
 
       // Auto-select default payment method
-      const defaultMethod = methods.find(m => m.is_default);
+      const defaultMethod = methods.find((m) => m.is_default);
       if (defaultMethod) {
         setSelectedSavedCard(defaultMethod.id);
       }
@@ -120,7 +140,7 @@ const DeliveryOrder = () => {
       toast({
         title: "Error",
         description: "Por favor ingresa la dirección",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -128,7 +148,7 @@ const DeliveryOrder = () => {
       toast({
         title: "Error",
         description: "Por favor selecciona una zona de Caracas",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -136,15 +156,19 @@ const DeliveryOrder = () => {
       toast({
         title: "Error",
         description: "Por favor selecciona un código postal válido para Caracas",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    if (paymentMethod === "card" && !selectedSavedCard && (!cardNumber.trim() || !cardName.trim() || !cardExpiry.trim() || !cardCVV.trim())) {
+    if (
+      paymentMethod === "card" &&
+      !selectedSavedCard &&
+      (!cardNumber.trim() || !cardName.trim() || !cardExpiry.trim() || !cardCVV.trim())
+    ) {
       toast({
         title: "Error",
         description: "Por favor completa todos los datos de la tarjeta",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -152,7 +176,7 @@ const DeliveryOrder = () => {
       toast({
         title: "Error",
         description: "Por favor completa todos los datos de Pago Móvil",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -163,40 +187,44 @@ const DeliveryOrder = () => {
     // Body: { items: cartItems, address: { street, city: 'Caracas', zone, zipCode }, deliveryOption, payment: { cardNumber, cardName } }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         toast({
           title: "Error",
           description: "Debes iniciar sesión para hacer un pedido",
-          variant: "destructive"
+          variant: "destructive",
         });
         return;
       }
 
       // Save payment method if checkbox is checked
       if (savePaymentMethod && paymentMethod === "card" && !selectedSavedCard) {
-        const lastFour = cardNumber.replace(/\s/g, '').slice(-4);
-        const [month, year] = cardExpiry.split('/').map(s => parseInt(s.trim()));
-        
+        const lastFour = cardNumber.replace(/\s/g, "").slice(-4);
+        const [month, year] = cardExpiry.split("/").map((s) => parseInt(s.trim()));
+
         // Determine card brand from card number
-        const cardBrand = cardNumber.startsWith('4') ? 'Visa' : 
-                          cardNumber.startsWith('5') ? 'Mastercard' : 
-                          cardNumber.startsWith('3') ? 'Amex' : 'Other';
-        
-        const { error: saveError } = await supabase
-          .from('payment_methods')
-          .insert({
-            user_id: session.user.id,
-            type: 'card',
-            last_four: lastFour,
-            card_brand: cardBrand,
-            expiry_month: month,
-            expiry_year: 2000 + year,
-            is_default: savedPaymentMethods.length === 0 // Set as default if it's the first one
-          });
-        
+        const cardBrand = cardNumber.startsWith("4")
+          ? "Visa"
+          : cardNumber.startsWith("5")
+            ? "Mastercard"
+            : cardNumber.startsWith("3")
+              ? "Amex"
+              : "Other";
+
+        const { error: saveError } = await supabase.from("payment_methods").insert({
+          user_id: session.user.id,
+          type: "card",
+          last_four: lastFour,
+          card_brand: cardBrand,
+          expiry_month: month,
+          expiry_year: 2000 + year,
+          is_default: savedPaymentMethods.length === 0, // Set as default if it's the first one
+        });
+
         if (saveError) {
-          console.error('Error saving payment method:', saveError);
+          console.error("Error saving payment method:", saveError);
           toast({
             title: "Advertencia",
             description: "El pedido se procesó pero no se pudo guardar el método de pago",
@@ -211,29 +239,27 @@ const DeliveryOrder = () => {
       }
 
       // Save order to database
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: session.user.id,
-          items: cartItems,
-          subtotal,
-          delivery_fee: deliveryFee,
-          total,
-          address: {
-            street,
-            zone,
-            zipCode,
-            city: 'Caracas'
-          },
-          payment_method: paymentMethod,
-          status: 'preparing',
-          estimated_delivery: new Date(Date.now() + (deliveryOption === 'express' ? 3600000 : 7200000)).toISOString()
-        });
+      const { error: orderError } = await supabase.from("orders").insert({
+        user_id: session.user.id,
+        items: cartItems,
+        subtotal,
+        delivery_fee: deliveryFee,
+        total,
+        address: {
+          street,
+          zone,
+          zipCode,
+          city: "Caracas",
+        },
+        payment_method: paymentMethod,
+        status: "preparing",
+        estimated_delivery: new Date(Date.now() + (deliveryOption === "express" ? 3600000 : 7200000)).toISOString(),
+      });
 
       if (orderError) throw orderError;
 
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Mock successful response
       const mockOrderId = `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -243,20 +269,21 @@ const DeliveryOrder = () => {
       clearCart();
       toast({
         title: "¡Pedido confirmado!",
-        description: `Tu pedido llegará en ${mockEta}`
+        description: `Tu pedido llegará en ${mockEta}`,
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "No se pudo procesar el pedido. Intenta de nuevo.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
   if (orderSuccess) {
-    return <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10 flex items-center justify-center p-4">
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10 flex items-center justify-center p-4">
         <Card className="p-8 max-w-md w-full text-center">
           <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">¡Pedido Confirmado!</h2>
@@ -278,9 +305,11 @@ const DeliveryOrder = () => {
             Volver al Dashboard
           </Button>
         </Card>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
@@ -321,7 +350,8 @@ const DeliveryOrder = () => {
                   Resumen del Pedido
                 </h2>
                 <div className="space-y-3 mb-4">
-                  {cartItems.map((item, index) => <div key={index} className="flex justify-between text-sm border-b pb-2">
+                  {cartItems.map((item, index) => (
+                    <div key={index} className="flex justify-between text-sm border-b pb-2">
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-muted-foreground text-xs">
@@ -329,34 +359,30 @@ const DeliveryOrder = () => {
                         </p>
                       </div>
                       <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
                 <div className="space-y-2 pt-4 border-t">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
                     <span>
-                      {paymentMethod === "pago_movil" 
+                      {paymentMethod === "pago_movil"
                         ? `Bs. ${(subtotal * bcvRate).toFixed(2)}`
-                        : `$${subtotal.toFixed(2)}`
-                      }
+                        : `$${subtotal.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Envío</span>
                     <span>
-                      {paymentMethod === "pago_movil" 
+                      {paymentMethod === "pago_movil"
                         ? `Bs. ${(deliveryFee * bcvRate).toFixed(2)}`
-                        : `$${deliveryFee.toFixed(2)}`
-                      }
+                        : `$${deliveryFee.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span>Total</span>
                     <span className="text-primary">
-                      {paymentMethod === "pago_movil" 
-                        ? `Bs. ${(total * bcvRate).toFixed(2)}`
-                        : `$${total.toFixed(2)}`
-                      }
+                      {paymentMethod === "pago_movil" ? `Bs. ${(total * bcvRate).toFixed(2)}` : `$${total.toFixed(2)}`}
                     </span>
                   </div>
                 </div>
@@ -371,13 +397,17 @@ const DeliveryOrder = () => {
                   <MapPin className="h-5 w-5 text-primary" />
                   Dirección de Entrega
                 </h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Servicio disponible solo en Caracas, Venezuela
-                </p>
+                <p className="text-sm text-muted-foreground mb-4">Servicio disponible solo en Caracas, Venezuela</p>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="street">Calle y Número</Label>
-                    <Input id="street" placeholder="Ej: Av. Francisco de Miranda, Edif. Torre Europa" value={street} onChange={e => setStreet(e.target.value)} required />
+                    <Input
+                      id="street"
+                      placeholder="Ej: Av. Francisco de Miranda, Edif. Torre Europa"
+                      value={street}
+                      onChange={(e) => setStreet(e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -387,9 +417,11 @@ const DeliveryOrder = () => {
                           <SelectValue placeholder="Selecciona zona" />
                         </SelectTrigger>
                         <SelectContent>
-                          {CARACAS_ZONES.map(z => <SelectItem key={z} value={z}>
+                          {CARACAS_ZONES.map((z) => (
+                            <SelectItem key={z} value={z}>
                               {z}
-                            </SelectItem>)}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -405,9 +437,11 @@ const DeliveryOrder = () => {
                         <SelectValue placeholder="Selecciona código postal" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CARACAS_ZIP_CODES.map(zip => <SelectItem key={zip} value={zip}>
+                        {CARACAS_ZIP_CODES.map((zip) => (
+                          <SelectItem key={zip} value={zip}>
                             {zip}
-                          </SelectItem>)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -421,7 +455,10 @@ const DeliveryOrder = () => {
                   Opciones de Entrega
                 </h2>
                 <div className="space-y-3">
-                  <div className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${deliveryOption === "standard" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`} onClick={() => setDeliveryOption("standard")}>
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${deliveryOption === "standard" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                    onClick={() => setDeliveryOption("standard")}
+                  >
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold">Estándar</p>
@@ -430,7 +467,10 @@ const DeliveryOrder = () => {
                       <p className="font-bold text-primary">$1.50</p>
                     </div>
                   </div>
-                  <div className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${deliveryOption === "express" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`} onClick={() => setDeliveryOption("express")}>
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${deliveryOption === "express" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                    onClick={() => setDeliveryOption("express")}
+                  >
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold">Express</p>
@@ -444,7 +484,7 @@ const DeliveryOrder = () => {
 
               {/* Payment Method */}
               <Card className="p-6 shadow-lg">
-                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2 justify-between">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2 justify-between">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-primary" />
                     Método de Pago
@@ -454,37 +494,50 @@ const DeliveryOrder = () => {
                     Gestionar
                   </Button>
                 </h2>
-                
+
                 {/* Saved Payment Methods */}
-                {savedPaymentMethods.length > 0 && <div className="space-y-3 mb-6">
+                {savedPaymentMethods.length > 0 && (
+                  <div className="space-y-3 mb-6">
                     <Label>Tarjetas Guardadas</Label>
-                    {savedPaymentMethods.map(method => <div key={method.id} className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedSavedCard === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`} onClick={() => {
-                  setSelectedSavedCard(method.id);
-                  setPaymentMethod("saved");
-                }}>
+                    {savedPaymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedSavedCard === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                        onClick={() => {
+                          setSelectedSavedCard(method.id);
+                          setPaymentMethod("saved");
+                        }}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <CreditCard className="h-5 w-5" />
                             <div>
                               <p className="font-semibold flex items-center gap-2">
                                 {method.card_brand || "Tarjeta"} •••• {method.last_four}
-                                {method.is_default && <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                                {method.is_default && (
+                                  <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
                                     Predeterminada
-                                  </span>}
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
                         </div>
-                      </div>)}
-                  </div>}
-                
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Payment Method Selector */}
                 <Label className="mb-3 block">O selecciona otro método</Label>
                 <div className="space-y-3 mb-6">
-                  <div className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentMethod === "card" && !selectedSavedCard ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`} onClick={() => {
-                  setPaymentMethod("card");
-                  setSelectedSavedCard("");
-                }}>
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentMethod === "card" && !selectedSavedCard ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                    onClick={() => {
+                      setPaymentMethod("card");
+                      setSelectedSavedCard("");
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <CreditCard className="h-5 w-5" />
                       <div>
@@ -493,11 +546,14 @@ const DeliveryOrder = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentMethod === "pago_movil" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`} onClick={() => {
-                  setPaymentMethod("pago_movil");
-                  setSelectedSavedCard("");
-                }}>
+
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentMethod === "pago_movil" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                    onClick={() => {
+                      setPaymentMethod("pago_movil");
+                      setSelectedSavedCard("");
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <Smartphone className="h-5 w-5" />
                       <div>
@@ -506,84 +562,96 @@ const DeliveryOrder = () => {
                       </div>
                     </div>
                   </div>
-                  
                 </div>
 
                 {/* Credit Card Form - Only show if card is selected and no saved card */}
-                {paymentMethod === "card" && !selectedSavedCard && <div className="space-y-4">
+                {paymentMethod === "card" && !selectedSavedCard && (
+                  <div className="space-y-4">
                     <div>
                       <Label htmlFor="cardNumber">Número de Tarjeta</Label>
-                      <Input id="cardNumber" type="text" placeholder="1234 5678 9012 3456" value={cardNumber} onChange={e => setCardNumber(e.target.value)} maxLength={19} required />
+                      <Input
+                        id="cardNumber"
+                        type="text"
+                        placeholder="1234 5678 9012 3456"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value)}
+                        maxLength={19}
+                        required
+                      />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="cardName">Nombre en la Tarjeta</Label>
-                        <Input id="cardName" placeholder="Juan Pérez" value={cardName} onChange={e => setCardName(e.target.value)} required />
+                        <Input
+                          id="cardName"
+                          placeholder="Juan Pérez"
+                          value={cardName}
+                          onChange={(e) => setCardName(e.target.value)}
+                          required
+                        />
                       </div>
                       <div>
                         <Label htmlFor="cardExpiry">Vencimiento</Label>
-                        <Input 
-                          id="cardExpiry" 
-                          type="text" 
-                          placeholder="MM/AA" 
+                        <Input
+                          id="cardExpiry"
+                          type="text"
+                          placeholder="MM/AA"
                           maxLength={5}
                           value={cardExpiry}
-                          onChange={e => setCardExpiry(e.target.value)}
-                          required 
+                          onChange={(e) => setCardExpiry(e.target.value)}
+                          required
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="cardCVV">CVV</Label>
-                        <Input 
-                          id="cardCVV" 
-                          type="text" 
-                          placeholder="123" 
+                        <Input
+                          id="cardCVV"
+                          type="text"
+                          placeholder="123"
                           maxLength={3}
                           value={cardCVV}
-                          onChange={e => setCardCVV(e.target.value)}
-                          required 
+                          onChange={(e) => setCardCVV(e.target.value)}
+                          required
                         />
                       </div>
                     </div>
-                    
+
                     {/* Save Payment Method Option */}
                     <div className="flex items-center space-x-2 pt-2 pb-2 border-t">
-                      <Checkbox 
-                        id="savePayment" 
+                      <Checkbox
+                        id="savePayment"
                         checked={savePaymentMethod}
                         onCheckedChange={(checked) => setSavePaymentMethod(checked as boolean)}
                       />
-                      <Label 
-                        htmlFor="savePayment" 
+                      <Label
+                        htmlFor="savePayment"
                         className="text-sm font-normal cursor-pointer flex items-center gap-2"
                       >
                         <Save className="h-4 w-4" />
                         Guardar este método de pago para futuras compras
                       </Label>
                     </div>
-                  </div>}
+                  </div>
+                )}
 
                 {/* Pago Movil Form - Only show if pago_movil is selected */}
-                {paymentMethod === "pago_movil" && <div className="space-y-4">
+                {paymentMethod === "pago_movil" && (
+                  <div className="space-y-4">
                     <div className="bg-primary/10 rounded-lg p-4 mb-4">
-                      <p className="text-sm font-semibold">
-                        Total a pagar: Bs. {(total * bcvRate).toFixed(2)}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Tasa BCV: Bs. {bcvRate.toFixed(2)} / USD
-                      </p>
+                      <p className="text-sm font-semibold">Total a pagar: Bs. {(total * bcvRate).toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Tasa BCV: Bs. {bcvRate.toFixed(2)} / USD</p>
                     </div>
                     <div>
                       <Label htmlFor="pagoMovilCedula">Cédula</Label>
-                      <Input 
-                        id="pagoMovilCedula" 
-                        type="text" 
-                        placeholder="12345678" 
-                        value={pagoMovilCedula} 
-                        onChange={e => setPagoMovilCedula(e.target.value)} 
-                        required 
+                      <Input
+                        id="pagoMovilCedula"
+                        type="text"
+                        placeholder="12345678"
+                        value={pagoMovilCedula}
+                        onChange={(e) => setPagoMovilCedula(e.target.value)}
+                        required
                       />
                     </div>
                     <div>
@@ -618,43 +686,51 @@ const DeliveryOrder = () => {
                     </div>
                     <div>
                       <Label htmlFor="pagoMovilPhone">Teléfono</Label>
-                      <Input 
-                        id="pagoMovilPhone" 
-                        type="tel" 
-                        placeholder="04241234567" 
-                        value={pagoMovilPhone} 
-                        onChange={e => setPagoMovilPhone(e.target.value)} 
-                        required 
+                      <Input
+                        id="pagoMovilPhone"
+                        type="tel"
+                        placeholder="04241234567"
+                        value={pagoMovilPhone}
+                        onChange={(e) => setPagoMovilPhone(e.target.value)}
+                        required
                       />
                     </div>
-                  </div>}
+                  </div>
+                )}
 
                 {/* Cashea Info - Only show if cashea is selected */}
-                {paymentMethod === "cashea" && <div className="bg-muted/50 rounded-lg p-4">
+                {paymentMethod === "cashea" && (
+                  <div className="bg-muted/50 rounded-lg p-4">
                     <p className="text-sm">
-                      Serás redirigido a Cashea para completar tu compra de forma segura.
-                      Paga en cuotas flexibles sin tarjeta de crédito.
+                      Serás redirigido a Cashea para completar tu compra de forma segura. Paga en cuotas flexibles sin
+                      tarjeta de crédito.
                     </p>
-                  </div>}
+                  </div>
+                )}
               </Card>
 
               {/* Submit Button */}
               <Button type="submit" size="lg" className="w-full rounded-full text-lg py-6" disabled={isSubmitting}>
-                {isSubmitting ? <>
+                {isSubmitting ? (
+                  <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Procesando pedido...
-                  </> : <>
+                  </>
+                ) : (
+                  <>
                     {paymentMethod === "pago_movil" ? (
                       <>Verificar Pago - Bs. {(total * bcvRate).toFixed(2)}</>
                     ) : (
                       <>Confirmar Pedido - ${total.toFixed(2)}</>
                     )}
-                  </>}
+                  </>
+                )}
               </Button>
             </div>
           </div>
         </form>
       </main>
-    </div>;
+    </div>
+  );
 };
 export default DeliveryOrder;
