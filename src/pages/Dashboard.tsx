@@ -260,7 +260,7 @@ const Dashboard = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                  <UserIcon className="h-5 w-5" />
+                  <UserIcon className="h-6 w-6" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
