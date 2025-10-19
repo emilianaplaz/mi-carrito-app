@@ -226,6 +226,12 @@ const ComprarLista = () => {
       setLoadingRecommendations(false);
     }
   };
+  const CollapsibleCard = ({ userBudget, list, allPrices, itemBrandPreferences, handleBrandChange }) => {
+  const [isOpen, setIsOpen] = useState(false); // State to manage the open/close status
+
+  const toggleCard = () => {
+    setIsOpen(!isOpen); // Toggle the card open/close status
+  };
   const handleBrandChange = (itemName: string, brand: string) => {
     setItemBrandPreferences(prev => ({
       ...prev,
@@ -273,30 +279,37 @@ const ComprarLista = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Brand Selection Section */}
-        <Card className="p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold">Preferencias de Marca</h2>
-              {userBudget && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Presupuesto: <span className="font-semibold text-primary">${userBudget.toFixed(2)}</span>
-                </p>
-              )}
-            </div>
-            
-          </div>
+  <Card className="p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xl font-bold cursor-pointer" onClick={toggleCard}>
+            Preferencias de Marca
+          </h2>
+          {userBudget && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Presupuesto: <span className="font-semibold text-primary">${userBudget.toFixed(2)}</span>
+            </p>
+          )}
+        </div>
+        <button onClick={toggleCard}>
+          {isOpen ? 'Collapse' : 'Expand'} {/* Button to toggle the card */}
+        </button>
+      </div>
+      {isOpen && ( // Conditionally render content based on isOpen
+        <>
           <p className="text-sm text-muted-foreground mb-4">
             Selecciona "ANY" para buscar el mejor precio entre todas las marcas, o elige una marca específica
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {list?.items.map((item, index) => {
-            const availableBrands = allPrices.find(p => p.name.toLowerCase() === item.name.toLowerCase())?.availablePrices.map(p => p.brand).filter((brand, idx, arr) => brand && arr.indexOf(brand) === idx) || [];
-            return <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+              const availableBrands = allPrices.find(p => p.name.toLowerCase() === item.name.toLowerCase())?.availablePrices.map(p => p.brand).filter((brand, idx, arr) => brand && arr.indexOf(brand) === idx) || [];
+              return (
+                <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
                     {item.amount && <p className="text-xs text-muted-foreground">
-                        {item.amount} {item.unit || ""}
-                      </p>}
+                      {item.amount} {item.unit || ""}
+                    </p>}
                   </div>
                   <Select value={itemBrandPreferences[item.name] || "ANY"} onValueChange={value => handleBrandChange(item.name, value)}>
                     <SelectTrigger className="w-[180px]">
@@ -304,15 +317,20 @@ const ComprarLista = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ANY">ANY (Mejor precio)</SelectItem>
-                      {availableBrands.map(brand => <SelectItem key={brand} value={brand || "sin marca"}>
+                      {availableBrands.map(brand => (
+                        <SelectItem key={brand} value={brand || "sin marca"}>
                           {brand || "Sin marca"}
-                        </SelectItem>)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </div>;
-          })}
+                </div>
+              );
+            })}
           </div>
-        </Card>
+        </>
+      )}
+    </Card>
 
         {/* Loading state */}
         {loadingRecommendations ? <Card className="p-6 mb-6">
