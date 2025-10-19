@@ -89,7 +89,7 @@ const Landing = () => {
       <section className="mt-12 relative">
         <div className="w-full">
           <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
-          <div className="absolute top-8 left-0 right-0 flex justify-center">
+          <div className="absolute top-4 left-0 right-0 flex justify-center">
             <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-8">
               Comenzar Ahora
             </Button>
