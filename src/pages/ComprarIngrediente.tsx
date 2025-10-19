@@ -30,7 +30,7 @@ const ComprarIngrediente = () => {
   const [selectedPriceId, setSelectedPriceId] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addItem } = useCart();
+  const { addItem, totalItems } = useCart();
   useEffect(() => {
     loadBrandsAndPrices();
   }, [productName]);
@@ -143,7 +143,7 @@ const ComprarIngrediente = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
-              <Calendar className="h-10 w-10" />
+              <Calendar className="h-5 w-5" />
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
@@ -182,7 +182,17 @@ const ComprarIngrediente = () => {
                   </p>
                 </div>
               </div>
-              <Button size="lg" className="rounded-full" onClick={() => navigate("/delivery-order")}>
+              <Button size="lg" className="rounded-full" onClick={() => {
+                if (totalItems === 0) {
+                  toast({
+                    title: "Carrito vacío",
+                    description: "Necesitas agregar al menos un producto al carrito antes de hacer un pedido",
+                    variant: "destructive"
+                  });
+                } else {
+                  navigate("/delivery-order");
+                }
+              }}>
                 <Truck className="mr-2 h-5 w-5" />
                 Comprar por Delivery
               </Button>

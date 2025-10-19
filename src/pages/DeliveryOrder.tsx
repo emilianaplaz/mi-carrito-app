@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat } from "lucide-react";
+import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat, Settings } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
@@ -16,6 +17,14 @@ type CartItem = {
   quantity: number;
   price: number;
   unit: string;
+};
+
+type SavedPaymentMethod = {
+  id: string;
+  type: string;
+  last_four?: string;
+  card_brand?: string;
+  is_default: boolean;
 };
 
 // Caracas zones for dropdown
@@ -60,11 +69,44 @@ const DeliveryOrder = () => {
   const [zipCode, setZipCode] = useState("");
   const [deliveryOption, setDeliveryOption] = useState("standard");
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [selectedSavedCard, setSelectedSavedCard] = useState<string>("");
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState("");
+
+  // Load saved payment methods
+  useEffect(() => {
+    loadSavedPaymentMethods();
+  }, []);
+
+  const loadSavedPaymentMethods = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("id, type, last_four, card_brand, is_default")
+        .eq("user_id", session.user.id)
+        .order("is_default", { ascending: false });
+
+      if (error) throw error;
+      
+      const methods = data || [];
+      setSavedPaymentMethods(methods);
+      
+      // Auto-select default payment method
+      const defaultMethod = methods.find(m => m.is_default);
+      if (defaultMethod) {
+        setSelectedSavedCard(defaultMethod.id);
+      }
+    } catch (error) {
+      console.error("Error loading payment methods:", error);
+    }
+  };
 
   // Calculate totals
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -192,7 +234,7 @@ const DeliveryOrder = () => {
 
           <div className="flex items-center gap-2 flex-1 justify-end">
             <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
-              <Calendar className="h-10 w-10" />
+              <Calendar className="h-5 w-5" />
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
@@ -347,25 +389,76 @@ const DeliveryOrder = () => {
 
               {/* Payment Method */}
               <Card className="p-6 shadow-lg">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-primary" />
-                  Método de Pago
+                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2 justify-between">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-primary" />
+                    Método de Pago
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/payment-methods")}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Gestionar
+                  </Button>
                 </h2>
                 
+                {/* Saved Payment Methods */}
+                {savedPaymentMethods.length > 0 && (
+                  <div className="space-y-3 mb-6">
+                    <Label>Tarjetas Guardadas</Label>
+                    {savedPaymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                          selectedSavedCard === method.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                        onClick={() => {
+                          setSelectedSavedCard(method.id);
+                          setPaymentMethod("saved");
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5" />
+                            <div>
+                              <p className="font-semibold flex items-center gap-2">
+                                {method.card_brand || "Tarjeta"} •••• {method.last_four}
+                                {method.is_default && (
+                                  <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                                    Predeterminada
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 {/* Payment Method Selector */}
+                <Label className="mb-3 block">O selecciona otro método</Label>
                 <div className="space-y-3 mb-6">
                   <div
                     className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                      paymentMethod === "card"
+                      paymentMethod === "card" && !selectedSavedCard
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
                     }`}
-                    onClick={() => setPaymentMethod("card")}
+                    onClick={() => {
+                      setPaymentMethod("card");
+                      setSelectedSavedCard("");
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <CreditCard className="h-5 w-5" />
                       <div>
-                        <p className="font-semibold">Tarjeta de Crédito/Débito</p>
+                        <p className="font-semibold">Tarjeta Nueva</p>
                         <p className="text-sm text-muted-foreground">Pago inmediato con tarjeta</p>
                       </div>
                     </div>
@@ -391,8 +484,8 @@ const DeliveryOrder = () => {
                   </div>
                 </div>
 
-                {/* Credit Card Form - Only show if card is selected */}
-                {paymentMethod === "card" && (
+                {/* Credit Card Form - Only show if card is selected and no saved card */}
+                {paymentMethod === "card" && !selectedSavedCard && (
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="cardNumber">Número de Tarjeta</Label>

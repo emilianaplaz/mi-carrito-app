@@ -19,6 +19,7 @@ import ComprarLista from "./pages/ComprarLista";
 import DeliveryOrder from "./pages/DeliveryOrder";
 import ImportPrices from "./pages/ImportPrices";
 import Calendar from "./pages/Calendar";
+import PaymentMethods from "./pages/PaymentMethods";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
             <Route path="/delivery-order" element={<DeliveryOrder />} />
             <Route path="/import-prices" element={<ImportPrices />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/payment-methods" element={<PaymentMethods />} />
             <Route path="/test-preferencias" element={<TestPreferencias />} />
             <Route path="/editar-preferencias" element={<EditPreferencias />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
