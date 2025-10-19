@@ -435,15 +435,15 @@ const Listas = () => {
                           )}
                         </div>
                       <Select
-                        value={item.brand}
-                        onValueChange={(value) => updateItemField(index, "brand", value)}
+                        value={item.brand || "ANY"}
+                        onValueChange={(value) => updateItemField(index, "brand", value === "ANY" ? "" : value)}
                         disabled={!item.name}
                       >
                         <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Marca (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">CUALQUIER MARCA</SelectItem>
+                          <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
                           {allBrands.map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
