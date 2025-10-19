@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  ChefHat,
+  UserIcon,
   ArrowLeft,
   Leaf,
   Apple,
@@ -157,7 +157,7 @@ const EditPreferencias = () => {
           .single();
 
         if (!error && existingPrefs) {
-          const loadedPrefs = {
+          setPreferences({
             planDuration: existingPrefs.plan_duration || "1_week",
             breakfastOptions: existingPrefs.breakfast_options || 3,
             lunchOptions: existingPrefs.lunch_options || 3,
@@ -172,9 +172,7 @@ const EditPreferencias = () => {
               ? existingPrefs.cuisine_preferences
               : [],
             budget: existingPrefs.budget || undefined,
-          };
-          console.log("Loaded preferences:", loadedPrefs);
-          setPreferences(loadedPrefs);
+          });
           setIsFirstTime(false);
         } else {
           // No preferences found, first time user
@@ -330,7 +328,7 @@ const EditPreferencias = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <ChefHat className="h-5 w-5 text-primary" />
+              <UserIcon className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold">Editar Preferencias</span>
             </div>
             <BCVRate />
@@ -362,8 +360,8 @@ const EditPreferencias = () => {
               <div>
                 <h3 className="text-lg font-bold mb-2">¡Bienvenido a MiCarrito!</h3>
                 <p className="text-muted-foreground">
-                  Configura tus preferencias alimentarias para comenzar a generar planes de comidas personalizados.
-                  Una vez que guardes tus preferencias, podrás regresar aquí en cualquier momento para actualizarlas.
+                  Configura tus preferencias alimentarias para comenzar a generar planes de comidas personalizados. Una
+                  vez que guardes tus preferencias, podrás regresar aquí en cualquier momento para actualizarlas.
                 </p>
               </div>
             </div>
@@ -455,18 +453,14 @@ const EditPreferencias = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {section.options.map((option) => {
-                    const currentValue = preferences[section.field];
                     const isSelected = section.single
-                      ? currentValue === option.value
-                      : Array.isArray(currentValue) && currentValue.includes(option.value);
+                      ? preferences[section.field] === option.value
+                      : (preferences[section.field] as string[]).includes(option.value);
 
                     return (
                       <button
                         key={option.value}
-                        onClick={() => {
-                          console.log(`Toggling ${section.field} with value ${option.value}, current:`, currentValue);
-                          toggleOption(section.field, option.value, section.single);
-                        }}
+                        onClick={() => toggleOption(section.field, option.value, section.single)}
                         className={`
                           relative p-4 rounded-lg border-2 transition-all duration-300
                           ${
