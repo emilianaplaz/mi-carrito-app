@@ -9,6 +9,7 @@ import { ChefHat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import miCarritoLogo from "@/assets/mi-carrit-logo.png";
 
 const emailSchema = z.string().email("Email inválido");
 const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres");
@@ -155,7 +156,7 @@ const Auth = () => {
       <Card className="w-full max-w-md p-8 shadow-strong">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <ChefHat className="h-8 w-8 text-primary" />
+            <img src={miCarritoLogo} alt="MiCarrito" className="h-8 w-auto" />
             <span className="text-2xl font-bold text-primary">
               MiCarrito
             </span>
