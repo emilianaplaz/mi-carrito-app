@@ -571,8 +571,8 @@ const MiPlan = () => {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="container mx-auto px-4 flex items-center justify-between">
+            <div className="flex items-center gap-4 flex-1">
               <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -581,7 +581,12 @@ const MiPlan = () => {
                 <span className="text-lg font-bold">Mi Plan</span>
               </div>
             </div>
-            <img src={logo} alt="MiCarrit" className="h-20" />
+
+            <div className="flex items-center justify-center">
+              <img src={logo} alt="MiCarrit" className="h-28" />
+            </div>
+
+            <div className="flex-1"></div>
           </div>
         </header>
 
@@ -612,7 +617,7 @@ const MiPlan = () => {
       <header className="border-b border-border bg-card sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-1">
               <Button
                 variant="ghost"
                 size="icon"
@@ -632,9 +637,11 @@ const MiPlan = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <img src={logo} alt="MiCarrit" className="h-20" />
-              
+            <div className="flex items-center justify-center">
+              <img src={logo} alt="MiCarrit" className="h-28" />
+            </div>
+
+            <div className="flex items-center gap-4 flex-1 justify-end">
               {/* Plan Completo Button - Always visible on right */}
               {!selectionMode ? (
                 <Button
