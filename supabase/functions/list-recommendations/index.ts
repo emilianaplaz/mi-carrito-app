@@ -520,16 +520,33 @@ serve(async (req) => {
       }
     }
     
-    // Ensure we always have exactly the right labels regardless of how recommendations were added
-    // The first recommendation should ALWAYS be "Mejor Opción"
-    // The second recommendation should ALWAYS be "Opción Más Barata"
-    if (finalRecommendations.length >= 1) {
+    // Ensure we always have exactly the right labels based on actual prices
+    // The CHEAPEST recommendation should be labeled "Opción Más Barata"
+    // The other should be "Mejor Opción" (best coverage/stores)
+    if (finalRecommendations.length >= 2) {
+      // Compare prices and assign labels correctly
+      const price0 = finalRecommendations[0].totalPrice;
+      const price1 = finalRecommendations[1].totalPrice;
+      
+      if (price0 < price1) {
+        // First is cheaper
+        finalRecommendations[0].displayLabel = 'Opción Más Barata';
+        finalRecommendations[0].sortOrder = 2;
+        finalRecommendations[1].displayLabel = 'Mejor Opción';
+        finalRecommendations[1].sortOrder = 1;
+        // Swap them so Mejor Opción is first
+        [finalRecommendations[0], finalRecommendations[1]] = [finalRecommendations[1], finalRecommendations[0]];
+      } else {
+        // Second is cheaper (or same price)
+        finalRecommendations[0].displayLabel = 'Mejor Opción';
+        finalRecommendations[0].sortOrder = 1;
+        finalRecommendations[1].displayLabel = 'Opción Más Barata';
+        finalRecommendations[1].sortOrder = 2;
+      }
+    } else if (finalRecommendations.length === 1) {
+      // Only one option, label it as best
       finalRecommendations[0].displayLabel = 'Mejor Opción';
       finalRecommendations[0].sortOrder = 1;
-    }
-    if (finalRecommendations.length >= 2) {
-      finalRecommendations[1].displayLabel = 'Opción Más Barata';
-      finalRecommendations[1].sortOrder = 2;
     }
     
     // Final sort to ensure correct order
