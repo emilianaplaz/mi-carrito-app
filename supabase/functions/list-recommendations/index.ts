@@ -431,32 +431,34 @@ serve(async (req) => {
     // ORDER MATTERS: First = Mejor Opción (fewest stores), Second = Opción Más Barata (cheapest)
     const finalRecommendations: any[] = [];
     
+    // Helper to clean supermarket name from any existing labels
+    const cleanSupermarketName = (name: string): string => {
+      return name
+        .replace(/^Mejor Opción:\s*/i, '')
+        .replace(/^Opción Más Barata:\s*/i, '')
+        .trim();
+    };
+    
     // First position: Mejor Opción (fewest stores strategy)
     if (fewestStoresOption) {
-      const labeled = { 
+      const cleanedName = cleanSupermarketName(fewestStoresOption.supermarket);
+      finalRecommendations.push({ 
         ...fewestStoresOption,
+        supermarket: cleanedName,
         displayLabel: 'Mejor Opción',
         sortOrder: 1
-      };
-      // Ensure supermarket name has the label
-      if (!labeled.supermarket.includes('Mejor Opción')) {
-        labeled.supermarket = `Mejor Opción: ${labeled.supermarket.replace('Opción Más Barata: ', '')}`;
-      }
-      finalRecommendations.push(labeled);
+      });
     }
     
     // Second position: Opción Más Barata (cheapest strategy)
     if (cheapestOption && cheapestOption !== fewestStoresOption) {
-      const labeled = {
+      const cleanedName = cleanSupermarketName(cheapestOption.supermarket);
+      finalRecommendations.push({
         ...cheapestOption,
+        supermarket: cleanedName,
         displayLabel: 'Opción Más Barata',
         sortOrder: 2
-      };
-      // Ensure supermarket name has the label
-      if (!labeled.supermarket.includes('Opción Más Barata')) {
-        labeled.supermarket = `Opción Más Barata: ${labeled.supermarket.replace('Mejor Opción: ', '')}`;
-      }
-      finalRecommendations.push(labeled);
+      });
     }
     
     // If we don't have 2 complete options, add other options with appropriate labels
@@ -468,18 +470,13 @@ serve(async (req) => {
       for (let i = 0; i < Math.min(remainingOptions.length, 2 - finalRecommendations.length); i++) {
         const opt = remainingOptions[i];
         const isFirst = finalRecommendations.length === 0;
-        const labeled = {
+        const cleanedName = cleanSupermarketName(opt.supermarket);
+        finalRecommendations.push({
           ...opt,
+          supermarket: cleanedName,
           displayLabel: isFirst ? 'Mejor Opción' : 'Opción Más Barata',
           sortOrder: isFirst ? 1 : 2
-        };
-        // Add label to supermarket name if not present
-        if (isFirst && !labeled.supermarket.includes('Mejor Opción')) {
-          labeled.supermarket = `Mejor Opción: ${labeled.supermarket}`;
-        } else if (!isFirst && !labeled.supermarket.includes('Opción Más Barata')) {
-          labeled.supermarket = `Opción Más Barata: ${labeled.supermarket}`;
-        }
-        finalRecommendations.push(labeled);
+        });
       }
     }
     

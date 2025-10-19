@@ -614,8 +614,8 @@ const ComprarLista = () => {
                 {recommendations
                   .slice(0, 2)
                   .map((rec, index) => {
-                  const isBestOption = rec.supermarket.includes('Mejor Opción') || rec.displayLabel === 'Mejor Opción';
-                  const isCheapest = rec.supermarket.includes('Más Barata') || rec.displayLabel === 'Opción Más Barata';
+                  const isBestOption = rec.displayLabel === 'Mejor Opción';
+                  const isCheapest = rec.displayLabel === 'Opción Más Barata';
                   
                   return (
                     <Card key={index} className={`p-6 border-2 ${(rec.missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
@@ -632,7 +632,7 @@ const ComprarLista = () => {
                               <div className="flex items-center gap-3">
                                 <Store className={`h-8 w-8 ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
                                 <div>
-                                  <h4 className="font-bold text-lg">{rec.supermarket.replace('Mejor Opción: ', '').replace('Opción Más Barata: ', '')}</h4>
+                                  <h4 className="font-bold text-lg">{rec.supermarket}</h4>
                                   <p className="text-sm text-muted-foreground">
                                     {rec.items.length} de {list.items.length} artículos
                                   </p>
