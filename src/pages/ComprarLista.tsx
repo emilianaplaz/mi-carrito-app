@@ -159,19 +159,24 @@ const ComprarLista = () => {
         const normSearch = normalize(searchTerm);
         const normProduct = normalize(productName);
         
-        // Direct match
+        // Direct substring match
         if (normProduct.includes(normSearch) || normSearch.includes(normProduct)) return true;
         
         // Split and check each word
-        const searchWords = normSearch.split(' ');
-        const productWords = normProduct.split(' ');
+        const searchWords = normSearch.split(' ').filter(w => w.length >= 2);
+        const productWords = normProduct.split(' ').filter(w => w.length >= 2);
         
-        // Check if any word matches (length >= 3 for meaningful matches)
-        return searchWords.some(sw => 
-          sw.length >= 3 && productWords.some(pw => 
-            pw.includes(sw) || sw.includes(pw)
-          )
-        );
+        // Check if most search words appear in product
+        if (searchWords.length > 0) {
+          const matchCount = searchWords.filter(sw => 
+            productWords.some(pw => pw.includes(sw) || sw.includes(pw))
+          ).length;
+          
+          // Match if at least 50% of words match, or if there's only 1 word
+          return matchCount > 0 && (searchWords.length === 1 || matchCount >= Math.ceil(searchWords.length / 2));
+        }
+        
+        return false;
       };
 
       // Filter prices to only matching items using fuzzy matching on producto
