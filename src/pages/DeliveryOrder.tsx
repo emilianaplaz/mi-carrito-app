@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat, Settings } from "lucide-react";
+import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat, Settings, Save } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
@@ -61,6 +62,9 @@ const DeliveryOrder = () => {
   const [savedPaymentMethods, setSavedPaymentMethods] = useState<SavedPaymentMethod[]>([]);
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCVV, setCardCVV] = useState("");
+  const [savePaymentMethod, setSavePaymentMethod] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState("");
@@ -129,10 +133,10 @@ const DeliveryOrder = () => {
       });
       return;
     }
-    if (paymentMethod === "card" && (!cardNumber.trim() || !cardName.trim())) {
+    if (paymentMethod === "card" && !selectedSavedCard && (!cardNumber.trim() || !cardName.trim() || !cardExpiry.trim() || !cardCVV.trim())) {
       toast({
         title: "Error",
-        description: "Por favor completa los datos de pago",
+        description: "Por favor completa todos los datos de la tarjeta",
         variant: "destructive"
       });
       return;
@@ -144,8 +148,77 @@ const DeliveryOrder = () => {
     // Body: { items: cartItems, address: { street, city: 'Caracas', zone, zipCode }, deliveryOption, payment: { cardNumber, cardName } }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "Debes iniciar sesión para hacer un pedido",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Save payment method if checkbox is checked
+      if (savePaymentMethod && paymentMethod === "card" && !selectedSavedCard) {
+        const lastFour = cardNumber.replace(/\s/g, '').slice(-4);
+        const [month, year] = cardExpiry.split('/').map(s => parseInt(s.trim()));
+        
+        // Determine card brand from card number
+        const cardBrand = cardNumber.startsWith('4') ? 'Visa' : 
+                          cardNumber.startsWith('5') ? 'Mastercard' : 
+                          cardNumber.startsWith('3') ? 'Amex' : 'Other';
+        
+        const { error: saveError } = await supabase
+          .from('payment_methods')
+          .insert({
+            user_id: session.user.id,
+            type: 'card',
+            last_four: lastFour,
+            card_brand: cardBrand,
+            expiry_month: month,
+            expiry_year: 2000 + year,
+            is_default: savedPaymentMethods.length === 0 // Set as default if it's the first one
+          });
+        
+        if (saveError) {
+          console.error('Error saving payment method:', saveError);
+          toast({
+            title: "Advertencia",
+            description: "El pedido se procesó pero no se pudo guardar el método de pago",
+          });
+        } else {
+          await loadSavedPaymentMethods(); // Reload the list
+          toast({
+            title: "Método de pago guardado",
+            description: "Podrás usar esta tarjeta en futuras compras",
+          });
+        }
+      }
+
+      // Save order to database
+      const { error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: session.user.id,
+          items: cartItems,
+          subtotal,
+          delivery_fee: deliveryFee,
+          total,
+          address: {
+            street,
+            zone,
+            zipCode,
+            city: 'Caracas'
+          },
+          payment_method: paymentMethod,
+          status: 'preparing',
+          estimated_delivery: new Date(Date.now() + (deliveryOption === 'express' ? 3600000 : 7200000)).toISOString()
+        });
+
+      if (orderError) throw orderError;
+
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Mock successful response
       const mockOrderId = `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -406,14 +479,46 @@ const DeliveryOrder = () => {
                       </div>
                       <div>
                         <Label htmlFor="cardExpiry">Vencimiento</Label>
-                        <Input id="cardExpiry" type="text" placeholder="MM/AA" maxLength={5} />
+                        <Input 
+                          id="cardExpiry" 
+                          type="text" 
+                          placeholder="MM/AA" 
+                          maxLength={5}
+                          value={cardExpiry}
+                          onChange={e => setCardExpiry(e.target.value)}
+                          required 
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="cardCVV">CVV</Label>
-                        <Input id="cardCVV" type="text" placeholder="123" maxLength={3} />
+                        <Input 
+                          id="cardCVV" 
+                          type="text" 
+                          placeholder="123" 
+                          maxLength={3}
+                          value={cardCVV}
+                          onChange={e => setCardCVV(e.target.value)}
+                          required 
+                        />
                       </div>
+                    </div>
+                    
+                    {/* Save Payment Method Option */}
+                    <div className="flex items-center space-x-2 pt-2 pb-2 border-t">
+                      <Checkbox 
+                        id="savePayment" 
+                        checked={savePaymentMethod}
+                        onCheckedChange={(checked) => setSavePaymentMethod(checked as boolean)}
+                      />
+                      <Label 
+                        htmlFor="savePayment" 
+                        className="text-sm font-normal cursor-pointer flex items-center gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Guardar este método de pago para futuras compras
+                      </Label>
                     </div>
                   </div>}
 
