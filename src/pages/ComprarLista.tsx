@@ -470,57 +470,6 @@ const ComprarLista = () => {
               </div>
             </Card>
 
-            {/* Individual Item Price Comparison */}
-            {allPrices.length > 0 && (
-              <Card className="p-6 mb-6">
-                <h2 className="text-2xl font-bold mb-4">Comparación de Precios por Artículo</h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Compara precios de cada producto en diferentes supermercados (ordenado de más barato a más caro)
-                </p>
-                <div className="space-y-6">
-                  {allPrices.map((item, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <h3 className="font-bold text-lg mb-3">{item.name}</h3>
-                      {item.availablePrices.length > 0 ? (
-                        <div className="space-y-2">
-                          {item.availablePrices.map((price: any, priceIndex: number) => (
-                            <div 
-                              key={priceIndex} 
-                              className={`flex items-center justify-between p-3 rounded-lg border ${
-                                priceIndex === 0 
-                                  ? 'bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-700' 
-                                  : 'bg-card border-border'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <Store className={`h-5 w-5 ${priceIndex === 0 ? 'text-green-600' : 'text-muted-foreground'}`} />
-                                <div>
-                                  <p className="font-semibold">{price.supermarket}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {price.brand && `${price.brand} • `}{price.unit}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className={`text-xl font-bold ${priceIndex === 0 ? 'text-green-600' : 'text-primary'}`}>
-                                  €{price.price.toFixed(2)}
-                                </p>
-                                {priceIndex === 0 && (
-                                  <p className="text-xs font-semibold text-green-600">¡Más barato!</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground italic">No hay precios disponibles para este artículo</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
             {/* Items without any prices */}
             {itemsWithoutPrices.length > 0 && (
               <Card className="p-6 mb-6 border-2 border-red-500/30 bg-red-50/50 dark:bg-red-950/20">
