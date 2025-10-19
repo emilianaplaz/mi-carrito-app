@@ -33,24 +33,11 @@ const ComprarIngrediente = () => {
   }, [productName]);
   const loadBrandsAndPrices = async () => {
     try {
-      // Load prices for this product by producto (exact match, then fallback to partial)
-      const { data: exactData, error: exactError } = await supabase
-        .from("product_prices")
-        .select(`
-          id,
-          precio,
-          presentacion,
-          mercado,
-          marca,
-          producto
-        `)
-        .eq("producto", productName);
-
-      if (exactError) throw exactError;
-
-      let pricesData = exactData;
-      if (!pricesData || pricesData.length === 0) {
-        const { data: likeData, error: likeError } = await supabase
+      // Fetch ALL product prices to do fuzzy matching
+      const PAGE_SIZE = 1000;
+      const allPricesData: any[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
           .from("product_prices")
           .select(`
             id,
@@ -60,12 +47,27 @@ const ComprarIngrediente = () => {
             marca,
             producto
           `)
-          .ilike("producto", `%${productName}%`);
-        if (likeError) throw likeError;
-        pricesData = likeData || [];
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        if (data && data.length > 0) allPricesData.push(...data);
+        if (!data || data.length < PAGE_SIZE) break;
       }
 
-      const formattedPrices: PriceInfo[] = (pricesData || []).map((p: any) => ({
+      // Import fuzzy matching utilities
+      const { fuzzyMatch } = await import("@/lib/fuzzyMatch");
+
+      // Filter prices using fuzzy matching
+      const matchedPrices = allPricesData.filter((price: any) => 
+        fuzzyMatch(productName, price.producto)
+      );
+
+      console.log(`🔍 Fuzzy matching for "${productName}":`, {
+        totalPrices: allPricesData.length,
+        matchedPrices: matchedPrices.length,
+        sampleMatches: matchedPrices.slice(0, 5).map((p: any) => p.producto)
+      });
+
+      const formattedPrices: PriceInfo[] = matchedPrices.map((p: any) => ({
         id: p.id,
         price: parseFloat(p.precio),
         presentacion: p.presentacion,
