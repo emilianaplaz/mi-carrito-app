@@ -7,32 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  ChefHat,
-  User as UserIcon,
-  Calendar,
-  List,
-  BookOpen,
-  ClipboardList,
-  LogOut,
-  Coffee,
-  UtensilsCrossed,
-  Moon,
-  ThumbsUp,
-  ThumbsDown,
-  Clock,
-  Users,
-} from "lucide-react";
+import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut, Coffee, UtensilsCrossed, Moon, ThumbsUp, ThumbsDown, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 type Recipe = {
   id: string;
   name: string;
@@ -59,19 +37,25 @@ const Dashboard = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [showPreferencesPrompt, setShowPreferencesPrompt] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     const initAuth = async () => {
       // Set up auth state listener FIRST
       const {
-        data: { subscription },
+        data: {
+          subscription
+        }
       } = supabase.auth.onAuthStateChange((event, session) => {
         setUser(session?.user ?? null);
       });
 
       // THEN check for existing session
       const {
-        data: { session },
+        data: {
+          session
+        }
       } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
       if (!session) {
@@ -87,15 +71,11 @@ const Dashboard = () => {
   }, [navigate]);
   const loadTodayRecipes = async (userId: string) => {
     // Load the most recent meal plan
-    const { data: plan } = await supabase
-      .from("meal_plans")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", {
-        ascending: false,
-      })
-      .limit(1)
-      .maybeSingle();
+    const {
+      data: plan
+    } = await supabase.from("meal_plans").select("*").eq("user_id", userId).order("created_at", {
+      ascending: false
+    }).limit(1).maybeSingle();
     if (!plan || !plan.recipe_ids) {
       setTodayRecipes(null);
       // Show preferences prompt if no meal plan exists
@@ -107,14 +87,12 @@ const Dashboard = () => {
     const today = new Date();
 
     // Set today's date display
-    setTodayDate(
-      today.toLocaleDateString("es-VE", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    );
+    setTodayDate(today.toLocaleDateString("es-VE", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    }));
 
     // Calculate which day of the plan today is
     const daysDiff = Math.floor((today.getTime() - planStartDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -134,30 +112,26 @@ const Dashboard = () => {
     }
 
     // Fetch recipes with full details
-    const { data: recipesData } = await supabase.from("recipes").select("*").in("id", recipeIds);
+    const {
+      data: recipesData
+    } = await supabase.from("recipes").select("*").in("id", recipeIds);
     if (recipesData) {
-      const recipesMap = new Map(
-        recipesData.map((r) => [
-          r.id,
-          {
-            ...r,
-            ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
-            instructions: Array.isArray(r.instructions) ? r.instructions : [],
-          },
-        ]),
-      );
+      const recipesMap = new Map(recipesData.map(r => [r.id, {
+        ...r,
+        ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
+        instructions: Array.isArray(r.instructions) ? r.instructions : []
+      }]));
       setTodayRecipes({
         breakfast: (todayDay.breakfast || []).map((id: string) => recipesMap.get(id)).filter(Boolean),
         lunch: (todayDay.lunch || []).map((id: string) => recipesMap.get(id)).filter(Boolean),
-        dinner: (todayDay.dinner || []).map((id: string) => recipesMap.get(id)).filter(Boolean),
+        dinner: (todayDay.dinner || []).map((id: string) => recipesMap.get(id)).filter(Boolean)
       });
     }
 
     // Load user recipe preferences
-    const { data: prefsData } = await supabase
-      .from("user_recipe_preferences")
-      .select("recipe_id, is_liked")
-      .eq("user_id", userId);
+    const {
+      data: prefsData
+    } = await supabase.from("user_recipe_preferences").select("recipe_id, is_liked").eq("user_id", userId);
     if (prefsData) {
       const prefsMap: Record<string, boolean> = {};
       prefsData.forEach((p: any) => {
@@ -168,38 +142,44 @@ const Dashboard = () => {
   };
   const handleRecipePreference = async (recipeId: string, isLiked: boolean) => {
     const {
-      data: { session },
+      data: {
+        session
+      }
     } = await supabase.auth.getSession();
     if (!session) return;
-    const { error } = await supabase.from("user_recipe_preferences").upsert({
+    const {
+      error
+    } = await supabase.from("user_recipe_preferences").upsert({
       user_id: session.user.id,
       recipe_id: recipeId,
-      is_liked: isLiked,
+      is_liked: isLiked
     });
     if (error) {
       toast({
         title: "Error",
         description: "No se pudo guardar la preferencia",
-        variant: "destructive",
+        variant: "destructive"
       });
     } else {
       setRecipePrefs({
         ...recipePrefs,
-        [recipeId]: isLiked,
+        [recipeId]: isLiked
       });
       toast({
         title: isLiked ? "¡Te gusta esta receta!" : "Receta marcada",
-        description: isLiked ? "Guardada en tus recetas" : "No se recomendará en el futuro",
+        description: isLiked ? "Guardada en tus recetas" : "No se recomendará en el futuro"
       });
     }
   };
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const {
+        error
+      } = await supabase.auth.signOut();
       if (error) throw error;
       toast({
         title: "Sesión cerrada",
-        description: "Has cerrado sesión exitosamente",
+        description: "Has cerrado sesión exitosamente"
       });
       navigate("/");
     } catch (error) {
@@ -207,48 +187,40 @@ const Dashboard = () => {
       toast({
         title: "Error",
         description: "No se pudo cerrar la sesión",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-  const navigationCards = [
-    {
-      title: "Mi Plan",
-      icon: Calendar,
-      description: "Planifica tus comidas semanales",
-      path: "/mi-plan",
-    },
-    {
-      title: "Listas",
-      icon: List,
-      description: "Gestiona tus listas de compras",
-      path: "/listas",
-    },
-    {
-      title: "Recetas",
-      icon: BookOpen,
-      description: "Explora y guarda recetas",
-      path: "/recetas",
-    },
-    {
-      title: "Test Preferencias",
-      icon: ClipboardList,
-      description: "Define tus preferencias alimentarias",
-      path: "/test-preferencias",
-    },
-  ];
+  const navigationCards = [{
+    title: "Mi Plan",
+    icon: Calendar,
+    description: "Planifica tus comidas semanales",
+    path: "/mi-plan"
+  }, {
+    title: "Listas",
+    icon: List,
+    description: "Gestiona tus listas de compras",
+    path: "/listas"
+  }, {
+    title: "Recetas",
+    icon: BookOpen,
+    description: "Explora y guarda recetas",
+    path: "/recetas"
+  }, {
+    title: "Test Preferencias",
+    icon: ClipboardList,
+    description: "Define tus preferencias alimentarias",
+    path: "/test-preferencias"
+  }];
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <ChefHat className="h-12 w-12 text-primary animate-pulse mx-auto mb-4" />
           <p className="text-muted-foreground">Cargando...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
@@ -288,25 +260,18 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Navigation Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 animate-fade-in">
-          {navigationCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Card
-                key={card.path}
-                className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-                onClick={() => navigate(card.path)}
-              >
+          {navigationCards.map(card => {
+          const Icon = card.icon;
+          return <Card key={card.path} className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => navigate(card.path)}>
                 <Icon className="h-10 w-10 text-primary mb-3" />
                 <h3 className="text-xl font-semibold mb-2">{card.title}</h3>
                 <p className="text-sm text-muted-foreground">{card.description}</p>
-              </Card>
-            );
-          })}
+              </Card>;
+        })}
         </div>
 
         {/* Today's Recipes */}
-        {todayRecipes && (
-          <Card className="p-6 bg-primary animate-fade-in">
+        {todayRecipes && <Card className="p-6 bg-primary animate-fade-in">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-slate-50">Recetas de Hoy</h3>
               <p className="text-sm capitalize text-slate-50">{todayDate}</p>
@@ -328,31 +293,21 @@ const Dashboard = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {["breakfast", "lunch", "dinner"].map((mealType) => (
-                <TabsContent key={mealType} value={mealType} className="mt-4">
+              {["breakfast", "lunch", "dinner"].map(mealType => <TabsContent key={mealType} value={mealType} className="mt-4">
                   <div className="grid gap-3">
                     {todayRecipes[mealType as keyof typeof todayRecipes].map((recipe: Recipe) => {
-                      const isLiked = recipePrefs[recipe.id];
-                      return (
-                        <Card key={recipe.id} className="p-4 transition-all">
+                const isLiked = recipePrefs[recipe.id];
+                return <Card key={recipe.id} className="p-4 transition-all">
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
                               <h3 className="font-bold text-lg">{recipe.name}</h3>
                               <p className="text-sm text-muted-foreground">{recipe.description}</p>
                             </div>
                             <div className="flex gap-2">
-                              <Button
-                                variant={isLiked === true ? "default" : "outline"}
-                                size="icon"
-                                onClick={() => handleRecipePreference(recipe.id, true)}
-                              >
+                              <Button variant={isLiked === true ? "default" : "outline"} size="icon" onClick={() => handleRecipePreference(recipe.id, true)}>
                                 <ThumbsUp className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant={isLiked === false ? "destructive" : "outline"}
-                                size="icon"
-                                onClick={() => handleRecipePreference(recipe.id, false)}
-                              >
+                              <Button variant={isLiked === false ? "destructive" : "outline"} size="icon" onClick={() => handleRecipePreference(recipe.id, false)}>
                                 <ThumbsDown className="h-4 w-4" />
                               </Button>
                             </div>
@@ -372,29 +327,23 @@ const Dashboard = () => {
                           <Button variant="outline" size="sm" onClick={() => setSelectedRecipe(recipe)}>
                             Ver Receta Completa
                           </Button>
-                        </Card>
-                      );
-                    })}
-                    {todayRecipes[mealType as keyof typeof todayRecipes].length === 0 && (
-                      <p className="text-sm text-muted-foreground text-center py-4">No hay recetas</p>
-                    )}
+                        </Card>;
+              })}
+                    {todayRecipes[mealType as keyof typeof todayRecipes].length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No hay recetas</p>}
                   </div>
-                </TabsContent>
-              ))}
+                </TabsContent>)}
             </Tabs>
-          </Card>
-        )}
+          </Card>}
       </main>
 
       {/* Recipe Detail Dialog */}
-      <Dialog open={!!selectedRecipe} onOpenChange={(open) => !open && setSelectedRecipe(null)}>
+      <Dialog open={!!selectedRecipe} onOpenChange={open => !open && setSelectedRecipe(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedRecipe?.name}</DialogTitle>
           </DialogHeader>
 
-          {selectedRecipe && (
-            <div className="space-y-4">
+          {selectedRecipe && <div className="space-y-4">
               <p className="text-muted-foreground">{selectedRecipe.description}</p>
 
               <div className="flex gap-4 text-sm">
@@ -411,26 +360,21 @@ const Dashboard = () => {
               <div>
                 <h4 className="font-semibold mb-2">Ingredientes:</h4>
                 <ul className="space-y-1">
-                  {selectedRecipe.ingredients?.map((ing: any, idx: number) => (
-                    <li key={idx} className="text-sm">
+                  {selectedRecipe.ingredients?.map((ing: any, idx: number) => <li key={idx} className="text-sm">
                       • {ing.amount} {ing.unit} {ing.item}
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
               </div>
 
               <div>
                 <h4 className="font-semibold mb-2">Instrucciones:</h4>
                 <ol className="space-y-2">
-                  {selectedRecipe.instructions?.map((step: string, idx: number) => (
-                    <li key={idx} className="text-sm">
+                  {selectedRecipe.instructions?.map((step: string, idx: number) => <li key={idx} className="text-sm">
                       {idx + 1}. {step}
-                    </li>
-                  ))}
+                    </li>)}
                 </ol>
               </div>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
 
@@ -445,28 +389,18 @@ const Dashboard = () => {
               Para comenzar a usar MiCarrito y generar tu plan de comidas personalizado, necesitamos conocer tus preferencias alimentarias.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={() => {
-                  setShowPreferencesPrompt(false);
-                  navigate("/test-preferencias");
-                }}
-                className="flex-1"
-              >
+              <Button onClick={() => {
+              setShowPreferencesPrompt(false);
+              navigate("/test-preferencias");
+            }} className="flex-1">
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Completar Test de Preferencias
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowPreferencesPrompt(false)}
-                className="flex-1"
-              >
-                Más Tarde
-              </Button>
+              
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
 export default Dashboard;
