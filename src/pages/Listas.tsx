@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2, Store } from "lucide-react";
+import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
 
 type GroceryItem = {
@@ -650,28 +650,25 @@ const Listas = () => {
       <Dialog open={!!viewingList} onOpenChange={(open) => !open && setViewingList(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="mb-2">{viewingList?.name}</DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              Haz clic en cualquier artículo para ver opciones de compra
-            </p>
+            <DialogTitle>{viewingList?.name}</DialogTitle>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 pr-4 mt-4" style={{ maxHeight: 'calc(80vh - 120px)' }}>
+          <ScrollArea className="flex-1 pr-4 overflow-scroll">
             {viewingList && Array.isArray(viewingList.items) && viewingList.items.length > 0 ? (
-              <div className="space-y-2 pb-2">
+              <div className="space-y-2">
                 {viewingList.items.map((item: GroceryItem, index: number) => (
                   <Card
                     key={index}
-                    className="p-4 hover:shadow-lg hover:border-primary transition-all cursor-pointer group"
+                    className="p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => {
                       setViewingList(null);
                       navigate(`/comprar-ingrediente?producto=${encodeURIComponent(item.name)}&lista=${viewingList.id}`);
                     }}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
+                      <div>
                         <div className="flex items-baseline gap-2">
-                          <h4 className="font-semibold group-hover:text-primary transition-colors">{item.name}</h4>
+                          <h4 className="font-semibold">{item.name}</h4>
                           {item.amount && item.unit && (
                             <span className="text-sm text-muted-foreground">
                               {item.amount} {item.unit}
@@ -682,9 +679,8 @@ const Listas = () => {
                           <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>
                         )}
                       </div>
-                      <Button variant="ghost" size="sm" className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <Store className="h-4 w-4 mr-2" />
-                        Ver Precios
+                      <Button variant="ghost" size="sm">
+                        Ver Precios →
                       </Button>
                     </div>
                   </Card>
