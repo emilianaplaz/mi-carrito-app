@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChefHat, ArrowLeft, Store, TrendingDown, Truck } from "lucide-react";
-
 type PriceInfo = {
   id: string;
   price: number;
@@ -15,29 +14,28 @@ type PriceInfo = {
   supermarket_name: string;
   brand_name: string;
 };
-
 const ComprarIngrediente = () => {
   const [searchParams] = useSearchParams();
   const productName = searchParams.get("producto") || "";
   const listId = searchParams.get("lista") || "";
-  
   const [loading, setLoading] = useState(true);
   const [prices, setPrices] = useState<PriceInfo[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("ALL");
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     loadBrandsAndPrices();
   }, [productName]);
-
   const loadBrandsAndPrices = async () => {
     try {
       // Load prices for this product by name
-      const { data: pricesData, error: pricesError } = await supabase
-        .from("product_prices")
-        .select(`
+      const {
+        data: pricesData,
+        error: pricesError
+      } = await supabase.from("product_prices").select(`
           id,
           price,
           unit,
@@ -45,22 +43,18 @@ const ComprarIngrediente = () => {
           brand_name,
           product_name,
           supermarkets (name)
-        `)
-        .eq("product_name", productName);
-
+        `).eq("product_name", productName);
       if (pricesError) throw pricesError;
-
       const formattedPrices: PriceInfo[] = (pricesData || []).map((p: any) => ({
         id: p.id,
         price: parseFloat(p.price),
         unit: p.unit,
         supermarket_id: p.supermarket_id,
         supermarket_name: p.supermarkets?.name || "Desconocido",
-        brand_name: p.brand_name || "Desconocida",
+        brand_name: p.brand_name || "Desconocida"
       }));
-
       setPrices(formattedPrices);
-      
+
       // Extract unique brands from prices
       const brands = Array.from(new Set(formattedPrices.map(p => p.brand_name))).sort();
       setAvailableBrands(brands);
@@ -69,7 +63,7 @@ const ComprarIngrediente = () => {
       toast({
         title: "Error",
         description: "No se pudieron cargar los datos",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -77,22 +71,14 @@ const ComprarIngrediente = () => {
   };
 
   // Filter and sort prices
-  const filteredPrices = selectedBrand === "ALL" 
-    ? [...prices].sort((a, b) => a.price - b.price)
-    : prices.filter(p => p.brand_name === selectedBrand).sort((a, b) => a.price - b.price);
-    
+  const filteredPrices = selectedBrand === "ALL" ? [...prices].sort((a, b) => a.price - b.price) : prices.filter(p => p.brand_name === selectedBrand).sort((a, b) => a.price - b.price);
   const cheapestPrice = filteredPrices.length > 0 ? filteredPrices[0].price : 0;
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <ChefHat className="h-12 w-12 text-primary animate-pulse" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
+  return <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(`/listas`)}>
@@ -107,8 +93,7 @@ const ComprarIngrediente = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Brand Filter */}
-        {availableBrands.length > 0 && (
-          <Card className="p-6 mb-6">
+        {availableBrands.length > 0 && <Card className="p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Filtrar por Marca</h2>
             <Select value={selectedBrand} onValueChange={setSelectedBrand}>
               <SelectTrigger>
@@ -116,38 +101,18 @@ const ComprarIngrediente = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Todas las Marcas</SelectItem>
-                {availableBrands.map((brand) => (
-                  <SelectItem key={brand} value={brand}>
+                {availableBrands.map(brand => <SelectItem key={brand} value={brand}>
                     {brand}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
-          </Card>
-        )}
+          </Card>}
 
         {/* Price Info Banner */}
-        {filteredPrices.length > 0 && (
-          <Card className="p-6 mb-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-200 dark:border-green-800">
-            <div className="flex items-start gap-3">
-              <TrendingDown className="h-6 w-6 text-green-600 dark:text-green-400 mt-1" />
-              <div>
-                <h2 className="text-xl font-semibold mb-2">
-                  {selectedBrand === "ALL" ? "Todas las Marcas" : `Marca: ${selectedBrand}`}
-                </h2>
-                <p className="text-sm text-foreground">
-                  {selectedBrand === "ALL" 
-                    ? "Mostrando todos los precios disponibles ordenados de menor a mayor."
-                    : `Mostrando precios de ${selectedBrand} ordenados de menor a mayor.`}
-                </p>
-              </div>
-            </div>
-          </Card>
-        )}
+        {filteredPrices.length > 0}
 
         {/* Delivery Option */}
-        {filteredPrices.length > 0 && (
-          <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800">
+        {filteredPrices.length > 0 && <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Truck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
@@ -158,42 +123,26 @@ const ComprarIngrediente = () => {
                   </p>
                 </div>
               </div>
-              <Button 
-                size="lg"
-                className="rounded-full"
-                onClick={() => navigate("/delivery-order")}
-              >
+              <Button size="lg" className="rounded-full" onClick={() => navigate("/delivery-order")}>
                 <Truck className="mr-2 h-5 w-5" />
                 Comprar por Delivery
               </Button>
             </div>
-          </Card>
-        )}
+          </Card>}
 
         {/* Price Comparison */}
-        {filteredPrices.length > 0 ? (
-          <div className="space-y-4">
+        {filteredPrices.length > 0 ? <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Comparación de Precios</h2>
-              {filteredPrices.length > 1 && (
-                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+              {filteredPrices.length > 1 && <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
                   <TrendingDown className="h-4 w-4" />
                   <span>
                     Ahorra hasta €{(filteredPrices[filteredPrices.length - 1].price - cheapestPrice).toFixed(2)}
                   </span>
-                </div>
-              )}
+                </div>}
             </div>
 
-            {filteredPrices.map((price, index) => (
-              <Card
-                key={price.id}
-                className={`p-4 transition-all ${
-                  index === 0
-                    ? "border-2 border-green-500 shadow-lg"
-                    : "hover:shadow-md"
-                }`}
-              >
+            {filteredPrices.map((price, index) => <Card key={price.id} className={`p-4 transition-all ${index === 0 ? "border-2 border-green-500 shadow-lg" : "hover:shadow-md"}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <Store className="h-8 w-8 text-primary" />
@@ -209,28 +158,20 @@ const ComprarIngrediente = () => {
                       €{price.price.toFixed(2)}
                     </p>
                     <p className="text-sm text-muted-foreground">por {price.unit}</p>
-                    {index === 0 && (
-                      <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
+                    {index === 0 && <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
                         ¡Mejor Precio!
-                      </p>
-                    )}
+                      </p>}
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="p-8 text-center">
+              </Card>)}
+          </div> : <Card className="p-8 text-center">
             <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No hay precios disponibles</h3>
             <p className="text-muted-foreground">
               No se encontraron precios para este producto
             </p>
-          </Card>
-        )}
+          </Card>}
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default ComprarIngrediente;
