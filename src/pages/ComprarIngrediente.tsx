@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChefHat, ArrowLeft, Store, TrendingDown, Truck } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { ChefHat, ArrowLeft, Store, TrendingDown, Truck, ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 type PriceInfo = {
   id: string;
   price: number;
@@ -21,10 +24,10 @@ const ComprarIngrediente = () => {
   const [prices, setPrices] = useState<PriceInfo[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("ALL");
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
+  const [selectedPriceId, setSelectedPriceId] = useState<string>("");
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { addItem } = useCart();
   useEffect(() => {
     loadBrandsAndPrices();
   }, [productName]);
@@ -89,6 +92,32 @@ const ComprarIngrediente = () => {
   // Filter and sort prices
   const filteredPrices = selectedBrand === "ALL" ? [...prices].sort((a, b) => a.price - b.price) : prices.filter(p => p.marca === selectedBrand).sort((a, b) => a.price - b.price);
   const cheapestPrice = filteredPrices.length > 0 ? filteredPrices[0].price : 0;
+
+  const handleAddToCart = () => {
+    const selectedPrice = filteredPrices.find(p => p.id === selectedPriceId);
+    if (!selectedPrice) {
+      toast({
+        title: "Selecciona una opción",
+        description: "Por favor selecciona un producto para agregar al carrito",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    addItem({
+      name: productName,
+      brand: selectedPrice.marca,
+      quantity: 1,
+      price: selectedPrice.price,
+      unit: selectedPrice.presentacion,
+      supermarket: selectedPrice.mercado
+    });
+
+    toast({
+      title: "¡Agregado al carrito!",
+      description: `${productName} de ${selectedPrice.mercado} agregado`
+    });
+  };
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <ChefHat className="h-12 w-12 text-primary animate-pulse" />
@@ -124,9 +153,6 @@ const ComprarIngrediente = () => {
             </Select>
           </Card>}
 
-        {/* Price Info Banner */}
-        {filteredPrices.length > 0}
-
         {/* Delivery Option */}
         {filteredPrices.length > 0 && <Card className="p-6 mb-6 bg-accent border-2 border-accent">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -158,28 +184,49 @@ const ComprarIngrediente = () => {
                 </div>}
             </div>
 
-            {filteredPrices.map((price, index) => <Card key={price.id} className={`p-4 transition-all ${index === 0 ? "border-2 border-green-500 shadow-lg" : "hover:shadow-md"}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Store className="h-8 w-8 text-primary" />
-                    <div>
-                      <h3 className="font-semibold text-lg">{price.mercado}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Marca: {price.marca}
-                      </p>
+            <RadioGroup value={selectedPriceId} onValueChange={setSelectedPriceId}>
+              {filteredPrices.map((price, index) => <Card key={price.id} className={`p-4 transition-all cursor-pointer ${
+                  selectedPriceId === price.id 
+                    ? "border-2 border-primary shadow-lg" 
+                    : index === 0 
+                    ? "border-2 border-green-500 shadow-lg" 
+                    : "hover:shadow-md"
+                }`}>
+                  <Label htmlFor={price.id} className="cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <RadioGroupItem value={price.id} id={price.id} />
+                        <Store className="h-8 w-8 text-primary" />
+                        <div>
+                          <h3 className="font-semibold text-lg">{price.mercado}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Marca: {price.marca}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-primary">
+                          €{price.price.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">por {price.presentacion}</p>
+                        {index === 0 && <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
+                            ¡Mejor Precio!
+                          </p>}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">
-                      €{price.price.toFixed(2)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">por {price.presentacion}</p>
-                    {index === 0 && <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
-                        ¡Mejor Precio!
-                      </p>}
-                  </div>
-                </div>
-              </Card>)}
+                  </Label>
+                </Card>)}
+            </RadioGroup>
+
+            <Button 
+              className="w-full" 
+              size="lg" 
+              onClick={handleAddToCart}
+              disabled={!selectedPriceId}
+            >
+              <ShoppingCart className="mr-2 h-5 w-5" />
+              Agregar al Carrito
+            </Button>
           </div> : <Card className="p-8 text-center">
             <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No hay precios disponibles</h3>

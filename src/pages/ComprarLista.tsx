@@ -476,13 +476,33 @@ const ComprarLista = () => {
                             ✓ Productos Disponibles ({data.available.length})
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {data.available.map((prod: any, idx: number) => <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                            {data.available.map((prod: any, idx: number) => <div 
+                                key={idx} 
+                                className="flex items-center justify-between text-sm p-2 rounded bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                                onClick={() => {
+                                  addItem({
+                                    name: prod.name,
+                                    brand: prod.brand,
+                                    quantity: 1,
+                                    price: prod.price,
+                                    unit: prod.unit || "unidad",
+                                    supermarket
+                                  });
+                                  toast({
+                                    title: "¡Agregado!",
+                                    description: `${prod.name} agregado al carrito`
+                                  });
+                                }}
+                              >
                                 <div className="flex items-center gap-2">
                                   <div className="w-2 h-2 rounded-full bg-green-500" />
                                   <span className="font-medium">{prod.name}</span>
                                   {prod.brand && <span className="text-xs text-muted-foreground">({prod.brand})</span>}
                                 </div>
-                                <span className="font-semibold text-green-700 dark:text-green-400">€{prod.price.toFixed(2)}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-green-700 dark:text-green-400">€{prod.price.toFixed(2)}</span>
+                                  <ShoppingCart className="h-3 w-3 text-muted-foreground" />
+                                </div>
                               </div>)}
                           </div>
                         </div>
