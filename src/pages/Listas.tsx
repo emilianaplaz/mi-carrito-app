@@ -30,29 +30,6 @@ type GroceryList = {
   updated_at: string;
 };
 
-// Common generic grocery product names in Spanish
-const GENERIC_PRODUCTS = [
-  "aceite de oliva", "aceite vegetal", "aceite de girasol", "aceite de maíz",
-  "agua mineral", "agua con gas", "agua sin gas",
-  "arroz", "arroz integral", "arroz blanco",
-  "atún", "atún en aceite", "atún en agua",
-  "azúcar", "azúcar blanca", "azúcar morena",
-  "café", "café molido", "café instantáneo", "café en grano",
-  "cebolla", "cebolla blanca", "cebolla morada",
-  "fideos", "pasta", "tallarines", "espagueti",
-  "harina", "harina de trigo", "harina integral",
-  "huevos",
-  "leche", "leche entera", "leche descremada", "leche deslactosada",
-  "mantequilla", "margarina",
-  "pan", "pan de molde", "pan integral",
-  "papel higiénico",
-  "pollo", "pechuga de pollo",
-  "queso",
-  "sal", "sal de mesa", "sal marina",
-  "tomate", "tomate",
-  "yogurt", "yogurt natural", "yogurt griego",
-].sort();
-
 const Listas = () => {
   const [loading, setLoading] = useState(true);
   const [lists, setLists] = useState<GroceryList[]>([]);
@@ -63,9 +40,8 @@ const Listas = () => {
   const [viewingList, setViewingList] = useState<GroceryList | null>(null);
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [availableProducts, setAvailableProducts] = useState<{ name: string; brands: string[] }[]>([]);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
   const [allBrands, setAllBrands] = useState<string[]>([]);
-  const [openProductPopovers, setOpenProductPopovers] = useState<{ [key: number]: boolean }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -77,49 +53,38 @@ const Listas = () => {
         return;
       }
       await loadLists();
-      await loadAvailableProducts();
+      await loadSubcategoriesAndBrands();
       setLoading(false);
     };
     checkUserAndLoadLists();
   }, [navigate]);
 
-  const loadAvailableProducts = async () => {
+  const loadSubcategoriesAndBrands = async () => {
     try {
-      // Fetch all products for validation
-      const pageSize = 1000;
-      const allProducts: string[] = [];
+      // Fetch subcategories
+      const { data: subcatsData, error: subcatsError } = await supabase
+        .from("subcategories")
+        .select("name")
+        .order("name", { ascending: true });
       
-      let from = 0;
-      while (true) {
-        const { data: pricesPage, error: pricesError } = await supabase
-          .from("product_prices")
-          .select("producto, subcategoria")
-          .range(from, from + pageSize - 1);
-        
-        if (pricesError) throw pricesError;
-        if (!pricesPage || pricesPage.length === 0) break;
-
-        pricesPage.forEach((row: any) => {
-          if (row.producto) allProducts.push(row.producto);
-          if (row.subcategoria) allProducts.push(row.subcategoria);
-        });
-
-        if (pricesPage.length < pageSize) break;
-        from += pageSize;
-      }
-
-      setAvailableProducts(Array.from(new Set(allProducts)).map(name => ({ name, brands: [] })));
+      if (subcatsError) throw subcatsError;
+      setSubcategories((subcatsData || []).map((s: any) => s.name));
       
-      // Fetch ALL brands
+      // Fetch brands
       const { data: brandsData, error: brandsError } = await supabase
         .from("brands")
         .select("name")
         .order("name", { ascending: true });
-      if (brandsError) throw brandsError;
       
+      if (brandsError) throw brandsError;
       setAllBrands((brandsData || []).map((b: any) => b.name));
     } catch (error) {
-      console.error("Error loading products:", error);
+      console.error("Error loading subcategories and brands:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las categorías",
+        variant: "destructive",
+      });
     }
   };
 
@@ -284,20 +249,7 @@ const Listas = () => {
   const handleEditList = (list: GroceryList) => {
     setEditingList(list);
     setNewListName(list.name);
-
-    // Map existing items to closest matching product names in the catalog
-    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
-    const mappedItems = (list.items.length > 0 ? list.items : [{ name: "", brand: "" }]).map((it) => {
-      if (!it.name) return it;
-      const exact = availableProducts.find((p) => norm(p.name) === norm(it.name));
-      const fuzzy = exact || availableProducts.find((p) => norm(p.name).includes(norm(it.name)) || norm(it.name).includes(norm(p.name)));
-      const chosenName = fuzzy ? fuzzy.name : it.name;
-      const validBrands = availableProducts.find((p) => p.name === chosenName)?.brands || [];
-      const chosenBrand = validBrands.includes(it.brand) ? it.brand : "";
-      return { ...it, name: chosenName, brand: chosenBrand };
-    });
-
-    setNewItems(mappedItems as GroceryItem[]);
+    setNewItems(list.items.length > 0 ? list.items : [{ name: "", brand: "" }]);
     setIsEditDialogOpen(true);
   };
 
@@ -414,9 +366,9 @@ const Listas = () => {
                             <SelectValue placeholder="Seleccionar producto..." />
                           </SelectTrigger>
                           <SelectContent className="max-h-[300px]">
-                            {GENERIC_PRODUCTS.map((product) => (
-                              <SelectItem key={product} value={product}>
-                                {product}
+                            {subcategories.map((subcat) => (
+                              <SelectItem key={subcat} value={subcat}>
+                                {subcat}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -636,64 +588,38 @@ const Listas = () => {
               <Label>Artículos</Label>
               {newItems.map((item, index) => (
                 <div key={index} className="flex gap-2">
-                  <Popover open={openProductPopovers[`edit-${index}`]} onOpenChange={(open) => setOpenProductPopovers(prev => ({ ...prev, [`edit-${index}`]: open }))}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openProductPopovers[`edit-${index}`]}
-                        className="flex-1 justify-between"
-                      >
-                        {item.name || "Selecciona producto"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar producto..." />
-                        <CommandList className="max-h-[300px] overflow-y-auto">
-                          <CommandEmpty>No se encontraron productos.</CommandEmpty>
-                          <CommandGroup>
-                            {availableProducts.map((product) => (
-                              <CommandItem
-                                key={product.name}
-                                value={product.name}
-                                onSelect={(value) => {
-                                  updateItemField(index, "name", product.name);
-                                  setOpenProductPopovers(prev => ({ ...prev, [`edit-${index}`]: false }));
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    item.name === product.name ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {product.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                      <Select
-                        value={item.brand}
-                        onValueChange={(value) => updateItemField(index, "brand", value)}
-                        disabled={!item.name}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Selecciona marca" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                          {item.name && availableProducts.find(p => p.name === item.name)?.brands.map((brand) => (
-                            <SelectItem key={brand} value={brand}>
-                              {brand}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <Select
+                    value={item.name}
+                    onValueChange={(value) => updateItemField(index, "name", value)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Seleccionar producto..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {subcategories.map((subcat) => (
+                        <SelectItem key={subcat} value={subcat}>
+                          {subcat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={item.brand || "ANY"}
+                    onValueChange={(value) => updateItemField(index, "brand", value === "ANY" ? "" : value)}
+                    disabled={!item.name}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Marca (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
+                      {allBrands.map((brand) => (
+                        <SelectItem key={brand} value={brand}>
+                          {brand}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {newItems.length > 1 && (
                     <Button
                       variant="ghost"
