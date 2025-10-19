@@ -11,6 +11,7 @@ import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircl
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import logo from "@/assets/mi-carrit-logo.png";
 type CartItem = {
   name: string;
@@ -73,8 +74,6 @@ const DeliveryOrder = () => {
   const [pagoMovilCedula, setPagoMovilCedula] = useState("");
   const [pagoMovilBank, setPagoMovilBank] = useState("");
   const [pagoMovilPhone, setPagoMovilPhone] = useState("");
-  
-  // BCV Exchange Rate
   const [bcvRate, setBcvRate] = useState<number | null>(null);
 
   // Load saved payment methods and BCV rate
@@ -82,7 +81,7 @@ const DeliveryOrder = () => {
     loadSavedPaymentMethods();
     fetchBCVRate();
   }, []);
-  
+
   const fetchBCVRate = async () => {
     try {
       const response = await fetch("https://api.dolarvzla.com/public/exchange-rate");
@@ -305,11 +304,7 @@ const DeliveryOrder = () => {
               <img src={logo} alt="MiCarrit" className="h-6 w-6 object-contain" />
               <span className="text-lg font-bold">Delivery en Caracas</span>
             </div>
-            {bcvRate && (
-              <div className="ml-4 text-sm bg-muted px-3 py-1 rounded-md">
-                <span className="font-semibold">BCV:</span> Bs. {bcvRate.toFixed(2)}
-              </div>
-            )}
+            <BCVRate />
           </div>
 
           <div className="flex items-center justify-center">

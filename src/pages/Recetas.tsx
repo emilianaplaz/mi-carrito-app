@@ -11,6 +11,7 @@ import { ChefHat, ArrowLeft, ThumbsUp, Clock, Users, Heart, Eye, Trash2, Utensil
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 
 type Recipe = {
   id: string;
@@ -123,8 +124,9 @@ const Recetas = () => {
             </Button>
             <div className="flex items-center gap-2">
               <ThumbsUp className="h-5 w-5 text-primary" />
-              <span className="text-lg font-bold">Mis Recetas Favoritas</span>
+              <span className="text-lg font-bold">Recetas Favoritas</span>
             </div>
+            <BCVRate />
           </div>
 
           <div className="flex items-center justify-center">

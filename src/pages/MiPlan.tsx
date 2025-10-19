@@ -34,6 +34,7 @@ import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 import cartIcon from "@/assets/cart-icon.png";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 
 type Recipe = {
   id: string;
@@ -582,6 +583,7 @@ const MiPlan = () => {
                 <ChefHat className="h-5 w-5 text-primary" />
                 <span className="text-lg font-bold">Mi Plan</span>
               </div>
+              <BCVRate />
             </div>
 
             <div className="flex items-center justify-center">

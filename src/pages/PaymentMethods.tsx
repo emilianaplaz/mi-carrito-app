@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ChefHat, ArrowLeft, CreditCard, Plus, Trash2, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 
@@ -218,6 +219,7 @@ const PaymentMethods = () => {
               <CreditCard className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold">Métodos de Pago</span>
             </div>
+            <BCVRate />
           </div>
           <div className="flex items-center justify-center">
             <img src={logo} alt="MiCarrit" className="h-28" />

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { ChefHat, ArrowLeft, Store, TrendingDown, Truck, ShoppingCart, Calendar } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 import cartIcon from "@/assets/cart-icon.png";
@@ -138,6 +139,7 @@ const ComprarIngrediente = () => {
           <div className="flex items-center gap-2 flex-1">
             <Store className="h-5 w-5 text-primary" />
             <span className="text-lg font-bold">Comprar: {productName}</span>
+            <BCVRate />
           </div>
           <div className="flex items-center justify-center flex-1">
             <img src={logo} alt="MiCarrit" className="h-28" />

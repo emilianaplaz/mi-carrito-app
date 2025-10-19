@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 import cartIcon from "@/assets/cart-icon.png";
@@ -379,6 +380,7 @@ const ComprarLista = () => {
               <img src={logo} alt="MiCarrit" className="h-6 w-6 object-contain" />
               <span className="text-lg font-bold">Comprar: {list.name}</span>
             </div>
+            <BCVRate />
           </div>
           <div className="flex items-center justify-center">
             <img src={logo} alt="MiCarrit" className="h-28" />

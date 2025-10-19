@@ -28,6 +28,7 @@ import {
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addWeeks, addMonths } from "date-fns";
@@ -485,6 +486,7 @@ const Listas = () => {
               <img src={logo} alt="MiCarrit" className="h-6 w-6 object-contain" />
               <span className="text-lg font-bold">Mis Listas</span>
             </div>
+            <BCVRate />
           </div>
 
           <div className="flex items-center justify-center">

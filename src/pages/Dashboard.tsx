@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut, Coffee, UtensilsCrossed, Moon, ThumbsUp, ThumbsDown, Clock, Users, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, addDays, isSameDay, parseISO, isWithinInterval, isBefore, isAfter } from "date-fns";
@@ -366,7 +367,9 @@ const Dashboard = () => {
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex-1"></div>
+          <div className="flex-1">
+            <BCVRate />
+          </div>
 
           <div className="flex items-center justify-center">
             <img src={logo} alt="MiCarrit" className="h-28" />

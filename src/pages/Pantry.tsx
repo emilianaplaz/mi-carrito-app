@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ChefHat, LogOut, Plus, Pencil, Trash2, ArrowLeft, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 
@@ -237,6 +238,7 @@ const Pantry = () => {
                 Mi Despensa
               </span>
             </div>
+            <BCVRate />
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>

@@ -10,6 +10,7 @@ import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 import cartIcon from "@/assets/cart-icon.png";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addDays, addWeeks, isWithinInterval, isBefore, isAfter, getDay, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -204,6 +205,7 @@ const Calendar = () => {
               <CalendarIcon className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold">Calendario de Listas</span>
             </div>
+            <BCVRate />
           </div>
           <div className="flex items-center justify-center">
             <img src={logo} alt="MiCarrit" className="h-28" />

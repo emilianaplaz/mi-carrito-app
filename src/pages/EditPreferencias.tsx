@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
 import { CartButton } from "@/components/Cart";
+import { BCVRate } from "@/components/BCVRate";
 import { z } from "zod";
 
 const preferencesSchema = z.object({
@@ -330,6 +331,7 @@ const EditPreferencias = () => {
               <ChefHat className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold">Editar Preferencias</span>
             </div>
+            <BCVRate />
           </div>
 
           <div className="flex items-center justify-center">
