@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from "lucide-react";
 
@@ -38,6 +42,7 @@ const Listas = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<{ name: string; brands: string[] }[]>([]);
   const [allBrands, setAllBrands] = useState<string[]>([]);
+  const [openProductPopovers, setOpenProductPopovers] = useState<{ [key: number]: boolean }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -392,21 +397,47 @@ const Listas = () => {
                   <Label>Artículos</Label>
                   {newItems.map((item, index) => (
                     <div key={index} className="flex gap-2">
-                      <Select
-                        value={item.name}
-                        onValueChange={(value) => updateItemField(index, "name", value)}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Selecciona producto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableProducts.map((product) => (
-                            <SelectItem key={product.name} value={product.name}>
-                              {product.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={openProductPopovers[index]} onOpenChange={(open) => setOpenProductPopovers(prev => ({ ...prev, [index]: open }))}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openProductPopovers[index]}
+                            className="flex-1 justify-between"
+                          >
+                            {item.name || "Selecciona producto"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Buscar producto..." />
+                            <CommandList>
+                              <CommandEmpty>No se encontraron productos.</CommandEmpty>
+                              <CommandGroup>
+                                {availableProducts.map((product) => (
+                                  <CommandItem
+                                    key={product.name}
+                                    value={product.name}
+                                    onSelect={(value) => {
+                                      updateItemField(index, "name", product.name);
+                                      setOpenProductPopovers(prev => ({ ...prev, [index]: false }));
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        item.name === product.name ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {product.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <Select
                         value={item.brand}
                         onValueChange={(value) => updateItemField(index, "brand", value)}
@@ -621,21 +652,47 @@ const Listas = () => {
               <Label>Artículos</Label>
               {newItems.map((item, index) => (
                 <div key={index} className="flex gap-2">
-                  <Select
-                    value={item.name}
-                    onValueChange={(value) => updateItemField(index, "name", value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecciona producto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableProducts.map((product) => (
-                        <SelectItem key={product.name} value={product.name}>
-                          {product.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={openProductPopovers[`edit-${index}`]} onOpenChange={(open) => setOpenProductPopovers(prev => ({ ...prev, [`edit-${index}`]: open }))}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openProductPopovers[`edit-${index}`]}
+                        className="flex-1 justify-between"
+                      >
+                        {item.name || "Selecciona producto"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar producto..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontraron productos.</CommandEmpty>
+                          <CommandGroup>
+                            {availableProducts.map((product) => (
+                              <CommandItem
+                                key={product.name}
+                                value={product.name}
+                                onSelect={(value) => {
+                                  updateItemField(index, "name", product.name);
+                                  setOpenProductPopovers(prev => ({ ...prev, [`edit-${index}`]: false }));
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    item.name === product.name ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {product.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                       <Select
                         value={item.brand}
                         onValueChange={(value) => updateItemField(index, "brand", value)}
