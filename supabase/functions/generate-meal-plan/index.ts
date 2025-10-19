@@ -44,21 +44,26 @@ serve(async (req) => {
 
     const days = planDuration === "2_weeks" ? 14 : 7;
 
-    // Fetch available products from product_prices table (using subcategoria)
+    // Fetch available products from product_prices table (use both subcategoria and producto)
     console.log("Fetching available products...");
     const { data: productsData, error: productsError } = await supabase
       .from('product_prices')
-      .select('subcategoria');
+      .select('subcategoria, producto');
     
     if (productsError) {
       console.error("Error fetching products:", productsError);
       throw new Error("Failed to fetch available products");
     }
     
-    // Get unique subcategorias (product names)
-    const uniqueProducts = [...new Set(productsData?.map(p => p.subcategoria) || [])];
+    // Build allowed product name set (normalize to lowercase)
+    const nameSet = new Set<string>();
+    for (const p of (productsData || [])) {
+      if (p?.subcategoria) nameSet.add(String(p.subcategoria).toLowerCase().trim());
+      if (p?.producto) nameSet.add(String(p.producto).toLowerCase().trim());
+    }
+    const uniqueProducts = Array.from(nameSet);
     const availableProducts = uniqueProducts.join(", ");
-    console.log("Available products from product_prices:", availableProducts);
+    console.log("Available products from product_prices (normalized):", availableProducts);
 
     // Build detailed prompt in Spanish
     const dietaryInfo = [];
@@ -203,6 +208,19 @@ Responde SOLO con un objeto JSON válido en este formato exacto:
     }
 
     console.log("Saving recipes to database...");
+    // Helper: basic pantry items always allowed
+    const alwaysAllowed = new Set([
+      'agua',
+      'sal',
+      'pimienta',
+      'aceite de oliva',
+    ]);
+    const isIngredientAllowed = (item: string): boolean => {
+      const normalized = String(item || '').toLowerCase().trim();
+      if (!normalized) return false;
+      if (alwaysAllowed.has(normalized)) return true;
+      return nameSet.has(normalized);
+    };
     
     // Store all recipes and build the plan structure
     const planWithRecipeIds: any = { days: [] };
@@ -229,6 +247,16 @@ Responde SOLO con un objeto JSON válido en este formato exacto:
           // Validate recipe has required fields
           if (!recipe || !recipe.name || !recipe.ingredients || !recipe.instructions) {
             console.log(`Skipping invalid recipe in ${mealType} for day ${day.day}`);
+            continue;
+          }
+          // Enforce ingredient availability constraint
+          const invalidIngredients = (recipe.ingredients || [])
+            .map((ing: any) => ing?.item)
+            .filter((name: any) => !isIngredientAllowed(name));
+          if (invalidIngredients.length > 0) {
+            console.log(
+              `Skipping recipe '${recipe.name}' in ${mealType} for day ${day.day} due to unavailable ingredients: ${invalidIngredients.join(", ")}`
+            );
             continue;
           }
           

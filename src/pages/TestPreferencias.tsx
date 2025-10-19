@@ -373,7 +373,18 @@ const TestPreferencias = () => {
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Loading Overlay */}
+      {saving && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center">
+            <img src={loadingCart} alt="Loading" className="w-32 h-auto object-contain animate-pulse mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Generando tu plan de comidas...</h3>
+            <p className="text-muted-foreground">Esto puede tomar unos momentos</p>
+          </div>
+        </div>
+      )}
+
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
@@ -403,7 +414,7 @@ const TestPreferencias = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <main className={`container mx-auto px-4 py-8 max-w-2xl ${saving ? 'pointer-events-none opacity-50' : ''}`}>
         {/* Editing info banner */}
         {hasExistingPreferences && currentStep === 0 && (
           <Card className="p-4 mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">

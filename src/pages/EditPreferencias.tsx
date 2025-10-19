@@ -321,7 +321,18 @@ const EditPreferencias = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Loading Overlay */}
+      {saving && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center">
+            <img src={loadingCart} alt="Loading" className="w-32 h-auto object-contain animate-pulse mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Generando tu plan de comidas...</h3>
+            <p className="text-muted-foreground">Esto puede tomar unos momentos</p>
+          </div>
+        </div>
+      )}
+
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
@@ -351,7 +362,7 @@ const EditPreferencias = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className={`container mx-auto px-4 py-8 max-w-4xl ${saving ? 'pointer-events-none opacity-50' : ''}`}>
         {isFirstTime && (
           <Card className="p-6 mb-6 bg-primary/10 border-primary/20">
             <div className="flex items-start gap-4">

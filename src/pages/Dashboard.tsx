@@ -24,6 +24,12 @@ import {
   Clock,
   Users,
   ShoppingCart,
+  Heart,
+  Plus,
+  Eye,
+  Edit2,
+  Settings,
+  Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
@@ -60,6 +66,22 @@ type AutomatedList = {
   automation_frequency: string;
   items: any[];
 };
+
+type GroceryItem = {
+  name: string;
+  brand: string;
+  amount?: string;
+  unit?: string;
+};
+
+type GroceryList = {
+  id: string;
+  name: string;
+  items: GroceryItem[];
+  created_at: string;
+  is_automated: boolean;
+  is_favorite?: boolean;
+};
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +97,7 @@ const Dashboard = () => {
   const [hasPreferences, setHasPreferences] = useState(false);
   const [automatedLists, setAutomatedLists] = useState<AutomatedList[]>([]);
   const [weekDays, setWeekDays] = useState<Date[]>([]);
+  const [favoritedLists, setFavoritedLists] = useState<GroceryList[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   useEffect(() => {
@@ -106,9 +129,10 @@ const Dashboard = () => {
         // Load today's recipes
         await loadTodayRecipes(session.user.id);
 
-        // Load automated lists and current week
-        await loadAutomatedLists(session.user.id);
-        initializeWeek();
+          // Load automated lists and current week
+          await loadAutomatedLists(session.user.id);
+          await loadFavoritedLists(session.user.id);
+          initializeWeek();
 
         setLoading(false);
       }
@@ -250,6 +274,29 @@ const Dashboard = () => {
     }
   };
 
+  const loadFavoritedLists = async (userId: string) => {
+    console.log("Loading favorited lists for user:", userId);
+    const { data, error } = await supabase
+      .from("grocery_lists")
+      .select("id, name, items, created_at, is_automated, is_favorite")
+      .eq("user_id", userId)
+      .eq("is_favorite", true)
+      .order("created_at", { ascending: false })
+      .limit(3); // Show only 3 favorited lists
+
+    console.log("Favorited lists query result:", { data, error });
+
+    if (data) {
+      const mappedData = data.map((list) => ({
+        ...list,
+        items: Array.isArray(list.items) ? list.items as GroceryItem[] : [],
+        is_favorite: list.is_favorite || false,
+      }));
+      console.log("Mapped favorited lists:", mappedData);
+      setFavoritedLists(mappedData);
+    }
+  };
+
   const getListOccurrencesInWeek = (list: AutomatedList) => {
     const occurrences: Date[] = [];
     if (!list.next_scheduled_date || !list.automation_frequency || weekDays.length === 0) return occurrences;
@@ -268,7 +315,7 @@ const Dashboard = () => {
           backwardDate = addDays(backwardDate, -14);
         } else if (list.automation_frequency === "monthly") {
           backwardDate = addDays(backwardDate, -30);
-        } else if (list.automation_frequency === "buy_once") {
+        } else {
           break;
         }
 
@@ -291,8 +338,6 @@ const Dashboard = () => {
         currentDate = addDays(currentDate, 14);
       } else if (list.automation_frequency === "monthly") {
         currentDate = addDays(currentDate, 30);
-      } else if (list.automation_frequency === "buy_once") {
-        break;
       } else {
         break;
       }
@@ -320,8 +365,6 @@ const Dashboard = () => {
         return "bg-purple-500";
       case "monthly":
         return "bg-green-500";
-      case "buy_once":
-        return "bg-orange-500";
       default:
         return "bg-gray-500";
     }
@@ -335,8 +378,6 @@ const Dashboard = () => {
         return "Quincenal";
       case "monthly":
         return "Mensual";
-      case "buy_once":
-        return "Una Vez";
       default:
         return frequency;
     }
@@ -397,12 +438,12 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between relative">
           <div className="flex-1 inline-flex items-center whitespace-nowrap max-w-xs">
             <BCVRate />
           </div>
 
-          <div className="flex items-center justify-center">
+          <div className="absolute left-1/2 transform -translate-x-1/2">
             <img src={logo} alt="MiCarrit" className="h-28" />
           </div>
 
@@ -458,6 +499,68 @@ const Dashboard = () => {
             );
           })}
         </div>
+
+        {/* Favorited Lists Preview */}
+        <Card className="p-6 mb-6 animate-fade-in">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-red-500" />
+              <h3 className="text-lg font-semibold">Listas Favoritas</h3>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/listas")}
+              className="text-xs"
+            >
+              Ver todas
+            </Button>
+          </div>
+
+          {favoritedLists.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="mb-4">
+                <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground mb-2">No tienes listas favoritas</p>
+                <p className="text-sm text-muted-foreground">Marca tus listas como favoritas para verlas aquí</p>
+              </div>
+              <Button onClick={() => navigate("/listas")} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Ir a Listas
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {favoritedLists.map((list) => (
+                <div 
+                  key={list.id} 
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1 cursor-pointer" onClick={() => navigate(`/comprar-lista?id=${list.id}`)}>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{list.name}</h4>
+                      <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {list.items.length} artículo{list.items.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigate(`/comprar-lista?id=${list.id}`)}
+                      className="h-8 w-8 p-0"
+                      title="Ver lista"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
         {/* Today's Recipes */}
         {todayRecipes && (
@@ -606,10 +709,6 @@ const Dashboard = () => {
                   <div className="w-3 h-3 rounded bg-green-500"></div>
                   <span>Mensual</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-orange-500"></div>
-                  <span>Una Vez</span>
-                </div>
               </div>
             )}
           </Card>
@@ -666,7 +765,7 @@ const Dashboard = () => {
 
       {/* Preferences Prompt Dialog */}
       <Dialog open={showPreferencesPrompt} onOpenChange={setShowPreferencesPrompt}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>¡Bienvenido a MiCarrito!</DialogTitle>
           </DialogHeader>

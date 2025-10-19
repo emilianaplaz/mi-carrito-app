@@ -25,8 +25,6 @@ import {
   Clock,
   Users,
   ListPlus,
-  CheckSquare,
-  X,
   Sparkles,
   Calendar,
 } from "lucide-react";
@@ -65,8 +63,6 @@ const MiPlan = () => {
   const [showAddToList, setShowAddToList] = useState(false);
   const [selectedIngredients, setSelectedIngredients] = useState<Set<number>>(new Set());
   const [listName, setListName] = useState("");
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedRecipeIds, setSelectedRecipeIds] = useState<Set<string>>(new Set());
   const [showBulkAddDialog, setShowBulkAddDialog] = useState(false);
   const [existingLists, setExistingLists] = useState<any[]>([]);
   const [listChoice, setListChoice] = useState<"new" | "existing">("new");
@@ -464,25 +460,27 @@ const MiPlan = () => {
     } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Collect all ingredients from selected recipes
+    // Collect all ingredients from all recipes in the meal plan
     // Important: This includes ingredients from recipes that are repeated in the week
     // The combineItems function will automatically:
     // 1. Exclude water, salt, pepper, and olive oil (pantry staples)
     // 2. Sum up quantities of the same ingredient across all recipes
     // 3. Normalize ingredient names to avoid duplicates
     const allIngredients: any[] = [];
-    selectedRecipeIds.forEach((recipeId) => {
-      const recipe = recipes[recipeId];
-      if (recipe && recipe.ingredients) {
-        recipe.ingredients.forEach((ing) => {
-          allIngredients.push({
-            name: ing.item,
-            brand: "",
-            amount: ing.amount,
-            unit: ing.unit,
+    mealPlan.days?.forEach((day: any) => {
+      [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach((recipeId: string) => {
+        const recipe = recipes[recipeId];
+        if (recipe && recipe.ingredients) {
+          recipe.ingredients.forEach((ing) => {
+            allIngredients.push({
+              name: ing.item,
+              brand: "",
+              amount: ing.amount,
+              unit: ing.unit,
+            });
           });
-        });
-      }
+        }
+      });
     });
 
     if (allIngredients.length === 0) {
@@ -543,18 +541,15 @@ const MiPlan = () => {
       description: `${uniqueCount} ingredientes con cantidades totales para toda la semana`,
     });
     setShowBulkAddDialog(false);
-    setSelectedRecipeIds(new Set());
-    setSelectionMode(false);
     setListName("");
     setListChoice("new");
     setSelectedListId("");
     loadExistingLists();
+    
+    // Redirect to lists section
+    navigate("/listas");
   };
 
-  const handleCancelSelection = () => {
-    setSelectionMode(false);
-    setSelectedRecipeIds(new Set());
-  };
 
 
   const handleEditPreferences = () => {
@@ -573,7 +568,7 @@ const MiPlan = () => {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card sticky top-0 z-50">
-          <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between relative">
             <div className="flex items-center gap-4 flex-1">
               <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
                 <ArrowLeft className="h-5 w-5" />
@@ -585,7 +580,7 @@ const MiPlan = () => {
               <BCVRate />
             </div>
 
-            <div className="flex items-center justify-center">
+            <div className="absolute left-1/2 transform -translate-x-1/2">
               <img src={logo} alt="MiCarrit" className="h-28" />
             </div>
 
@@ -607,7 +602,14 @@ const MiPlan = () => {
             <p className="text-muted-foreground mb-6">
               Configura tus preferencias para generar tu plan personalizado
             </p>
-            <Button onClick={() => navigate("/editar-preferencias")}>Crear Mi Plan</Button>
+            <Button 
+              onClick={() => navigate("/editar-preferencias")}
+              className="w-full bg-green-500 hover:bg-green-600 text-white text-lg py-6 px-8 h-auto"
+              size="lg"
+            >
+              <Settings className="mr-2 h-6 w-6" />
+              Configurar Preferencias
+            </Button>
           </Card>
         </main>
       </div>
@@ -627,7 +629,7 @@ const MiPlan = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between relative py-2">
             <div className="flex items-center gap-3 flex-1">
               <Button
                 variant="ghost"
@@ -648,69 +650,27 @@ const MiPlan = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-center">
+            <div className="absolute left-1/2 transform -translate-x-1/2">
               <img src={logo} alt="MiCarrit" className="h-28" />
             </div>
 
             <div className="flex items-center gap-4 flex-1 justify-end">
-              {/* Plan Completo Button - Always visible on right */}
-              {!selectionMode ? (
-                <>
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={() => {
-                      const allRecipeIds = new Set<string>();
-                      mealPlan.days?.forEach((day: any) => {
-                        [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach((id) => allRecipeIds.add(id));
-                      });
-                      setSelectedRecipeIds(allRecipeIds);
-                      setSelectionMode(true);
-                      setShowBulkAddDialog(true);
-                    }}
-                    className="group relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <ListPlus className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
-                    <div className="relative z-10">
-                      <div className="font-semibold">Plan Completo</div>
-                      <div className="text-xs opacity-90">Agregar todo a lista</div>
-                    </div>
-                  </Button>
-                  <CartButton />
-                  <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-                    <ChefHat className="h-10 w-10" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={() => setShowBulkAddDialog(true)}
-                    disabled={selectedRecipeIds.size === 0}
-                    className="group relative overflow-hidden disabled:opacity-50"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <ShoppingCart className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
-                    <div className="relative z-10">
-                      <div className="font-semibold">Crear Lista de Compras</div>
-                      <div className="text-xs opacity-90">
-                        {selectedRecipeIds.size === 0
-                          ? "Selecciona recetas"
-                          : `${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? "s" : ""} seleccionada${selectedRecipeIds.size > 1 ? "s" : ""}`}
-                      </div>
-                    </div>
-                    {selectedRecipeIds.size > 0 && (
-                      <Badge className="ml-2 relative z-10 bg-white text-primary">{selectedRecipeIds.size}</Badge>
-                    )}
-                  </Button>
-                  <CartButton />
-                  <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-                    <ChefHat className="h-10 w-10" />
-                  </Button>
-                </>
-              )}
+              <Button
+                variant="default"
+                size="lg"
+                onClick={() => setShowBulkAddDialog(true)}
+                className="group relative overflow-hidden bg-green-500 hover:bg-green-600 text-white"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ListPlus className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+                <div className="relative z-10">
+                  <div className="font-semibold">CONVIERTE TU PLAN A LISTA DE MERCADO</div>
+                </div>
+              </Button>
+              <CartButton />
+              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+                <ChefHat className="h-10 w-10" />
+              </Button>
             </div>
           </div>
         </div>
@@ -719,55 +679,18 @@ const MiPlan = () => {
       {/* Action Buttons Below Header */}
       <div className="px-10">
         <div className="container mx-auto px-4 py-3">
-          {!selectionMode ? (
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setSelectionMode(true)}
-                className="flex-1 group hover:bg-primary/10 hover:border-primary transition-all"
-              >
-                <CheckSquare className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-                <div>
-                  <div className="font-semibold">Seleccionar Recetas</div>
-                  <div className="text-xs text-muted-foreground">Elegir algunas recetas</div>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleEditPreferences}
-                className="flex-1 group hover:bg-accent/50 hover:border-accent transition-all"
-              >
-                <Settings className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-                <div>
-                  <div className="font-semibold">Editar Preferencias</div>
-                  <div className="text-xs text-muted-foreground">Personalizar plan</div>
-                </div>
-              </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleEditPreferences}
+            className="w-full group hover:bg-accent/50 hover:border-accent transition-all"
+          >
+            <Settings className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+            <div>
+              <div className="font-semibold">Editar Preferencias</div>
+              <div className="text-xs text-muted-foreground">Personalizar plan</div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-primary border border-primary animate-fade-in">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary-foreground animate-pulse" />
-                  <span className="text-sm font-medium text-primary-foreground">
-                    Modo de selección activado - Toca las recetas para seleccionarlas
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCancelSelection}
-                  className="group hover:bg-destructive/10 hover:text-destructive transition-all"
-                >
-                  <X className="h-4 w-4 mr-1 group-hover:rotate-90 transition-transform" />
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          )}
+          </Button>
         </div>
       </div>
 
@@ -807,69 +730,35 @@ const MiPlan = () => {
                         return (
                           <Card
                             key={idx}
-                            className={`p-4 transition-all cursor-pointer ${
-                              selectionMode && selectedRecipeIds.has(recipeId)
-                                ? "border-2 border-primary bg-primary"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              if (selectionMode) {
-                                const newSet = new Set(selectedRecipeIds);
-                                if (newSet.has(recipeId)) {
-                                  newSet.delete(recipeId);
-                                } else {
-                                  newSet.add(recipeId);
-                                }
-                                setSelectedRecipeIds(newSet);
-                              }
-                            }}
+                            className="p-4 transition-all"
                           >
                             <div className="flex justify-between items-start mb-2">
-                              <div className="flex-1 flex items-start gap-3">
-                                {selectionMode && (
-                                  <Checkbox
-                                    checked={selectedRecipeIds.has(recipeId)}
-                                    onCheckedChange={(checked) => {
-                                      const newSet = new Set(selectedRecipeIds);
-                                      if (checked) {
-                                        newSet.add(recipeId);
-                                      } else {
-                                        newSet.delete(recipeId);
-                                      }
-                                      setSelectedRecipeIds(newSet);
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                )}
-                                <div className="flex-1">
-                                  <h3 className="font-bold text-lg">{recipe.name}</h3>
-                                  <p className="text-sm text-muted-foreground">{recipe.description}</p>
-                                </div>
+                              <div className="flex-1">
+                                <h3 className="font-bold text-lg">{recipe.name}</h3>
+                                <p className="text-sm text-muted-foreground">{recipe.description}</p>
                               </div>
-                              {!selectionMode && (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant={isLiked === true ? "default" : "outline"}
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRecipePreference(recipe.id, true);
-                                    }}
-                                  >
-                                    <ThumbsUp className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant={isLiked === false ? "destructive" : "outline"}
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRecipePreference(recipe.id, false);
-                                    }}
-                                  >
-                                    <ThumbsDown className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
+                              <div className="flex gap-2">
+                                <Button
+                                  variant={isLiked === true ? "default" : "outline"}
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRecipePreference(recipe.id, true);
+                                  }}
+                                >
+                                  <ThumbsUp className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant={isLiked === false ? "destructive" : "outline"}
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRecipePreference(recipe.id, false);
+                                  }}
+                                >
+                                  <ThumbsDown className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
 
                             <div className="flex gap-4 text-sm text-muted-foreground mb-3">
@@ -899,19 +788,17 @@ const MiPlan = () => {
                               </div>
                             )}
 
-                            {!selectionMode && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedRecipe(recipe);
-                                  setSelectedIngredients(new Set());
-                                }}
-                              >
-                                Ver Receta Completa
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRecipe(recipe);
+                                setSelectedIngredients(new Set());
+                              }}
+                            >
+                              Ver Receta Completa
+                            </Button>
                           </Card>
                         );
                       })}
@@ -1093,9 +980,7 @@ const MiPlan = () => {
 
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {selectedRecipeIds.size === 0
-                ? "Se agregarán todos los ingredientes del plan completo"
-                : `Se agregarán ingredientes de ${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? "s" : ""} seleccionada${selectedRecipeIds.size > 1 ? "s" : ""}`}
+              Se agregarán todos los ingredientes del plan completo
             </p>
 
             <div>

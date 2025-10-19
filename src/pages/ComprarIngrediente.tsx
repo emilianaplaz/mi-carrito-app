@@ -131,7 +131,7 @@ const ComprarIngrediente = () => {
   }
   return <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-4">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-4 relative">
           <Button variant="ghost" size="icon" onClick={() => navigate(`/listas`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -140,7 +140,7 @@ const ComprarIngrediente = () => {
             <span className="text-lg font-bold">Comprar: {productName}</span>
             <BCVRate />
           </div>
-          <div className="flex items-center justify-center flex-1">
+          <div className="absolute left-1/2 transform -translate-x-1/2">
             <img src={logo} alt="MiCarrit" className="h-28" />
           </div>
           <div className="flex items-center gap-2">
@@ -156,6 +156,12 @@ const ComprarIngrediente = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Ingredient Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary mb-2">{productName}</h1>
+          <p className="text-lg text-muted-foreground">Compara precios y encuentra la mejor opción</p>
+        </div>
+
         {/* Brand Filter */}
         {availableBrands.length > 0 && <Card className="p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Filtrar por Marca</h2>

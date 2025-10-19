@@ -82,8 +82,6 @@ const Listas = () => {
         return "Quincenal";
       case "monthly":
         return "Mensual";
-      case "buy_once":
-        return "Una Vez";
       default:
         return frequency;
     }
@@ -477,7 +475,7 @@ const Listas = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between relative">
           <div className="flex items-center gap-4 flex-1">
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
@@ -489,7 +487,7 @@ const Listas = () => {
             <BCVRate />
           </div>
 
-          <div className="flex items-center justify-center">
+          <div className="absolute left-1/2 transform -translate-x-1/2">
             <img src={logo} alt="MiCarrit" className="h-28" />
           </div>
 
@@ -533,9 +531,9 @@ const Listas = () => {
                               <Button
                                 variant="outline"
                                 role="combobox"
-                                className={cn("flex-1 justify-between", !item.name && "text-muted-foreground")}
+                                className={cn("flex-1 justify-between min-w-0", !item.name && "text-muted-foreground")}
                               >
-                                {item.name || "Seleccionar producto..."}
+                                <span className="truncate max-w-[200px]">{item.name || "Seleccionar producto..."}</span>
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
                             </PopoverTrigger>
@@ -545,28 +543,31 @@ const Listas = () => {
                                   placeholder="Buscar producto..."
                                   onValueChange={(search) => setProductSearchQuery(search)}
                                 />
-                                <CommandList>
-                                  <CommandEmpty>
-                                    {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
-                                  </CommandEmpty>
-                                  <CommandGroup>
-                                    {productSearchResults.map((product) => (
-                                      <CommandItem
-                                        key={product}
-                                        value={product}
-                                        onSelect={() => updateItemField(index, "name", product)}
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "mr-2 h-4 w-4",
-                                            item.name === product ? "opacity-100" : "opacity-0",
-                                          )}
-                                        />
-                                        {product}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </CommandList>
+                                <div className="max-h-[200px] overflow-y-auto overscroll-contain" style={{ scrollbarWidth: 'thin' }}>
+                                  <CommandList className="overflow-visible">
+                                    <CommandEmpty>
+                                      {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {productSearchResults.map((product) => (
+                                        <CommandItem
+                                          key={product}
+                                          value={product}
+                                          onSelect={() => updateItemField(index, "name", product)}
+                                          className="cursor-pointer"
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              item.name === product ? "opacity-100" : "opacity-0",
+                                            )}
+                                          />
+                                          <span className="truncate max-w-[300px]">{product}</span>
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </div>
                               </Command>
                             </PopoverContent>
                           </Popover>
@@ -592,7 +593,7 @@ const Listas = () => {
                             <PopoverContent className="w-[300px] p-0 z-50 bg-popover" align="start">
                               <Command>
                                 <CommandInput placeholder="Buscar marca..." />
-                                <CommandList>
+                                <CommandList className="max-h-[200px] overflow-y-auto">
                                   <CommandEmpty>No se encontró la marca.</CommandEmpty>
                                   <CommandGroup>
                                     <CommandItem value="ANY" onSelect={() => updateItemField(index, "brand", "")}>
@@ -717,11 +718,13 @@ const Listas = () => {
                     </Button>
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
                       onClick={() => handleOpenAutomation(list)}
                       title="Configurar automatización"
+                      className="flex items-center gap-2"
                     >
                       <Clock className="h-4 w-4" />
+                      <span>Automatizar</span>
                     </Button>
                     <Button variant="outline" size="icon" onClick={() => handleEditList(list)}>
                       <Edit2 className="h-4 w-4" />
@@ -778,7 +781,7 @@ const Listas = () => {
                         {item.brand && <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>}
                       </div>
                       <Button variant="ghost" size="sm">
-                        Ver Precios →
+                        Comparar Precios →
                       </Button>
                     </div>
                   </Card>
@@ -827,9 +830,9 @@ const Listas = () => {
                       <Button
                         variant="outline"
                         role="combobox"
-                        className={cn("flex-1 justify-between", !item.name && "text-muted-foreground")}
+                        className={cn("flex-1 justify-between min-w-0", !item.name && "text-muted-foreground")}
                       >
-                        {item.name || "Seleccionar producto..."}
+                        <span className="truncate max-w-[200px]">{item.name || "Seleccionar producto..."}</span>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -839,25 +842,28 @@ const Listas = () => {
                           placeholder="Buscar producto..."
                           onValueChange={(search) => setProductSearchQuery(search)}
                         />
-                        <CommandList>
-                          <CommandEmpty>
-                            {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {productSearchResults.map((product) => (
-                              <CommandItem
-                                key={product}
-                                value={product}
-                                onSelect={() => updateItemField(index, "name", product)}
-                              >
-                                <Check
-                                  className={cn("mr-2 h-4 w-4", item.name === product ? "opacity-100" : "opacity-0")}
-                                />
-                                {product}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
+                        <div className="max-h-[200px] overflow-y-auto overscroll-contain" style={{ scrollbarWidth: 'thin' }}>
+                          <CommandList className="overflow-visible">
+                            <CommandEmpty>
+                              {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {productSearchResults.map((product) => (
+                                <CommandItem
+                                  key={product}
+                                  value={product}
+                                  onSelect={() => updateItemField(index, "name", product)}
+                                  className="cursor-pointer"
+                                >
+                                  <Check
+                                    className={cn("mr-2 h-4 w-4", item.name === product ? "opacity-100" : "opacity-0")}
+                                  />
+                                  <span className="truncate max-w-[300px]">{product}</span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </div>
                       </Command>
                     </PopoverContent>
                   </Popover>
@@ -980,7 +986,6 @@ const Listas = () => {
                         <SelectItem value="weekly">Semanal</SelectItem>
                         <SelectItem value="bi-weekly">Quincenal (cada 2 semanas)</SelectItem>
                         <SelectItem value="monthly">Mensual</SelectItem>
-                        <SelectItem value="buy_once">Una Vez</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

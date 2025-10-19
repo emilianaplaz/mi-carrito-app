@@ -17,9 +17,12 @@ import {
   CheckCircle,
   Calendar,
   ChefHat,
+  UserIcon,
   Settings,
   Save,
   Smartphone,
+  Star,
+  Trash2,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "@/contexts/CartContext";
@@ -63,16 +66,24 @@ const DeliveryOrder = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { items: cartItems, clearCart } = useCart();
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
+  
   useEffect(() => {
-    if (cartItems.length === 0) {
-      toast({
-        title: "Carrito vacío",
-        description: "No hay productos en el carrito",
-        variant: "destructive",
-      });
-      navigate("/listas");
-    }
-  }, []);
+    // Wait a bit for cart to load, then check
+    const timer = setTimeout(() => {
+      setIsCartLoaded(true);
+      if (cartItems.length === 0) {
+        toast({
+          title: "Carrito vacío",
+          description: "No hay productos en el carrito",
+          variant: "destructive",
+        });
+        navigate("/listas");
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [cartItems, navigate, toast]);
 
   // Form state
   const [street, setStreet] = useState("");
@@ -87,9 +98,16 @@ const DeliveryOrder = () => {
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCVV, setCardCVV] = useState("");
   const [savePaymentMethod, setSavePaymentMethod] = useState(false);
+  const [paymentTitle, setPaymentTitle] = useState("");
+  const [savePagoMovil, setSavePagoMovil] = useState(false);
+  const [pagoMovilTitle, setPagoMovilTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [addressTitle, setAddressTitle] = useState("");
+  const [savedAddresses, setSavedAddresses] = useState<Array<{ title?: string; street: string; zone: string; zipCode: string; is_default?: boolean }>>([]);
+  const [paymentLabelMap, setPaymentLabelMap] = useState<Record<string, string>>({});
 
   // Pago Movil state
   const [pagoMovilCedula, setPagoMovilCedula] = useState("");
@@ -100,6 +118,20 @@ const DeliveryOrder = () => {
   // Load saved payment methods
   useEffect(() => {
     loadSavedPaymentMethods();
+    // Load saved addresses from localStorage
+    try {
+      const raw = localStorage.getItem("saved_addresses");
+      if (raw) setSavedAddresses(JSON.parse(raw));
+    } catch (e) {
+      console.error("Failed to load saved addresses", e);
+    }
+    // Load saved payment labels
+    try {
+      const rawLabels = localStorage.getItem("payment_labels");
+      if (rawLabels) setPaymentLabelMap(JSON.parse(rawLabels));
+    } catch (e) {
+      console.error("Failed to load payment labels", e);
+    }
   }, []);
   const loadSavedPaymentMethods = async () => {
     try {
@@ -125,6 +157,110 @@ const DeliveryOrder = () => {
       }
     } catch (error) {
       console.error("Error loading payment methods:", error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("payment_methods")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Remove from local labels
+      const updatedLabels = { ...paymentLabelMap };
+      delete updatedLabels[id];
+      localStorage.setItem("payment_labels", JSON.stringify(updatedLabels));
+      setPaymentLabelMap(updatedLabels);
+
+      toast({
+        title: "Método eliminado",
+        description: "El método de pago ha sido eliminado"
+      });
+
+      loadSavedPaymentMethods();
+    } catch (error: any) {
+      console.error("Error deleting payment method:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el método de pago",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // First, set all methods to non-default
+      await supabase
+        .from("payment_methods")
+        .update({ is_default: false })
+        .eq("user_id", session.user.id);
+
+      // Then set the selected one as default
+      const { error } = await supabase
+        .from("payment_methods")
+        .update({ is_default: true })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Método predeterminado actualizado",
+        description: "El método de pago ha sido establecido como predeterminado"
+      });
+
+      loadSavedPaymentMethods();
+    } catch (error: any) {
+      console.error("Error setting default:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el método predeterminado",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAddress = (idx: number) => {
+    try {
+      const updated = savedAddresses.filter((_, i) => i !== idx);
+      localStorage.setItem("saved_addresses", JSON.stringify(updated));
+      setSavedAddresses(updated);
+      toast({
+        title: "Dirección eliminada",
+        description: "La dirección ha sido eliminada"
+      });
+    } catch (e) {
+      console.error("Failed to delete address", e);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la dirección",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSetDefaultAddress = (idx: number) => {
+    try {
+      const updated = savedAddresses.map((addr, i) => ({ ...addr, is_default: i === idx }));
+      localStorage.setItem("saved_addresses", JSON.stringify(updated));
+      setSavedAddresses(updated);
+      toast({
+        title: "Dirección predeterminada",
+        description: "La dirección ha sido establecida como predeterminada"
+      });
+    } catch (e) {
+      console.error("Failed to set default address", e);
+      toast({
+        title: "Error",
+        description: "No se pudo establecer la dirección predeterminada",
+        variant: "destructive"
+      });
     }
   };
 
@@ -213,7 +349,7 @@ const DeliveryOrder = () => {
               ? "Amex"
               : "Other";
 
-        const { error: saveError } = await supabase.from("payment_methods").insert({
+        const { data: insertedCard, error: saveError } = await supabase.from("payment_methods").insert({
           user_id: session.user.id,
           type: "card",
           last_four: lastFour,
@@ -221,7 +357,7 @@ const DeliveryOrder = () => {
           expiry_month: month,
           expiry_year: 2000 + year,
           is_default: savedPaymentMethods.length === 0, // Set as default if it's the first one
-        });
+        }).select("id").single();
 
         if (saveError) {
           console.error("Error saving payment method:", saveError);
@@ -231,10 +367,49 @@ const DeliveryOrder = () => {
           });
         } else {
           await loadSavedPaymentMethods(); // Reload the list
+          // Store label locally keyed by inserted id (since DB has no label field)
+          if (insertedCard?.id && paymentTitle.trim()) {
+            const updated = { ...paymentLabelMap, [insertedCard.id]: paymentTitle.trim() };
+            localStorage.setItem("payment_labels", JSON.stringify(updated));
+            setPaymentLabelMap(updated);
+          }
           toast({
             title: "Método de pago guardado",
             description: "Podrás usar esta tarjeta en futuras compras",
           });
+        }
+      }
+
+      // Save Pago Móvil if checkbox is checked
+      if (savePagoMovil && paymentMethod === "pago_movil") {
+        const lastFourPhone = pagoMovilPhone.replace(/\D/g, "").slice(-4);
+        const { data: { session: sessionForPM } } = await supabase.auth.getSession();
+        if (sessionForPM) {
+          const { data: insertedPM, error: savePMError } = await supabase.from("payment_methods").insert({
+            user_id: sessionForPM.user.id,
+            type: "pago_movil",
+            last_four: lastFourPhone,
+            card_brand: pagoMovilBank,
+            is_default: savedPaymentMethods.length === 0,
+          }).select("id").single();
+          if (savePMError) {
+            console.error("Error saving Pago Móvil:", savePMError);
+            toast({
+              title: "Advertencia",
+              description: "El pedido se procesó pero no se pudo guardar tu Pago Móvil",
+            });
+          } else {
+            await loadSavedPaymentMethods();
+            if (insertedPM?.id && pagoMovilTitle.trim()) {
+              const updated = { ...paymentLabelMap, [insertedPM.id]: pagoMovilTitle.trim() };
+              localStorage.setItem("payment_labels", JSON.stringify(updated));
+              setPaymentLabelMap(updated);
+            }
+            toast({
+              title: "Pago Móvil guardado",
+              description: "Podrás usar estos datos en futuras compras",
+            });
+          }
         }
       }
 
@@ -257,6 +432,24 @@ const DeliveryOrder = () => {
       });
 
       if (orderError) throw orderError;
+
+      // Save address locally if requested
+      if (saveAddress) {
+        try {
+          const key = "saved_addresses";
+          const raw = localStorage.getItem(key);
+          const list: Array<{ title?: string; street: string; zone: string; zipCode: string }> = raw ? JSON.parse(raw) : [];
+          const exists = list.some(a => a.street === street && a.zone === zone && a.zipCode === zipCode && (a.title || "") === addressTitle.trim());
+          if (!exists) {
+            const updated = [{ title: addressTitle.trim() || undefined, street, zone, zipCode }, ...list].slice(0, 10);
+            localStorage.setItem(key, JSON.stringify(updated));
+            setSavedAddresses(updated);
+            toast({ title: "Dirección guardada", description: "Usarás esta dirección más rápido en el futuro" });
+          }
+        } catch (e) {
+          console.error("Failed to save address", e);
+        }
+      }
 
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -308,10 +501,22 @@ const DeliveryOrder = () => {
       </div>
     );
   }
+
+  // Show loading while cart is being loaded
+  if (!isCartLoaded) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Cargando carrito...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between relative">
           <div className="flex items-center gap-4 flex-1">
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
@@ -323,7 +528,7 @@ const DeliveryOrder = () => {
             <BCVRate />
           </div>
 
-          <div className="flex items-center justify-center">
+          <div className="absolute left-1/2 transform -translate-x-1/2">
             <img src={logo} alt="MiCarrit" className="h-28" />
           </div>
 
@@ -333,7 +538,7 @@ const DeliveryOrder = () => {
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-              <ChefHat className="h-10 w-10" />
+              <UserIcon className="h-10 w-10" />
             </Button>
           </div>
         </div>
@@ -399,6 +604,59 @@ const DeliveryOrder = () => {
                 </h2>
                 <p className="text-sm text-muted-foreground mb-4">Servicio disponible solo en Caracas, Venezuela</p>
                 <div className="space-y-4">
+                  {savedAddresses.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      <Label className="text-sm font-medium">Direcciones Guardadas</Label>
+                      {savedAddresses.map((addr, idx) => (
+                        <div key={idx} className="border rounded-lg p-3 bg-muted/30">
+                          <div className="flex items-center justify-between">
+                            <div 
+                              className="flex-1 cursor-pointer"
+                              onClick={() => { 
+                                setStreet(addr.street); 
+                                setZone(addr.zone); 
+                                setZipCode(addr.zipCode); 
+                              }}
+                            >
+                              <p className="font-medium text-sm">
+                                {addr.title ? `${addr.title} · ` : ''}{addr.street}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {addr.zone} · {addr.zipCode} · Caracas
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {!addr.is_default && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSetDefaultAddress(idx);
+                                  }}
+                                  className="text-xs"
+                                >
+                                  <Star className="h-3 w-3 mr-1" />
+                                  Predeterminada
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteAddress(idx);
+                                }}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div>
                     <Label htmlFor="street">Calle y Número</Label>
                     <Input
@@ -445,6 +703,24 @@ const DeliveryOrder = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="flex items-center space-x-2 pt-2 border-t">
+                    <Checkbox id="saveAddress" checked={saveAddress} onCheckedChange={(checked) => setSaveAddress(checked as boolean)} />
+                    <Label htmlFor="saveAddress" className="text-sm font-normal cursor-pointer flex items-center gap-2">
+                      <Save className="h-4 w-4" />
+                      Guardar esta dirección para futuras compras
+                    </Label>
+                  </div>
+                  {saveAddress && (
+                    <div>
+                      <Label htmlFor="addressTitle">Título</Label>
+                      <Input
+                        id="addressTitle"
+                        placeholder="Ej: Casa, Oficina"
+                        value={addressTitle}
+                        onChange={(e) => setAddressTitle(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
               </Card>
 
@@ -484,52 +760,80 @@ const DeliveryOrder = () => {
 
               {/* Payment Method */}
               <Card className="p-6 shadow-lg">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2 justify-between">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                    Método de Pago
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => navigate("/payment-methods")}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Gestionar
-                  </Button>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  Método de Pago
                 </h2>
 
                 {/* Saved Payment Methods */}
                 {savedPaymentMethods.length > 0 && (
                   <div className="space-y-3 mb-6">
-                    <Label>Tarjetas Guardadas</Label>
-                    {savedPaymentMethods.map((method) => (
-                      <div
-                        key={method.id}
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${selectedSavedCard === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
-                        onClick={() => {
-                          setSelectedSavedCard(method.id);
-                          setPaymentMethod("saved");
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <CreditCard className="h-5 w-5" />
-                            <div>
-                              <p className="font-semibold flex items-center gap-2">
-                                {method.card_brand || "Tarjeta"} •••• {method.last_four}
-                                {method.is_default && (
-                                  <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                                    Predeterminada
-                                  </span>
-                                )}
-                              </p>
+                    <Label>Métodos Guardados</Label>
+                    {savedPaymentMethods.map((method) => {
+                      const label = paymentLabelMap[method.id];
+                      return (
+                        <div
+                          key={method.id}
+                          className={`border-2 rounded-lg p-4 transition-all ${selectedSavedCard === method.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div 
+                              className="flex items-center gap-3 flex-1 cursor-pointer"
+                              onClick={() => {
+                                setSelectedSavedCard(method.id);
+                                setPaymentMethod("saved");
+                              }}
+                            >
+                              <CreditCard className="h-5 w-5" />
+                              <div>
+                                <p className="font-semibold flex items-center gap-2">
+                                  {label ? `${label} · ` : ''}{method.card_brand || "Tarjeta"} •••• {method.last_four}
+                                  {method.is_default && (
+                                    <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                                      Predeterminada
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {method.type === "pago_movil" ? "Pago Móvil" : "Tarjeta"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {!method.is_default && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSetDefault(method.id);
+                                  }}
+                                  className="text-xs"
+                                >
+                                  <Star className="h-3 w-3 mr-1" />
+                                  Predeterminada
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(method.id);
+                                }}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
                 {/* Payment Method Selector */}
-                <Label className="mb-3 block">O selecciona otro método</Label>
                 <div className="space-y-3 mb-6">
                   <div
                     className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentMethod === "card" && !selectedSavedCard ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
@@ -633,6 +937,17 @@ const DeliveryOrder = () => {
                         Guardar este método de pago para futuras compras
                       </Label>
                     </div>
+                {savePaymentMethod && (
+                  <div>
+                    <Label htmlFor="paymentTitle">Título</Label>
+                    <Input
+                      id="paymentTitle"
+                      placeholder="Ej: Visa Personal, Tarjeta Empresa"
+                      value={paymentTitle}
+                      onChange={(e) => setPaymentTitle(e.target.value)}
+                    />
+                  </div>
+                )}
                   </div>
                 )}
 
@@ -695,6 +1010,32 @@ const DeliveryOrder = () => {
                         required
                       />
                     </div>
+                    {/* Save Pago Móvil Option */}
+                    <div className="flex items-center space-x-2 pt-2 pb-2 border-t">
+                      <Checkbox
+                        id="savePagoMovil"
+                        checked={savePagoMovil}
+                        onCheckedChange={(checked) => setSavePagoMovil(checked as boolean)}
+                      />
+                      <Label
+                        htmlFor="savePagoMovil"
+                        className="text-sm font-normal cursor-pointer flex items-center gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Guardar Pago Móvil para futuras compras
+                      </Label>
+                    </div>
+                {savePagoMovil && (
+                  <div>
+                    <Label htmlFor="pagoMovilTitle">Título</Label>
+                    <Input
+                      id="pagoMovilTitle"
+                      placeholder="Ej: Pago Móvil Personal"
+                      value={pagoMovilTitle}
+                      onChange={(e) => setPagoMovilTitle(e.target.value)}
+                    />
+                  </div>
+                )}
                   </div>
                 )}
 

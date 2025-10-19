@@ -17,6 +17,7 @@ import EditPreferencias from "./pages/EditPreferencias";
 import ComprarIngrediente from "./pages/ComprarIngrediente";
 import ComprarLista from "./pages/ComprarLista";
 import DeliveryOrder from "./pages/DeliveryOrder";
+import Addresses from "./pages/Addresses";
 import ImportPrices from "./pages/ImportPrices";
 import Calendar from "./pages/Calendar";
 import PaymentMethods from "./pages/PaymentMethods";
@@ -51,6 +52,7 @@ function App() {
             <Route path="/comprar-ingrediente" element={<ComprarIngrediente />} />
             <Route path="/comprar-lista" element={<ComprarLista />} />
             <Route path="/delivery-order" element={<DeliveryOrder />} />
+            <Route path="/addresses" element={<Addresses />} />
             <Route path="/import-prices" element={<ImportPrices />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/payment-methods" element={<PaymentMethods />} />

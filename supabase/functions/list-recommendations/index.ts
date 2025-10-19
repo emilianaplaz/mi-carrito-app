@@ -1,3 +1,5 @@
+/// <reference path="../types.d.ts" />
+declare const Deno: any;
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -11,25 +13,37 @@ serve(async (req) => {
   }
 
   try {
-    const { listName, items, availablePrices, allSupermarkets, budget } = await req.json();
-    console.log('Received request:', { listName, itemCount: items.length, priceCount: availablePrices.length, supermarketCount: allSupermarkets?.length || 0, budget });
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const body = await req.json();
+    const listName = body?.listName ?? '';
+    const items: any[] = Array.isArray(body?.items) ? body.items : [];
+    const availablePrices: any[] = Array.isArray(body?.availablePrices) ? body.availablePrices : [];
+    const allSupermarkets: any[] = Array.isArray(body?.allSupermarkets) ? body.allSupermarkets : [];
+    const budget: number | undefined = typeof body?.budget === 'number' ? body.budget : undefined;
+    console.log('Received request:', { listName, itemCount: items.length, priceCount: availablePrices.length, supermarketCount: allSupermarkets.length, budget });
+    if (items.length === 0 || availablePrices.length === 0) {
+      return new Response(
+        JSON.stringify({
+          recommendations: [],
+          allPrices: [],
+          itemsWithoutPrices: items.map((i: any) => ({ name: i?.name, brand: i?.brand })),
+          summary: 'No se proporcionaron suficientes datos para generar recomendaciones.'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
     // Group prices by supermarket and product for detailed calculation
+    const normalize = (v: any) => String(v || '').toLowerCase().trim();
     const pricesBySupermarket: Record<string, any[]> = {};
     const productPriceMap: Record<string, any[]> = {};
     const productOnlyMap: Record<string, any[]> = {};
     
     availablePrices.forEach((price: any) => {
-      const supermarketName = price.mercado || "Desconocido";
-      const productName = price.producto;
+      const supermarketName = normalize(price.mercado) || "desconocido";
+      const productName = normalize(price.producto);
       if (!productName) return; // Skip if no product name
       
-      const brandName = price.marca || undefined;
+      const brandName = normalize(price.marca) || undefined;
       const productKey = `${productName}-${brandName || 'sin marca'}`;
       
       if (!pricesBySupermarket[supermarketName]) {
@@ -59,11 +73,13 @@ serve(async (req) => {
 
     // Build detailed price comparison for each item
     const itemsWithPrices = items.map((item: any) => {
-      const productKey = `${item.name}-${item.brand || 'sin marca'}`;
-      const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
+      const itemName = normalize(item.name);
+      const itemBrand = normalize(item.brand);
+      const productKey = `${itemName}-${itemBrand || 'sin marca'}`;
+      const prices = itemBrand ? (productPriceMap[productKey] || []) : (productOnlyMap[itemName] || []);
       return {
-        name: item.name,
-        brand: item.brand,
+        name: itemName,
+        brand: itemBrand,
         availablePrices: prices,
         hasPrices: prices.length > 0
       };
@@ -88,7 +104,7 @@ serve(async (req) => {
       const itemsInSupermarket: any[] = [];
       let hasAllItems = true;
       
-      for (const item of items) {
+      for (const item of items.map((it: any) => ({ name: normalize(it.name), brand: normalize(it.brand) }))) {
         let priceInSupermarket: any | undefined;
         if (item.brand) {
           // Match exact brand when provided
@@ -131,7 +147,7 @@ serve(async (req) => {
       for (const [supermarket, supermarketPrices] of Object.entries(pricesBySupermarket)) {
         const itemsFound: any[] = [];
         let total = 0;
-        for (const item of items) {
+        for (const item of items.map((it: any) => ({ name: normalize(it.name), brand: normalize(it.brand) }))) {
           let priceInSupermarket: any | undefined;
           if (item.brand) {
             priceInSupermarket = (supermarketPrices as any[]).find(
@@ -162,7 +178,7 @@ serve(async (req) => {
     let cheapestTotal = 0;
     const cheapestUsedSupermarkets = new Set<string>();
     
-    for (const item of items) {
+    for (const item of items.map((it: any) => ({ name: normalize(it.name), brand: normalize(it.brand) }))) {
       const productKey = `${item.name}-${item.brand || 'sin marca'}`;
       const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
       
@@ -193,17 +209,6 @@ serve(async (req) => {
         storeCount: cheapestStoreCount
       });
       console.log(`Cheapest overall: ${cheapestStoreCount} stores for $${cheapestTotal.toFixed(2)}`);
-    } else if (cheapestCombination.length > 0) {
-      // Partial coverage with cheapest
-      supermarketOptions.push({
-        supermarket: `Opción Más Barata: ${Array.from(cheapestUsedSupermarkets).join(' + ')}`,
-        items: cheapestCombination,
-        totalPrice: cheapestTotal,
-        isCombination: true,
-        missingCount: items.length - cheapestCombination.length,
-        strategy: 'cheapest',
-        storeCount: cheapestStoreCount
-      });
     }
     
     // Option 2B: Generate smart combination strategies that minimize store count
@@ -213,7 +218,7 @@ serve(async (req) => {
       for (const [supermarket, prices] of Object.entries(pricesBySupermarket)) {
         const coveredItems = new Set<string>();
         const priceMap = new Map<string, any>();
-        for (const item of items) {
+        for (const item of items.map((it: any) => ({ name: normalize(it.name), brand: normalize(it.brand) }))) {
           const matchingPrice = (prices as any[]).find((p: any) => 
             p.product === item.name && (!item.brand || (p.brand || 'sin marca') === (item.brand || 'sin marca'))
           );
@@ -236,8 +241,8 @@ serve(async (req) => {
       const foundCompleteCombinations: Array<{ stores: string[]; items: any[]; total: number }> = [];
       
       // Try all 2-store combinations
-      for (let i = 0; i < Math.min(10, supermarketCoverage.length); i++) {
-        for (let j = i + 1; j < Math.min(10, supermarketCoverage.length); j++) {
+      for (let i = 0; i < supermarketCoverage.length; i++) {
+        for (let j = i + 1; j < supermarketCoverage.length; j++) {
           const store1 = supermarketCoverage[i];
           const store2 = supermarketCoverage[j];
           
@@ -246,7 +251,7 @@ serve(async (req) => {
           let combinationTotal = 0;
           
           // Add items from both stores, picking cheapest when available in both
-          for (const item of items) {
+          for (const item of items.map((it: any) => ({ name: normalize(it.name), brand: normalize(it.brand) }))) {
             const price1 = store1.priceMap.get(item.name);
             const price2 = store2.priceMap.get(item.name);
             
@@ -297,7 +302,7 @@ serve(async (req) => {
       // If no 2-store solution found, try combinations with more stores
       // Keep adding stores until we achieve complete coverage or exceed budget
       if (foundCompleteCombinations.length === 0) {
-        const maxStores = Math.min(10, supermarketCoverage.length);
+        const maxStores = supermarketCoverage.length;
         
         // Try 3-store, 4-store, etc. combinations until we find complete coverage
         for (let numStores = 3; numStores <= maxStores && foundCompleteCombinations.length === 0; numStores++) {
@@ -317,14 +322,14 @@ serve(async (req) => {
             return combos;
           };
           
-          const storeCombos = generateCombinations(supermarketCoverage.slice(0, Math.min(15, supermarketCoverage.length)), numStores);
+          const storeCombos = generateCombinations(supermarketCoverage, numStores);
           
           for (const stores of storeCombos) {
             const coveredItems = new Set<string>();
             const combinationItems: any[] = [];
             let combinationTotal = 0;
             
-            for (const item of items) {
+            for (const item of items.map((it: any) => ({ name: normalize(it.name), brand: normalize(it.brand) }))) {
               let bestPrice: any = null;
               
               for (const store of stores) {
@@ -364,6 +369,57 @@ serve(async (req) => {
             // Stop after finding a few complete combinations with this store count
             if (foundCompleteCombinations.length >= 3) break;
           }
+        }
+      }
+
+      // Greedy fallback: ensure full coverage if possible by selecting stores that cover the most remaining items
+      if (foundCompleteCombinations.length === 0) {
+        const remainingItems = new Set<string>(items.map((it: any) => normalize(it.name)));
+        const selectedStores: any[] = [];
+        const selectedPriceMaps: Map<string, any>[] = [];
+        const coverageByStore = supermarketCoverage.map(s => ({ name: s.name, items: s.items, priceMap: s.priceMap }));
+        
+        while (remainingItems.size > 0) {
+          let bestStore: any = null;
+          let bestGain = 0;
+          for (const s of coverageByStore) {
+            const gain = Array.from(remainingItems).filter(it => s.items.has(it)).length;
+            if (gain > bestGain) {
+              bestGain = gain;
+              bestStore = s;
+            }
+          }
+          if (!bestStore || bestGain === 0) break;
+          selectedStores.push(bestStore.name);
+          selectedPriceMaps.push(bestStore.priceMap);
+          for (const it of Array.from(remainingItems)) {
+            if (bestStore.items.has(it)) remainingItems.delete(it);
+          }
+        }
+        
+        if (remainingItems.size === 0 && selectedStores.length > 0) {
+          const combinationItems: any[] = [];
+          let combinationTotal = 0;
+          for (const item of items.map((it: any) => ({ name: normalize(it.name) }))) {
+            let bestPrice: any = null;
+            for (const pm of selectedPriceMaps) {
+              const price = pm.get(item.name);
+              if (price && (!bestPrice || price.price < bestPrice.price)) bestPrice = price;
+            }
+            if (bestPrice) {
+              combinationItems.push({
+                item: item.name,
+                price: bestPrice.price,
+                brand: bestPrice.brand,
+                supermarket: bestPrice.supermarket
+              });
+              combinationTotal += bestPrice.price;
+            }
+          }
+          foundCompleteCombinations.push({ stores: selectedStores, items: combinationItems, total: combinationTotal });
+          console.log(`Greedy coverage found complete: ${selectedStores.join(' + ')} = $${combinationTotal.toFixed(2)}`);
+        } else {
+          console.log('Greedy coverage could not find full coverage (some items have no prices).');
         }
       }
       
@@ -447,26 +503,18 @@ serve(async (req) => {
     // CRITICAL: fewest-stores should be labeled "Mejor Opción", cheapest should be "Opción Más Barata"
     
     // First, try to find COMPLETE coverage options (missingCount === 0)
-    // For "Mejor Opción", prioritize complete coverage even with many stores
+    // For "Mejor Opción", must be complete coverage
     let fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores' && (opt.missingCount || 0) === 0);
     
-    // If no complete fewest-stores option, try to find ANY complete option for Mejor Opción
+    // If no complete fewest-stores option, do NOT downgrade to partial
     if (!fewestStoresOption) {
-      fewestStoresOption = withinBudget.find(opt => (opt.missingCount || 0) === 0);
-      console.log('No complete fewest-stores option, using any complete option for Mejor Opción');
+      console.log('No complete fewest-stores option available for "Mejor Opción"');
     }
     
-    // If still no complete option, fall back to best partial fewest-stores option
-    if (!fewestStoresOption) {
-      fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores');
-      console.log('No complete option found, using partial fewest-stores option');
-    }
-    
+    // "Opción Más Barata" must also be complete coverage
     let cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest' && (opt.missingCount || 0) === 0);
-    
-    // If no complete cheapest option, fall back to best partial cheapest option
     if (!cheapestOption) {
-      cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest');
+      console.log('No complete cheapest option available for "Opción Más Barata"');
     }
     
     console.log('Found options:', {
@@ -535,10 +583,10 @@ serve(async (req) => {
       console.log('No cheapestOption found');
     }
     
-    // If we still don't have 2 options, add other top options
+    // If we still don't have 2 options, add other top complete options
     if (finalRecommendations.length < 2) {
       const remainingOptions = withinBudget.filter(opt => 
-        opt !== fewestStoresOption && opt !== cheapestOption
+        opt !== fewestStoresOption && opt !== cheapestOption && (opt.missingCount || 0) === 0
       );
       
       // Determine what label the next options should get
@@ -586,11 +634,13 @@ serve(async (req) => {
       finalRecommendations[0].sortOrder = 1;
     }
     
+    // Enforce COMPLETE coverage only: drop any partials just in case
+    const completeRecommendations = finalRecommendations.filter(opt => (opt.missingCount || 0) === 0);
     // Final sort to ensure correct order
-    finalRecommendations.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+    completeRecommendations.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
     
-    console.log(`Final recommendations count: ${finalRecommendations.length}`);
-    console.log('Final recommendations details:', JSON.stringify(finalRecommendations.map((r, i) => ({
+    console.log(`Final recommendations count (complete only): ${completeRecommendations.length}`);
+    console.log('Final recommendations details:', JSON.stringify(completeRecommendations.map((r, i) => ({
       index: i,
       displayLabel: r.displayLabel,
       supermarket: r.supermarket,
@@ -602,20 +652,18 @@ serve(async (req) => {
     const response = {
       allPrices: itemsWithPrices,
       itemsWithoutPrices: itemsWithoutPrices,
-      recommendations: finalRecommendations.map((opt, index) => {
+      recommendations: completeRecommendations.map((opt, index) => {
         const marketsCount = opt.isCombination ? new Set(opt.items.map((i: any) => i.supermarket)).size : 1;
-        const hasAllItems = (opt.missingCount || 0) === 0;
-        const missingNote = opt.missingCount && opt.missingCount > 0 ? ` Faltan ${opt.missingCount} producto(s).` : ' ¡Todos los productos disponibles!';
+        const hasAllItems = true;
+        const missingNote = ' ¡Todos los productos disponibles!';
         
         const base = opt.isCombination
           ? `Combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por $${opt.totalPrice.toFixed(2)}.`
           : `${opt.supermarket} por $${opt.totalPrice.toFixed(2)}.`;
         
         let prefix = '';
-        if (index === 0 && hasAllItems) {
+        if (index === 0) {
           prefix = '✓ RECOMENDADO: ';
-        } else if (index === 0) {
-          prefix = 'Mejor opción parcial: ';
         } else {
           prefix = 'Alternativa: ';
         }
@@ -635,24 +683,24 @@ serve(async (req) => {
         
         return { ...opt, reasoning: `⚠️ Excede presupuesto: ${base} ${missingNote} (Excede por $${(opt.totalPrice - budget).toFixed(2)})` };
       }) : [],
-      summary: withinBudget.length > 0
-        ? (() => {
-            const best = withinBudget[0];
+      summary: (() => {
+          const withinBudgetComplete = withinBudget.filter(opt => (opt.missingCount || 0) === 0);
+          if (withinBudgetComplete.length > 0) {
+            const best = withinBudgetComplete[0];
             const marketsCount = best.isCombination ? new Set(best.items.map((i: any) => i.supermarket)).size : 1;
-            const hasAllItems = (best.missingCount || 0) === 0;
             const budgetNote = budget && budget > 0 ? ` dentro del presupuesto de $${budget.toFixed(2)}` : '';
-            
-            if (!hasAllItems) {
-              return `Ningún supermercado tiene todos los productos${budgetNote}. La mejor opción parcial es ${best.supermarket} con ${best.items.length} de ${items.length} artículos por $${best.totalPrice.toFixed(2)}.`;
-            }
-            
             return best.isCombination
               ? `¡Puedes conseguir TODOS los productos${budgetNote}! La opción más completa es combinar ${marketsCount} supermercados por $${best.totalPrice.toFixed(2)}.`
               : `¡Puedes conseguir TODOS los productos en ${best.supermarket} por $${best.totalPrice.toFixed(2)}${budgetNote}!`;
-          })()
-        : budget && budget > 0 && exceededBudget.length > 0
-          ? `⚠️ Ninguna opción está dentro del presupuesto de $${budget.toFixed(2)}. La opción más económica cuesta $${exceededBudget[0].totalPrice.toFixed(2)}.`
-          : "No se encontraron precios suficientes para hacer recomendaciones."
+          }
+          if (budget && budget > 0 && exceededBudget.length > 0) {
+            const completeExceeded = exceededBudget.filter(opt => (opt.missingCount || 0) === 0);
+            if (completeExceeded.length > 0) {
+              return `⚠️ Ninguna opción está dentro del presupuesto de $${budget.toFixed(2)}. La opción más económica que incluye TODOS los productos cuesta $${completeExceeded[0].totalPrice.toFixed(2)}.`;
+            }
+          }
+          return "No se encontró ninguna combinación de supermercados que incluya TODOS los productos de la lista. Revisa si hay productos sin precio.";
+        })()
     };
 
     console.log('Calculated recommendations:', response.recommendations.length);
