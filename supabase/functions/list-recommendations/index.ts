@@ -26,7 +26,7 @@ serve(async (req) => {
     
     availablePrices.forEach((price: any) => {
       const supermarketName = price.supermarkets?.name || "Desconocido";
-      const productName = price.products?.name;
+      const productName = price.product_name;
       if (!productName) return; // Skip if no product name
       
       const brandName = price.brand_name || undefined;

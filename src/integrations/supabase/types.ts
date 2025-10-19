@@ -198,7 +198,7 @@ export type Database = {
           id: string
           last_updated: string
           price: number
-          product_id: string
+          product_name: string
           supermarket_id: string
           unit: string
         }
@@ -208,7 +208,7 @@ export type Database = {
           id?: string
           last_updated?: string
           price: number
-          product_id: string
+          product_name: string
           supermarket_id: string
           unit: string
         }
@@ -218,18 +218,11 @@ export type Database = {
           id?: string
           last_updated?: string
           price?: number
-          product_id?: string
+          product_name?: string
           supermarket_id?: string
           unit?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "product_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "product_prices_supermarket_id_fkey"
             columns: ["supermarket_id"]

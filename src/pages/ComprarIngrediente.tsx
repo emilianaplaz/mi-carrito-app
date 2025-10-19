@@ -32,20 +32,7 @@ const ComprarIngrediente = () => {
 
   const loadBrandsAndPrices = async () => {
     try {
-      // Load prices for this product
-      // First get the product ID
-      const { data: productData } = await supabase
-        .from("products")
-        .select("id, name")
-        .eq("name", productName)
-        .maybeSingle();
-
-      if (!productData) {
-        setPrices([]);
-        setLoading(false);
-        return;
-      }
-
+      // Load prices for this product by name
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
         .select(`
@@ -54,10 +41,10 @@ const ComprarIngrediente = () => {
           unit,
           supermarket_id,
           brand_name,
-          products (name),
+          product_name,
           supermarkets (name)
         `)
-        .eq("product_id", productData.id);
+        .eq("product_name", productName);
 
       if (pricesError) throw pricesError;
 
