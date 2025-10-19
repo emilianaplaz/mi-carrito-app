@@ -423,15 +423,53 @@ serve(async (req) => {
     
     // Build final recommendations list with both strategies
     const finalRecommendations: any[] = [];
-    if (fewestStoresOption) finalRecommendations.push(fewestStoresOption);
-    if (cheapestOption && cheapestOption !== fewestStoresOption) finalRecommendations.push(cheapestOption);
     
-    // If we don't have 2 complete options, add other options
+    // ALWAYS label the best option as "Mejor Opción"
+    if (fewestStoresOption) {
+      const labeled = { 
+        ...fewestStoresOption,
+        displayLabel: 'Mejor Opción'
+      };
+      // Ensure supermarket name has the label
+      if (!labeled.supermarket.includes('Mejor Opción')) {
+        labeled.supermarket = `Mejor Opción: ${labeled.supermarket}`;
+      }
+      finalRecommendations.push(labeled);
+    }
+    
+    // ALWAYS label the cheapest option as "Opción Más Barata"
+    if (cheapestOption && cheapestOption !== fewestStoresOption) {
+      const labeled = {
+        ...cheapestOption,
+        displayLabel: 'Opción Más Barata'
+      };
+      // Ensure supermarket name has the label
+      if (!labeled.supermarket.includes('Opción Más Barata')) {
+        labeled.supermarket = `Opción Más Barata: ${labeled.supermarket}`;
+      }
+      finalRecommendations.push(labeled);
+    }
+    
+    // If we don't have 2 complete options, add other options with appropriate labels
     if (finalRecommendations.length < 2) {
       const remainingOptions = withinBudget.filter(opt => 
-        !finalRecommendations.includes(opt)
+        !finalRecommendations.includes(opt) && opt !== fewestStoresOption && opt !== cheapestOption
       );
-      finalRecommendations.push(...remainingOptions.slice(0, 2 - finalRecommendations.length));
+      
+      for (let i = 0; i < Math.min(remainingOptions.length, 2 - finalRecommendations.length); i++) {
+        const opt = remainingOptions[i];
+        const labeled = {
+          ...opt,
+          displayLabel: finalRecommendations.length === 0 ? 'Mejor Opción' : 'Opción Más Barata'
+        };
+        // Add label to supermarket name if not present
+        if (finalRecommendations.length === 0 && !labeled.supermarket.includes('Mejor Opción')) {
+          labeled.supermarket = `Mejor Opción: ${labeled.supermarket}`;
+        } else if (finalRecommendations.length === 1 && !labeled.supermarket.includes('Opción Más Barata')) {
+          labeled.supermarket = `Opción Más Barata: ${labeled.supermarket}`;
+        }
+        finalRecommendations.push(labeled);
+      }
     }
     
     console.log(`Final recommendations count: ${finalRecommendations.length} (fewest: ${fewestStoresOption ? 'yes' : 'no'}, cheapest: ${cheapestOption ? 'yes' : 'no'})`);

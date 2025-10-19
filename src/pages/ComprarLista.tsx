@@ -33,6 +33,7 @@ type SupermarketRecommendation = {
   reasoning: string;
   isCombination?: boolean;
   missingCount?: number;
+  displayLabel?: string;
 };
 type ItemPriceComparison = {
   name: string;
@@ -374,19 +375,12 @@ const ComprarLista = () => {
                   <p className="text-sm text-muted-foreground">Elige la estrategia que prefieras</p>
                 </div>
                 
-                {/* Sort recommendations: Best Option first, then Cheapest */}
-                {[...recommendations]
-                  .sort((a, b) => {
-                    const aIsBest = a.supermarket.includes('Mejor Opción');
-                    const bIsBest = b.supermarket.includes('Mejor Opción');
-                    if (aIsBest && !bIsBest) return -1;
-                    if (!aIsBest && bIsBest) return 1;
-                    return 0;
-                  })
+                {/* Always show in order: Best Option first, then Cheapest */}
+                {recommendations
                   .slice(0, 2)
                   .map((rec, index) => {
-                  const isBestOption = rec.supermarket.includes('Mejor Opción');
-                  const isCheapest = rec.supermarket.includes('Más Barata');
+                  const isBestOption = rec.supermarket.includes('Mejor Opción') || rec.displayLabel === 'Mejor Opción';
+                  const isCheapest = rec.supermarket.includes('Más Barata') || rec.displayLabel === 'Opción Más Barata';
                   
                   return (
                     <Card key={index} className={`p-6 border-2 ${(rec.missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
@@ -394,7 +388,7 @@ const ComprarLista = () => {
                         <Sparkles className={`h-7 w-7 mt-1 flex-shrink-0 ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
                         <div className="flex-1">
                           <h3 className={`text-xl font-bold mb-2 ${(rec.missingCount || 0) === 0 ? 'text-green-800 dark:text-green-300' : 'text-orange-800 dark:text-orange-300'}`}>
-                            {isBestOption ? '🎯 Mejor Opción' : isCheapest ? '💰 Opción Más Barata' : rec.supermarket}
+                            {index === 0 ? '🎯 Mejor Opción' : '💰 Opción Más Barata'}
                           </h3>
                           
                           {/* Recommendation details */}
