@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logo from "@/assets/mi-carrit-logo.png";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -220,14 +221,13 @@ const Dashboard = () => {
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ChefHat className="h-5 w-5 text-primary" />
-            <span className="text-lg font-bold text-primary">
-              MiCarrito
-            </span>
+          <div className="flex-1"></div>
+          
+          <div className="flex items-center justify-center">
+            <img src={logo} alt="MiCarrit" className="h-12" />
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1 justify-end">
             <CartButton />
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
