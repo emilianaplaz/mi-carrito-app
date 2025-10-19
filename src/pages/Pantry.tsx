@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ChefHat, LogOut, Plus, Pencil, Trash2, ArrowLeft, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CartButton } from "@/components/Cart";
 
 interface PantryItem {
   id: string;
@@ -236,11 +237,9 @@ const Pantry = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:block">
-              {user?.email}
-            </span>
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
-              <LogOut className="h-5 w-5" />
+            <CartButton />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ChefHat className="h-10 w-10" />
             </Button>
           </div>
         </div>

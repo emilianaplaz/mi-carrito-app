@@ -248,7 +248,12 @@ const ComprarLista = () => {
               <span className="text-lg font-bold">Comprar: {list.name}</span>
             </div>
           </div>
-          <CartButton />
+          <div className="flex items-center gap-2">
+            <CartButton />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ChefHat className="h-10 w-10" />
+            </Button>
+          </div>
         </div>
       </header>
 

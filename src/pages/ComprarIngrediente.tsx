@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ChefHat, ArrowLeft, Store, TrendingDown, Truck, ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { CartButton } from "@/components/Cart";
 type PriceInfo = {
   id: string;
   price: number;
@@ -131,9 +132,15 @@ const ComprarIngrediente = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate(`/listas`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <Store className="h-5 w-5 text-primary" />
             <span className="text-lg font-bold">Comprar: {productName}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CartButton />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ChefHat className="h-10 w-10" />
+            </Button>
           </div>
         </div>
       </header>

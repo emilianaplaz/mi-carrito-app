@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
+import { CartButton } from "@/components/Cart";
 
 type GroceryItem = {
   name: string;
@@ -391,6 +392,10 @@ const Listas = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
+            <CartButton />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ChefHat className="h-10 w-10" />
+            </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>

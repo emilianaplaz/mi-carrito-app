@@ -30,6 +30,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
+import { CartButton } from "@/components/Cart";
 
 type Recipe = {
   id: string;
@@ -586,7 +587,12 @@ const MiPlan = () => {
               <img src={logo} alt="MiCarrit" className="h-28" />
             </div>
 
-            <div className="flex-1"></div>
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <CartButton />
+              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+                <ChefHat className="h-10 w-10" />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -644,44 +650,56 @@ const MiPlan = () => {
             <div className="flex items-center gap-4 flex-1 justify-end">
               {/* Plan Completo Button - Always visible on right */}
               {!selectionMode ? (
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={() => {
-                    handleSelectAllRecipes();
-                    setShowBulkAddDialog(true);
-                  }}
-                  className="group relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <ListPlus className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
-                  <div className="relative z-10">
-                    <div className="font-semibold">Plan Completo</div>
-                    <div className="text-xs opacity-90">Agregar todo a lista</div>
-                  </div>
-                </Button>
+                <>
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={() => {
+                      handleSelectAllRecipes();
+                      setShowBulkAddDialog(true);
+                    }}
+                    className="group relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ListPlus className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+                    <div className="relative z-10">
+                      <div className="font-semibold">Plan Completo</div>
+                      <div className="text-xs opacity-90">Agregar todo a lista</div>
+                    </div>
+                  </Button>
+                  <CartButton />
+                  <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+                    <ChefHat className="h-10 w-10" />
+                  </Button>
+                </>
               ) : (
-              <Button
-                variant="default"
-                size="lg"
-                onClick={() => setShowBulkAddDialog(true)}
-                disabled={selectedRecipeIds.size === 0}
-                className="group relative overflow-hidden disabled:opacity-50"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <ShoppingCart className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
-                <div className="relative z-10">
-                  <div className="font-semibold">Crear Lista de Compras</div>
-                  <div className="text-xs opacity-90">
-                    {selectedRecipeIds.size === 0
-                      ? "Selecciona recetas"
-                      : `${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? "s" : ""} seleccionada${selectedRecipeIds.size > 1 ? "s" : ""}`}
-                  </div>
-                </div>
-                {selectedRecipeIds.size > 0 && (
-                  <Badge className="ml-2 relative z-10 bg-white text-primary">{selectedRecipeIds.size}</Badge>
-                )}
-              </Button>
+                <>
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={() => setShowBulkAddDialog(true)}
+                    disabled={selectedRecipeIds.size === 0}
+                    className="group relative overflow-hidden disabled:opacity-50"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ShoppingCart className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+                    <div className="relative z-10">
+                      <div className="font-semibold">Crear Lista de Compras</div>
+                      <div className="text-xs opacity-90">
+                        {selectedRecipeIds.size === 0
+                          ? "Selecciona recetas"
+                          : `${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? "s" : ""} seleccionada${selectedRecipeIds.size > 1 ? "s" : ""}`}
+                      </div>
+                    </div>
+                    {selectedRecipeIds.size > 0 && (
+                      <Badge className="ml-2 relative z-10 bg-white text-primary">{selectedRecipeIds.size}</Badge>
+                    )}
+                  </Button>
+                  <CartButton />
+                  <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+                    <ChefHat className="h-10 w-10" />
+                  </Button>
+                </>
               )}
             </div>
           </div>
