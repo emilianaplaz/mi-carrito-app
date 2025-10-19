@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChefHat, ArrowLeft, Store, TrendingDown, Truck } from "lucide-react";
 
 type PriceInfo = {
@@ -23,6 +23,8 @@ const ComprarIngrediente = () => {
   
   const [loading, setLoading] = useState(true);
   const [prices, setPrices] = useState<PriceInfo[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string>("ALL");
+  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -58,6 +60,10 @@ const ComprarIngrediente = () => {
       }));
 
       setPrices(formattedPrices);
+      
+      // Extract unique brands from prices
+      const brands = Array.from(new Set(formattedPrices.map(p => p.brand_name))).sort();
+      setAvailableBrands(brands);
     } catch (error: any) {
       console.error("Error loading data:", error);
       toast({
@@ -70,9 +76,12 @@ const ComprarIngrediente = () => {
     }
   };
 
-  // Sort all prices by cheapest first
-  const sortedPrices = [...prices].sort((a, b) => a.price - b.price);
-  const cheapestPrice = sortedPrices.length > 0 ? sortedPrices[0].price : 0;
+  // Filter and sort prices
+  const filteredPrices = selectedBrand === "ALL" 
+    ? [...prices].sort((a, b) => a.price - b.price)
+    : prices.filter(p => p.brand_name === selectedBrand).sort((a, b) => a.price - b.price);
+    
+  const cheapestPrice = filteredPrices.length > 0 ? filteredPrices[0].price : 0;
 
   if (loading) {
     return (
@@ -97,15 +106,39 @@ const ComprarIngrediente = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Brand Filter */}
+        {availableBrands.length > 0 && (
+          <Card className="p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4">Filtrar por Marca</h2>
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona marca" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todas las Marcas</SelectItem>
+                {availableBrands.map((brand) => (
+                  <SelectItem key={brand} value={brand}>
+                    {brand}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Card>
+        )}
+
         {/* Price Info Banner */}
-        {sortedPrices.length > 0 && (
+        {filteredPrices.length > 0 && (
           <Card className="p-6 mb-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-200 dark:border-green-800">
             <div className="flex items-start gap-3">
               <TrendingDown className="h-6 w-6 text-green-600 dark:text-green-400 mt-1" />
               <div>
-                <h2 className="text-xl font-semibold mb-2">Precios Disponibles</h2>
+                <h2 className="text-xl font-semibold mb-2">
+                  {selectedBrand === "ALL" ? "Todas las Marcas" : `Marca: ${selectedBrand}`}
+                </h2>
                 <p className="text-sm text-foreground">
-                  Mostrando todos los precios disponibles ordenados de menor a mayor para que encuentres la mejor opción.
+                  {selectedBrand === "ALL" 
+                    ? "Mostrando todos los precios disponibles ordenados de menor a mayor."
+                    : `Mostrando precios de ${selectedBrand} ordenados de menor a mayor.`}
                 </p>
               </div>
             </div>
@@ -113,7 +146,7 @@ const ComprarIngrediente = () => {
         )}
 
         {/* Delivery Option */}
-        {sortedPrices.length > 0 && (
+        {filteredPrices.length > 0 && (
           <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -138,21 +171,21 @@ const ComprarIngrediente = () => {
         )}
 
         {/* Price Comparison */}
-        {sortedPrices.length > 0 ? (
+        {filteredPrices.length > 0 ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Comparación de Precios</h2>
-              {sortedPrices.length > 1 && (
+              {filteredPrices.length > 1 && (
                 <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
                   <TrendingDown className="h-4 w-4" />
                   <span>
-                    Ahorra hasta €{(sortedPrices[sortedPrices.length - 1].price - cheapestPrice).toFixed(2)}
+                    Ahorra hasta €{(filteredPrices[filteredPrices.length - 1].price - cheapestPrice).toFixed(2)}
                   </span>
                 </div>
               )}
             </div>
 
-            {sortedPrices.map((price, index) => (
+            {filteredPrices.map((price, index) => (
               <Card
                 key={price.id}
                 className={`p-4 transition-all ${
