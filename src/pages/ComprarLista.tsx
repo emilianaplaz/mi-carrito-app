@@ -184,6 +184,18 @@ const ComprarLista = () => {
         groceryList.items.some(item => fuzzyMatch(item.name, price.producto))
       );
 
+      console.log('🔍 Fuzzy Matching Debug:');
+      console.log('List items:', groceryList.items.map(i => i.name));
+      console.log('Sample productos from DB:', (allPricesData || []).slice(0, 10).map((p: any) => p.producto));
+      console.log('Matched prices count:', matchedPrices.length);
+      console.log('Total prices count:', (allPricesData || []).length);
+      
+      // Show specific matching details for common items
+      ['Platano', 'manzana', 'tomate', 'cebolla', 'ajo'].forEach(itemName => {
+        const matches = (allPricesData || []).filter((p: any) => fuzzyMatch(itemName, p.producto));
+        console.log(`"${itemName}" matches:`, matches.length, matches.slice(0, 3).map((p: any) => p.producto));
+      });
+
       // Fetch ALL supermarkets to show complete breakdown
       const {
         data: allSupermarkets
