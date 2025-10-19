@@ -91,7 +91,7 @@ const Landing = () => {
       </section>
 
       {/* Hero Banner Image */}
-      <section>
+      <section className="-mt-8">
         <div className="w-full">
           <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
         </div>
