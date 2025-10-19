@@ -43,6 +43,7 @@ const Listas = () => {
   const [availableProducts, setAvailableProducts] = useState<{ name: string; brands: string[] }[]>([]);
   const [allBrands, setAllBrands] = useState<string[]>([]);
   const [openProductPopovers, setOpenProductPopovers] = useState<{ [key: number]: boolean }>({});
+  const [productValidation, setProductValidation] = useState<{ [key: number]: boolean }>({});
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -62,46 +63,33 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      // Paginate through product_prices to get all unique product names
+      // Paginate through product_prices to get all product data for fuzzy matching
       const pageSize = 1000;
-      const brandMap = new Map<string, Set<string>>();
+      const allProducts: string[] = [];
       
       let from = 0;
       while (true) {
         const { data: pricesPage, error: pricesError } = await supabase
           .from("product_prices")
-          .select("producto, marca")
+          .select("producto, subcategoria")
           .range(from, from + pageSize - 1);
         
         if (pricesError) throw pricesError;
         if (!pricesPage || pricesPage.length === 0) break;
 
         pricesPage.forEach((row: any) => {
-          const productName = row.producto;
-          const brandName = row.marca || "Sin marca";
-          if (!productName) return;
-          
-          if (!brandMap.has(productName)) {
-            brandMap.set(productName, new Set());
-          }
-          brandMap.get(productName)!.add(brandName);
+          if (row.producto) allProducts.push(row.producto);
+          if (row.subcategoria) allProducts.push(row.subcategoria);
         });
 
         if (pricesPage.length < pageSize) break;
         from += pageSize;
       }
 
-      // Create products list from unique product names with their brands
-      const products = Array.from(brandMap.entries())
-        .map(([productName, brands]) => ({
-          name: productName,
-          brands: Array.from(brands),
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-      setAvailableProducts(products);
+      // Store unique products for validation
+      setAvailableProducts(Array.from(new Set(allProducts)).map(name => ({ name, brands: [] })));
       
-      // Fetch ALL brands from the brands table for the brand dropdown
+      // Fetch ALL brands from the brands table
       const { data: brandsData, error: brandsError } = await supabase
         .from("brands")
         .select("name")
@@ -112,6 +100,36 @@ const Listas = () => {
     } catch (error) {
       console.error("Error loading products:", error);
     }
+  };
+
+  // Fuzzy matching validation function
+  const validateProductName = (searchTerm: string): boolean => {
+    if (!searchTerm.trim()) return false;
+    
+    const normalize = (str: string) => 
+      str.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const fuzzyMatch = (search: string, target: string): boolean => {
+      const normSearch = normalize(search);
+      const normTarget = normalize(target);
+      
+      if (normTarget.includes(normSearch) || normSearch.includes(normTarget)) return true;
+      
+      const searchWords = normSearch.split(' ');
+      const targetWords = normTarget.split(' ');
+      
+      return searchWords.some(sw => 
+        sw.length > 2 && targetWords.some(tw => 
+          tw.includes(sw) || sw.includes(tw)
+        )
+      );
+    };
+
+    return availableProducts.some(product => fuzzyMatch(searchTerm, product.name));
   };
 
   const loadLists = async () => {
@@ -394,59 +412,39 @@ const Listas = () => {
                 <div className="space-y-3">
                   <Label>Artículos</Label>
                   {newItems.map((item, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Popover open={openProductPopovers[index]} onOpenChange={(open) => setOpenProductPopovers(prev => ({ ...prev, [index]: open }))}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openProductPopovers[index]}
-                            className="flex-1 justify-between"
-                          >
-                            {item.name || "Selecciona producto"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[400px] p-0" align="start">
-                          <Command>
-                            <CommandInput placeholder="Buscar producto..." />
-                            <CommandList className="max-h-[300px] overflow-y-auto">
-                              <CommandEmpty>No se encontraron productos.</CommandEmpty>
-                              <CommandGroup>
-                                {availableProducts.map((product) => (
-                                  <CommandItem
-                                    key={product.name}
-                                    value={product.name}
-                                    onSelect={(value) => {
-                                      updateItemField(index, "name", product.name);
-                                      setOpenProductPopovers(prev => ({ ...prev, [index]: false }));
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        item.name === product.name ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
-                                    {product.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                    <div key={index} className="space-y-2">
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <Input
+                            placeholder="Nombre genérico (ej: aceite de oliva, tomate)"
+                            value={item.name}
+                            onChange={(e) => updateItemField(index, "name", e.target.value)}
+                            className={cn(
+                              item.name && !productValidation[index] && "border-destructive focus-visible:ring-destructive"
+                            )}
+                          />
+                          {item.name && !productValidation[index] && (
+                            <p className="text-xs text-destructive mt-1">
+                              ⚠️ No se encontró coincidencia en la base de datos
+                            </p>
+                          )}
+                          {item.name && productValidation[index] && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ✓ Producto válido
+                            </p>
+                          )}
+                        </div>
                       <Select
                         value={item.brand}
                         onValueChange={(value) => updateItemField(index, "brand", value)}
                         disabled={!item.name}
                       >
                         <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Selecciona marca" />
+                          <SelectValue placeholder="Marca (opcional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                          {item.name && availableProducts.find(p => p.name === item.name)?.brands.map((brand) => (
+                          <SelectItem value="">CUALQUIER MARCA</SelectItem>
+                          {allBrands.map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
                             </SelectItem>
@@ -462,6 +460,7 @@ const Listas = () => {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
+                    </div>
                     </div>
                   ))}
                   <Button
