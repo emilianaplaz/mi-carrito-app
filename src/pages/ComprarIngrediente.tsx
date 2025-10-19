@@ -99,9 +99,9 @@ const ComprarIngrediente = () => {
 
       setPrices(formattedPrices);
 
-      // Auto-select first brand if available
+      // Auto-select "ANY" if prices are available
       if (formattedPrices.length > 0) {
-        setSelectedBrand(formattedPrices[0].brand_id);
+        setSelectedBrand("ANY");
       }
     } catch (error: any) {
       console.error("Error loading data:", error);
@@ -116,7 +116,7 @@ const ComprarIngrediente = () => {
   };
 
   const loadRecommendation = async () => {
-    if (!selectedBrand) return;
+    if (!selectedBrand || selectedBrand === "ANY") return;
 
     setLoadingRecommendation(true);
     try {
@@ -145,7 +145,9 @@ const ComprarIngrediente = () => {
   };
 
   const filteredPrices = selectedBrand
-    ? prices.filter(p => p.brand_id === selectedBrand).sort((a, b) => a.price - b.price)
+    ? selectedBrand === "ANY"
+      ? prices.sort((a, b) => a.price - b.price)
+      : prices.filter(p => p.brand_id === selectedBrand).sort((a, b) => a.price - b.price)
     : [];
 
   const cheapestPrice = filteredPrices.length > 0 ? filteredPrices[0].price : 0;
@@ -181,6 +183,7 @@ const ComprarIngrediente = () => {
               <SelectValue placeholder="Elige una marca" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="ANY">CUALQUIER MARCA (Mejores Precios)</SelectItem>
               {brands.map((brand) => (
                 <SelectItem key={brand.id} value={brand.id}>
                   {brand.name}
@@ -191,7 +194,7 @@ const ComprarIngrediente = () => {
         </Card>
 
         {/* AI Recommendation */}
-        {selectedBrand && (
+        {selectedBrand && selectedBrand !== "ANY" && (
           <Card className="p-6 mb-6 bg-gradient-to-br from-primary/5 to-secondary/5">
             <div className="flex items-start gap-3 mb-3">
               <Sparkles className="h-6 w-6 text-primary mt-1" />
@@ -205,6 +208,21 @@ const ComprarIngrediente = () => {
             ) : (
               <p className="text-sm text-foreground whitespace-pre-wrap">{recommendation}</p>
             )}
+          </Card>
+        )}
+
+        {/* ANY Brand Info */}
+        {selectedBrand === "ANY" && filteredPrices.length > 0 && (
+          <Card className="p-6 mb-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-200 dark:border-green-800">
+            <div className="flex items-start gap-3">
+              <TrendingDown className="h-6 w-6 text-green-600 dark:text-green-400 mt-1" />
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Mostrando Todas las Marcas</h2>
+                <p className="text-sm text-foreground">
+                  Comparando precios de todas las marcas disponibles, ordenados de menor a mayor precio para que puedas ahorrar más.
+                </p>
+              </div>
+            </div>
           </Card>
         )}
 

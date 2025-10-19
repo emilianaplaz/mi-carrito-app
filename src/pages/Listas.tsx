@@ -403,6 +403,7 @@ const Listas = () => {
                           <SelectValue placeholder="Selecciona marca" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
                           {allBrands.map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
@@ -631,6 +632,7 @@ const Listas = () => {
                           <SelectValue placeholder="Selecciona marca" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
                           {allBrands.map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
