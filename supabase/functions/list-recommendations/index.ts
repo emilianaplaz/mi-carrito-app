@@ -452,7 +452,11 @@ serve(async (req) => {
     // First position: Mejor Opción (fewest stores strategy)
     if (fewestStoresOption) {
       const cleanedName = cleanSupermarketName(fewestStoresOption.supermarket);
-      console.log('Adding fewestStoresOption:', cleanedName, fewestStoresOption.totalPrice);
+      console.log('Adding fewestStoresOption:', {
+        cleanedName,
+        totalPrice: fewestStoresOption.totalPrice,
+        strategy: fewestStoresOption.strategy
+      });
       finalRecommendations.push({ 
         ...fewestStoresOption,
         supermarket: cleanedName,
@@ -463,17 +467,22 @@ serve(async (req) => {
       console.log('No fewestStoresOption found');
     }
     
-    // Second position: Opción Más Barata (cheapest strategy) - only if different from first
+    // Second position: Opción Más Barata (cheapest strategy)
+    // Check if it's meaningfully different (different supermarket combo or price)
     if (cheapestOption) {
-      const areSame = cheapestOption === fewestStoresOption;
+      const isDifferent = !fewestStoresOption || 
+        cheapestOption.supermarket !== fewestStoresOption.supermarket ||
+        Math.abs(cheapestOption.totalPrice - fewestStoresOption.totalPrice) > 0.01;
+      
       console.log('Checking cheapestOption:', {
         exists: !!cheapestOption,
-        areSame,
+        isDifferent,
         supermarket: cheapestOption.supermarket,
-        price: cheapestOption.totalPrice
+        price: cheapestOption.totalPrice,
+        strategy: cheapestOption.strategy
       });
       
-      if (!areSame) {
+      if (isDifferent) {
         const cleanedName = cleanSupermarketName(cheapestOption.supermarket);
         console.log('Adding cheapestOption:', cleanedName, cheapestOption.totalPrice);
         finalRecommendations.push({
