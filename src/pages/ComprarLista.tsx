@@ -355,31 +355,39 @@ const ComprarLista = () => {
 
               <div className="space-y-4">
                 {allPrices.length > 0 && (() => {
-                  // Build supermarket breakdown - pick the cheapest option for each item per supermarket
+                  // Build supermarket breakdown - match original list items with prices
                   const supermarketMap = new Map<string, { available: any[], missing: string[], total: number }>();
                   
-                  allPrices.forEach((item) => {
-                    // Group prices by supermarket and pick the cheapest for each
-                    const bySupermarket = new Map<string, any>();
-                    item.availablePrices.forEach((price: any) => {
-                      if (!bySupermarket.has(price.supermarket) || bySupermarket.get(price.supermarket).price > price.price) {
-                        bySupermarket.set(price.supermarket, price);
-                      }
-                    });
-
-                    // Add the cheapest option to each supermarket
-                    bySupermarket.forEach((price, supermarketName) => {
-                      if (!supermarketMap.has(supermarketName)) {
-                        supermarketMap.set(supermarketName, { available: [], missing: [], total: 0 });
-                      }
-                      supermarketMap.get(supermarketName)!.available.push({
-                        name: item.name,
-                        brand: price.brand,
-                        price: price.price,
-                        unit: price.unit
+                  // For each item in the original list, find the cheapest option at each supermarket
+                  list.items.forEach((listItem) => {
+                    const priceData = allPrices.find(p => 
+                      p.name.toLowerCase() === listItem.name.toLowerCase()
+                    );
+                    
+                    if (priceData && priceData.availablePrices.length > 0) {
+                      // Group by supermarket and pick cheapest for this list item
+                      const bySupermarket = new Map<string, any>();
+                      priceData.availablePrices.forEach((price: any) => {
+                        if (!bySupermarket.has(price.supermarket) || bySupermarket.get(price.supermarket).price > price.price) {
+                          bySupermarket.set(price.supermarket, price);
+                        }
                       });
-                      supermarketMap.get(supermarketName)!.total += price.price;
-                    });
+
+                      // Add to each supermarket's available list
+                      bySupermarket.forEach((price, supermarketName) => {
+                        if (!supermarketMap.has(supermarketName)) {
+                          supermarketMap.set(supermarketName, { available: [], missing: [], total: 0 });
+                        }
+                        supermarketMap.get(supermarketName)!.available.push({
+                          name: listItem.name,
+                          brand: price.brand,
+                          price: price.price,
+                          unit: price.unit,
+                          amount: listItem.amount || "1"
+                        });
+                        supermarketMap.get(supermarketName)!.total += price.price;
+                      });
+                    }
                   });
 
                   // Add missing items
