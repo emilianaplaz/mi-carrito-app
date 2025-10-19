@@ -504,6 +504,9 @@ serve(async (req) => {
         opt !== fewestStoresOption && opt !== cheapestOption
       );
       
+      // Determine what label the next options should get
+      // If we have 0 recommendations, first one is "Mejor Opción"
+      // If we have 1 recommendation (regardless of its label), second one is "Opción Más Barata"
       for (let i = 0; i < Math.min(remainingOptions.length, 2 - finalRecommendations.length); i++) {
         const opt = remainingOptions[i];
         const isFirst = finalRecommendations.length === 0;
@@ -512,9 +515,21 @@ serve(async (req) => {
           ...opt,
           supermarket: cleanedName,
           displayLabel: isFirst ? 'Mejor Opción' : 'Opción Más Barata',
-          sortOrder: isFirst ? 1 : 2
+          sortOrder: finalRecommendations.length + 1
         });
       }
+    }
+    
+    // Ensure we always have exactly the right labels regardless of how recommendations were added
+    // The first recommendation should ALWAYS be "Mejor Opción"
+    // The second recommendation should ALWAYS be "Opción Más Barata"
+    if (finalRecommendations.length >= 1) {
+      finalRecommendations[0].displayLabel = 'Mejor Opción';
+      finalRecommendations[0].sortOrder = 1;
+    }
+    if (finalRecommendations.length >= 2) {
+      finalRecommendations[1].displayLabel = 'Opción Más Barata';
+      finalRecommendations[1].sortOrder = 2;
     }
     
     // Final sort to ensure correct order
