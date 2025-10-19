@@ -80,7 +80,9 @@ const Landing = () => {
               Menús personalizados, autogeneración de listas de compra, comparación de precios entre supermercados y
               gestión inteligente de tu despensa. Todo en una sola plataforma.
             </p>
-            
+            <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-8">
+              Comenzar Ahora
+            </Button>
           </div>
         </div>
       </section>
@@ -89,11 +91,6 @@ const Landing = () => {
       <section className="mt-12 relative">
         <div className="w-full">
           <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
-          <div className="absolute top-2 md:top-4 lg:top-6 left-0 right-0 flex justify-center px-4">
-            <Button size="lg" onClick={() => navigate("/auth")} className="text-base md:text-lg px-6 md:px-8">
-              Comenzar Ahora
-            </Button>
-          </div>
         </div>
       </section>
 
