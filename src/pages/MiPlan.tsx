@@ -674,7 +674,7 @@ const MiPlan = () => {
       </header>
 
       {/* Action Buttons Below Header */}
-      <div className="px-8">
+      <div className="px-10">
         <div className="container mx-auto px-4 py-3">
           {!selectionMode ? (
             <div className="flex gap-3">
