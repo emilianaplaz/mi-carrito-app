@@ -30,6 +30,29 @@ type GroceryList = {
   updated_at: string;
 };
 
+// Common generic grocery product names in Spanish
+const GENERIC_PRODUCTS = [
+  "aceite de oliva", "aceite vegetal", "aceite de girasol", "aceite de maíz",
+  "agua mineral", "agua con gas", "agua sin gas",
+  "arroz", "arroz integral", "arroz blanco",
+  "atún", "atún en aceite", "atún en agua",
+  "azúcar", "azúcar blanca", "azúcar morena",
+  "café", "café molido", "café instantáneo", "café en grano",
+  "cebolla", "cebolla blanca", "cebolla morada",
+  "fideos", "pasta", "tallarines", "espagueti",
+  "harina", "harina de trigo", "harina integral",
+  "huevos",
+  "leche", "leche entera", "leche descremada", "leche deslactosada",
+  "mantequilla", "margarina",
+  "pan", "pan de molde", "pan integral",
+  "papel higiénico",
+  "pollo", "pechuga de pollo",
+  "queso",
+  "sal", "sal de mesa", "sal marina",
+  "tomate", "tomate",
+  "yogurt", "yogurt natural", "yogurt griego",
+].sort();
+
 const Listas = () => {
   const [loading, setLoading] = useState(true);
   const [lists, setLists] = useState<GroceryList[]>([]);
@@ -41,11 +64,8 @@ const Listas = () => {
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<{ name: string; brands: string[] }[]>([]);
-  const [genericProducts, setGenericProducts] = useState<string[]>([]);
   const [allBrands, setAllBrands] = useState<string[]>([]);
   const [openProductPopovers, setOpenProductPopovers] = useState<{ [key: number]: boolean }>({});
-  const [productValidation, setProductValidation] = useState<{ [key: number]: boolean }>({});
-  const [loadingGenericProducts, setLoadingGenericProducts] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -65,24 +85,6 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      // Fetch generic products from AI
-      setLoadingGenericProducts(true);
-      const { data: genericData, error: genericError } = await supabase.functions.invoke(
-        'generate-product-list'
-      );
-      
-      if (genericError) {
-        console.error("Error loading generic products:", genericError);
-        toast({
-          title: "Advertencia",
-          description: "No se pudieron cargar los productos genéricos",
-          variant: "destructive",
-        });
-      } else if (genericData?.products) {
-        setGenericProducts(genericData.products);
-      }
-      setLoadingGenericProducts(false);
-
       // Fetch all products for validation
       const pageSize = 1000;
       const allProducts: string[] = [];
@@ -121,35 +123,6 @@ const Listas = () => {
     }
   };
 
-  // Fuzzy matching validation function
-  const validateProductName = (searchTerm: string): boolean => {
-    if (!searchTerm.trim()) return false;
-    
-    const normalize = (str: string) => 
-      str.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    const fuzzyMatch = (search: string, target: string): boolean => {
-      const normSearch = normalize(search);
-      const normTarget = normalize(target);
-      
-      if (normTarget.includes(normSearch) || normSearch.includes(normTarget)) return true;
-      
-      const searchWords = normSearch.split(' ');
-      const targetWords = normTarget.split(' ');
-      
-      return searchWords.some(sw => 
-        sw.length > 2 && targetWords.some(tw => 
-          tw.includes(sw) || sw.includes(tw)
-        )
-      );
-    };
-
-    return availableProducts.some(product => fuzzyMatch(searchTerm, product.name));
-  };
 
   const loadLists = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -435,31 +408,17 @@ const Listas = () => {
                       <div className="flex gap-2">
                         <Select
                           value={item.name}
-                          onValueChange={(value) => {
-                            updateItemField(index, "name", value);
-                            const isValid = validateProductName(value);
-                            setProductValidation(prev => ({ ...prev, [index]: isValid }));
-                          }}
+                          onValueChange={(value) => updateItemField(index, "name", value)}
                         >
                           <SelectTrigger className="flex-1">
                             <SelectValue placeholder="Seleccionar producto..." />
                           </SelectTrigger>
                           <SelectContent className="max-h-[300px]">
-                            {loadingGenericProducts ? (
-                              <div className="p-4 text-center text-sm text-muted-foreground">
-                                Cargando productos...
-                              </div>
-                            ) : genericProducts.length > 0 ? (
-                              genericProducts.map((product) => (
-                                <SelectItem key={product} value={product}>
-                                  {product}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <div className="p-4 text-center text-sm text-muted-foreground">
-                                No hay productos disponibles
-                              </div>
-                            )}
+                            {GENERIC_PRODUCTS.map((product) => (
+                              <SelectItem key={product} value={product}>
+                                {product}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       <Select
