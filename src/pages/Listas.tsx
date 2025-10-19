@@ -13,7 +13,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2, Calendar as CalendarIcon, Clock } from "lucide-react";
+import {
+  ChefHat,
+  ArrowLeft,
+  Plus,
+  Star,
+  Trash2,
+  ShoppingCart,
+  Eye,
+  Edit2,
+  Calendar as CalendarIcon,
+  Clock,
+} from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
 import { CartButton } from "@/components/Cart";
 import { Switch } from "@/components/ui/switch";
@@ -78,7 +89,9 @@ const Listas = () => {
 
   useEffect(() => {
     const checkUserAndLoadLists = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
@@ -148,10 +161,7 @@ const Listas = () => {
     if (productBrands.has(productName)) return;
 
     try {
-      const { data, error } = await supabase
-        .from("product_prices")
-        .select("marca")
-        .eq("producto", productName);
+      const { data, error } = await supabase.from("product_prices").select("marca").eq("producto", productName);
 
       if (error) throw error;
 
@@ -160,15 +170,16 @@ const Listas = () => {
         if (row.marca) brands.add(row.marca);
       });
 
-      setProductBrands(prev => new Map(prev).set(productName, Array.from(brands).sort()));
+      setProductBrands((prev) => new Map(prev).set(productName, Array.from(brands).sort()));
     } catch (error) {
       console.error("Error loading brands:", error);
     }
   };
 
-
   const loadLists = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     const { data, error } = await supabase
@@ -185,9 +196,9 @@ const Listas = () => {
         variant: "destructive",
       });
     } else {
-      const formattedLists = (data || []).map(list => ({
+      const formattedLists = (data || []).map((list) => ({
         ...list,
-        items: Array.isArray(list.items) ? list.items as GroceryItem[] : []
+        items: Array.isArray(list.items) ? (list.items as GroceryItem[]) : [],
       }));
       setLists(formattedLists);
     }
@@ -203,7 +214,7 @@ const Listas = () => {
       return;
     }
 
-    const validItems = newItems.filter(item => item.name.trim() !== "");
+    const validItems = newItems.filter((item) => item.name.trim() !== "");
     if (validItems.length === 0) {
       toast({
         title: "Error",
@@ -215,7 +226,9 @@ const Listas = () => {
 
     setIsCreating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
       const { error } = await supabase.from("grocery_lists").insert({
@@ -275,16 +288,11 @@ const Listas = () => {
 
   const handleToggleFavorite = async (listId: string, currentFavorite: boolean) => {
     try {
-      const { error } = await supabase
-        .from("grocery_lists")
-        .update({ is_favorite: !currentFavorite })
-        .eq("id", listId);
+      const { error } = await supabase.from("grocery_lists").update({ is_favorite: !currentFavorite }).eq("id", listId);
 
       if (error) throw error;
 
-      setLists(lists.map(list => 
-        list.id === listId ? { ...list, is_favorite: !currentFavorite } : list
-      ));
+      setLists(lists.map((list) => (list.id === listId ? { ...list, is_favorite: !currentFavorite } : list)));
 
       toast({
         title: !currentFavorite ? "Agregado a favoritos" : "Removido de favoritos",
@@ -305,10 +313,7 @@ const Listas = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("grocery_lists")
-        .delete()
-        .eq("id", listId);
+      const { error } = await supabase.from("grocery_lists").delete().eq("id", listId);
 
       if (error) throw error;
 
@@ -362,9 +367,7 @@ const Listas = () => {
     if (!session) return;
 
     try {
-      const nextDate = isAutomated
-        ? (nextScheduledDate || calculateNextDate(automationFrequency))
-        : null;
+      const nextDate = isAutomated ? nextScheduledDate || calculateNextDate(automationFrequency) : null;
 
       const { error } = await supabase
         .from("grocery_lists")
@@ -381,11 +384,7 @@ const Listas = () => {
         title: isAutomated ? "Automatización activada" : "Automatización desactivada",
         description: isAutomated
           ? `La lista se agregará automáticamente cada ${
-              automationFrequency === "weekly"
-                ? "semana"
-                : automationFrequency === "bi-weekly"
-                ? "2 semanas"
-                : "mes"
+              automationFrequency === "weekly" ? "semana" : automationFrequency === "bi-weekly" ? "2 semanas" : "mes"
             }`
           : "La automatización ha sido desactivada",
       });
@@ -411,7 +410,7 @@ const Listas = () => {
 
   const handleUpdateList = async () => {
     if (!editingList) return;
-    
+
     if (!newListName.trim()) {
       toast({
         title: "Error",
@@ -421,7 +420,7 @@ const Listas = () => {
       return;
     }
 
-    const validItems = newItems.filter(item => item.name.trim() !== "");
+    const validItems = newItems.filter((item) => item.name.trim() !== "");
     if (validItems.length === 0) {
       toast({
         title: "Error",
@@ -492,186 +491,165 @@ const Listas = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/calendar")}
-              className="flex items-center gap-2"
-            >
+            <Button onClick={() => navigate("/calendar")} className="flex items-center gap-2">
               <CalendarIcon className="h-4 w-4" />
-              Calendario
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ChefHat className="h-10 w-10" />
             </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nueva Lista
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Crear Nueva Lista</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="list-name">Nombre de la Lista</Label>
-                  <Input
-                    id="list-name"
-                    placeholder="Ej: Compras de la semana"
-                    value={newListName}
-                    onChange={(e) => setNewListName(e.target.value)}
-                  />
-                </div>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva Lista
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Crear Nueva Lista</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="list-name">Nombre de la Lista</Label>
+                    <Input
+                      id="list-name"
+                      placeholder="Ej: Compras de la semana"
+                      value={newListName}
+                      onChange={(e) => setNewListName(e.target.value)}
+                    />
+                  </div>
 
-                <div className="space-y-3">
-                  <Label>Artículos</Label>
-                  {newItems.map((item, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="flex gap-2">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "flex-1 justify-between",
-                                !item.name && "text-muted-foreground"
-                              )}
-                            >
-                              {item.name || "Seleccionar producto..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
-                            <Command shouldFilter={false}>
-                              <CommandInput 
-                                placeholder="Buscar producto..." 
-                                onValueChange={(search) => setProductSearchQuery(search)}
-                              />
-                              <CommandList>
-                                <CommandEmpty>
-                                  {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
-                                </CommandEmpty>
-                                <CommandGroup>
-                                  {productSearchResults.map((product) => (
-                                    <CommandItem
-                                      key={product}
-                                      value={product}
-                                      onSelect={() => updateItemField(index, "name", product)}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          item.name === product ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      {product}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                  <div className="space-y-3">
+                    <Label>Artículos</Label>
+                    {newItems.map((item, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex gap-2">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn("flex-1 justify-between", !item.name && "text-muted-foreground")}
+                              >
+                                {item.name || "Seleccionar producto..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
+                              <Command shouldFilter={false}>
+                                <CommandInput
+                                  placeholder="Buscar producto..."
+                                  onValueChange={(search) => setProductSearchQuery(search)}
+                                />
+                                <CommandList>
+                                  <CommandEmpty>
+                                    {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
+                                  </CommandEmpty>
+                                  <CommandGroup>
+                                    {productSearchResults.map((product) => (
+                                      <CommandItem
+                                        key={product}
+                                        value={product}
+                                        onSelect={() => updateItemField(index, "name", product)}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            item.name === product ? "opacity-100" : "opacity-0",
+                                          )}
+                                        />
+                                        {product}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
 
-                        <Popover onOpenChange={(open) => {
-                          if (open && item.name) {
-                            loadBrandsForProduct(item.name);
-                          }
-                        }}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              disabled={!item.name}
-                              className={cn(
-                                "flex-1 justify-between",
-                                !item.brand && "text-muted-foreground"
-                              )}
-                            >
-                              {item.brand || "Marca (opcional)"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[300px] p-0 z-50 bg-popover" align="start">
-                            <Command>
-                              <CommandInput placeholder="Buscar marca..." />
-                              <CommandList>
-                                <CommandEmpty>No se encontró la marca.</CommandEmpty>
-                                <CommandGroup>
-                                  <CommandItem
-                                    value="ANY"
-                                    onSelect={() => updateItemField(index, "brand", "")}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        !item.brand ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
-                                    CUALQUIER MARCA
-                                  </CommandItem>
-                                  {(productBrands.get(item.name) || []).map((brand) => (
-                                    <CommandItem
-                                      key={brand}
-                                      value={brand}
-                                      onSelect={() => updateItemField(index, "brand", brand)}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          item.brand === brand ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      {brand}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-
-                        {newItems.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeItemField(index)}
+                          <Popover
+                            onOpenChange={(open) => {
+                              if (open && item.name) {
+                                loadBrandsForProduct(item.name);
+                              }
+                            }}
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                disabled={!item.name}
+                                className={cn("flex-1 justify-between", !item.brand && "text-muted-foreground")}
+                              >
+                                {item.brand || "Marca (opcional)"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0 z-50 bg-popover" align="start">
+                              <Command>
+                                <CommandInput placeholder="Buscar marca..." />
+                                <CommandList>
+                                  <CommandEmpty>No se encontró la marca.</CommandEmpty>
+                                  <CommandGroup>
+                                    <CommandItem value="ANY" onSelect={() => updateItemField(index, "brand", "")}>
+                                      <Check
+                                        className={cn("mr-2 h-4 w-4", !item.brand ? "opacity-100" : "opacity-0")}
+                                      />
+                                      CUALQUIER MARCA
+                                    </CommandItem>
+                                    {(productBrands.get(item.name) || []).map((brand) => (
+                                      <CommandItem
+                                        key={brand}
+                                        value={brand}
+                                        onSelect={() => updateItemField(index, "brand", brand)}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            item.brand === brand ? "opacity-100" : "opacity-0",
+                                          )}
+                                        />
+                                        {brand}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+
+                          {newItems.length > 1 && (
+                            <Button variant="ghost" size="icon" onClick={() => removeItemField(index)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                    <Button variant="outline" size="sm" onClick={addItemField} className="w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Agregar Artículo
+                    </Button>
+                  </div>
+                </div>
+                <DialogFooter>
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={addItemField}
-                    className="w-full"
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setNewListName("");
+                      setNewItems([{ name: "", brand: "" }]);
+                    }}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar Artículo
+                    Cancelar
                   </Button>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                  setIsDialogOpen(false);
-                  setNewListName("");
-                  setNewItems([{ name: "", brand: "" }]);
-                }}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleCreateList} disabled={isCreating}>
-                  {isCreating ? "Creando..." : "Crear Lista"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  <Button onClick={handleCreateList} disabled={isCreating}>
+                    {isCreating ? "Creando..." : "Crear Lista"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </header>
@@ -681,9 +659,7 @@ const Listas = () => {
           <Card className="p-8 text-center">
             <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">No tienes listas todavía</h2>
-            <p className="text-muted-foreground mb-6">
-              Crea tu primera lista de compras para empezar a organizarte
-            </p>
+            <p className="text-muted-foreground mb-6">Crea tu primera lista de compras para empezar a organizarte</p>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Crear Primera Lista
@@ -692,8 +668,8 @@ const Listas = () => {
         ) : (
           <div className="grid gap-4">
             {lists.map((list) => (
-              <Card 
-                key={list.id} 
+              <Card
+                key={list.id}
                 className="p-6 hover:shadow-lg transition-all cursor-pointer group"
                 onClick={() => navigate(`/comprar-lista?id=${list.id}`)}
               >
@@ -701,9 +677,7 @@ const Listas = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{list.name}</h3>
-                      {list.is_favorite && (
-                        <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                      )}
+                      {list.is_favorite && <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />}
                       {list.is_automated && (
                         <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
                           <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" />
@@ -714,10 +688,12 @@ const Listas = () => {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {Array.isArray(list.items) ? list.items.length : 0} {Array.isArray(list.items) && list.items.length === 1 ? "artículo" : "artículos"}
+                      {Array.isArray(list.items) ? list.items.length : 0}{" "}
+                      {Array.isArray(list.items) && list.items.length === 1 ? "artículo" : "artículos"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Creada el {new Date(list.created_at).toLocaleDateString("es-ES", {
+                      Creada el{" "}
+                      {new Date(list.created_at).toLocaleDateString("es-ES", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -730,13 +706,9 @@ const Listas = () => {
                       </p>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setViewingList(list)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setViewingList(list)}>
                       <Eye className="h-4 w-4 mr-2" />
                       Ver Artículos
                     </Button>
@@ -748,29 +720,17 @@ const Listas = () => {
                     >
                       <Clock className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleEditList(list)}
-                    >
+                    <Button variant="outline" size="icon" onClick={() => handleEditList(list)}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleToggleFavorite(list.id, list.is_favorite)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleToggleFavorite(list.id, list.is_favorite)}>
                       <Star
                         className={`h-5 w-5 ${
                           list.is_favorite ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"
                         }`}
                       />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteList(list.id, list.name)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteList(list.id, list.name)}>
                       <Trash2 className="h-5 w-5 text-destructive" />
                     </Button>
                   </div>
@@ -787,7 +747,7 @@ const Listas = () => {
           <DialogHeader>
             <DialogTitle>{viewingList?.name}</DialogTitle>
           </DialogHeader>
-          
+
           <ScrollArea className="flex-1 pr-4 overflow-scroll">
             {viewingList && Array.isArray(viewingList.items) && viewingList.items.length > 0 ? (
               <div className="space-y-2">
@@ -797,7 +757,9 @@ const Listas = () => {
                     className="p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => {
                       setViewingList(null);
-                      navigate(`/comprar-ingrediente?producto=${encodeURIComponent(item.name)}&lista=${viewingList.id}`);
+                      navigate(
+                        `/comprar-ingrediente?producto=${encodeURIComponent(item.name)}&lista=${viewingList.id}`,
+                      );
                     }}
                   >
                     <div className="flex items-center justify-between">
@@ -810,9 +772,7 @@ const Listas = () => {
                             </span>
                           )}
                         </div>
-                        {item.brand && (
-                          <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>
-                        )}
+                        {item.brand && <p className="text-sm text-muted-foreground">Marca: {item.brand}</p>}
                       </div>
                       <Button variant="ghost" size="sm">
                         Ver Precios →
@@ -822,23 +782,24 @@ const Listas = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-4">
-                Esta lista no tiene artículos
-              </p>
+              <p className="text-center text-muted-foreground py-4">Esta lista no tiene artículos</p>
             )}
           </ScrollArea>
         </DialogContent>
       </Dialog>
 
       {/* Edit List Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
-        setIsEditDialogOpen(open);
-        if (!open) {
-          setEditingList(null);
-          setNewListName("");
-          setNewItems([{ name: "", brand: "" }]);
-        }
-      }}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) {
+            setEditingList(null);
+            setNewListName("");
+            setNewItems([{ name: "", brand: "" }]);
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Lista</DialogTitle>
@@ -863,10 +824,7 @@ const Listas = () => {
                       <Button
                         variant="outline"
                         role="combobox"
-                        className={cn(
-                          "flex-1 justify-between",
-                          !item.name && "text-muted-foreground"
-                        )}
+                        className={cn("flex-1 justify-between", !item.name && "text-muted-foreground")}
                       >
                         {item.name || "Seleccionar producto..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -874,8 +832,8 @@ const Listas = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
                       <Command shouldFilter={false}>
-                        <CommandInput 
-                          placeholder="Buscar producto..." 
+                        <CommandInput
+                          placeholder="Buscar producto..."
                           onValueChange={(search) => setProductSearchQuery(search)}
                         />
                         <CommandList>
@@ -890,10 +848,7 @@ const Listas = () => {
                                 onSelect={() => updateItemField(index, "name", product)}
                               >
                                 <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    item.name === product ? "opacity-100" : "opacity-0"
-                                  )}
+                                  className={cn("mr-2 h-4 w-4", item.name === product ? "opacity-100" : "opacity-0")}
                                 />
                                 {product}
                               </CommandItem>
@@ -904,20 +859,19 @@ const Listas = () => {
                     </PopoverContent>
                   </Popover>
 
-                  <Popover onOpenChange={(open) => {
-                    if (open && item.name) {
-                      loadBrandsForProduct(item.name);
-                    }
-                  }}>
+                  <Popover
+                    onOpenChange={(open) => {
+                      if (open && item.name) {
+                        loadBrandsForProduct(item.name);
+                      }
+                    }}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
                         disabled={!item.name}
-                        className={cn(
-                          "flex-1 justify-between",
-                          !item.brand && "text-muted-foreground"
-                        )}
+                        className={cn("flex-1 justify-between", !item.brand && "text-muted-foreground")}
                       >
                         {item.brand || "Marca (opcional)"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -929,16 +883,8 @@ const Listas = () => {
                         <CommandList>
                           <CommandEmpty>No se encontró la marca.</CommandEmpty>
                           <CommandGroup>
-                            <CommandItem
-                              value="ANY"
-                              onSelect={() => updateItemField(index, "brand", "")}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  !item.brand ? "opacity-100" : "opacity-0"
-                                )}
-                              />
+                            <CommandItem value="ANY" onSelect={() => updateItemField(index, "brand", "")}>
+                              <Check className={cn("mr-2 h-4 w-4", !item.brand ? "opacity-100" : "opacity-0")} />
                               CUALQUIER MARCA
                             </CommandItem>
                             {(productBrands.get(item.name) || []).map((brand) => (
@@ -948,10 +894,7 @@ const Listas = () => {
                                 onSelect={() => updateItemField(index, "brand", brand)}
                               >
                                 <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    item.brand === brand ? "opacity-100" : "opacity-0"
-                                  )}
+                                  className={cn("mr-2 h-4 w-4", item.brand === brand ? "opacity-100" : "opacity-0")}
                                 />
                                 {brand}
                               </CommandItem>
@@ -963,34 +906,28 @@ const Listas = () => {
                   </Popover>
 
                   {newItems.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeItemField(index)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => removeItemField(index)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
               ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={addItemField}
-                className="w-full"
-              >
+              <Button variant="outline" size="sm" onClick={addItemField} className="w-full">
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar Artículo
               </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsEditDialogOpen(false);
-              setEditingList(null);
-              setNewListName("");
-              setNewItems([{ name: "", brand: "" }]);
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setEditingList(null);
+                setNewListName("");
+                setNewItems([{ name: "", brand: "" }]);
+              }}
+            >
               Cancelar
             </Button>
             <Button onClick={handleUpdateList} disabled={isCreating}>
@@ -1001,14 +938,17 @@ const Listas = () => {
       </Dialog>
 
       {/* Automation Settings Dialog */}
-      <Dialog open={!!automationList} onOpenChange={(open) => {
-        if (!open) {
-          setAutomationList(null);
-          setIsAutomated(false);
-          setAutomationFrequency("weekly");
-          setNextScheduledDate(undefined);
-        }
-      }}>
+      <Dialog
+        open={!!automationList}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAutomationList(null);
+            setIsAutomated(false);
+            setAutomationFrequency("weekly");
+            setNextScheduledDate(undefined);
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Automatización de Lista: {automationList?.name}</DialogTitle>
@@ -1021,10 +961,7 @@ const Listas = () => {
                   La lista se agregará automáticamente al carrito en la fecha programada
                 </p>
               </div>
-              <Switch
-                checked={isAutomated}
-                onCheckedChange={setIsAutomated}
-              />
+              <Switch checked={isAutomated} onCheckedChange={setIsAutomated} />
             </div>
 
             {isAutomated && (
@@ -1049,10 +986,7 @@ const Listas = () => {
                     <Label>Primera fecha programada</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
+                        <Button variant="outline" className="w-full justify-start text-left font-normal">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {nextScheduledDate ? (
                             format(nextScheduledDate, "PPP", { locale: es })
@@ -1084,8 +1018,8 @@ const Listas = () => {
                         {automationFrequency === "weekly"
                           ? "semana"
                           : automationFrequency === "bi-weekly"
-                          ? "2 semanas"
-                          : "mes"}
+                            ? "2 semanas"
+                            : "mes"}
                       </>
                     ) : (
                       "Selecciona una fecha para activar la automatización"
@@ -1096,10 +1030,7 @@ const Listas = () => {
             )}
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setAutomationList(null)}
-            >
+            <Button variant="outline" onClick={() => setAutomationList(null)}>
               Cancelar
             </Button>
             <Button onClick={handleSaveAutomation} disabled={isAutomated && !nextScheduledDate}>
