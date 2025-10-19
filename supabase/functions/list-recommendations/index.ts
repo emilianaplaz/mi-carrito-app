@@ -416,11 +416,30 @@ serve(async (req) => {
       }
     }
     
-    // Return structured data with all available prices
+     // Return structured data with all available prices
+    // Ensure we show both strategies if available
+    const fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores' && (opt.missingCount || 0) === 0);
+    const cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest' && (opt.missingCount || 0) === 0);
+    
+    // Build final recommendations list with both strategies
+    const finalRecommendations: any[] = [];
+    if (fewestStoresOption) finalRecommendations.push(fewestStoresOption);
+    if (cheapestOption && cheapestOption !== fewestStoresOption) finalRecommendations.push(cheapestOption);
+    
+    // If we don't have 2 complete options, add other options
+    if (finalRecommendations.length < 2) {
+      const remainingOptions = withinBudget.filter(opt => 
+        !finalRecommendations.includes(opt)
+      );
+      finalRecommendations.push(...remainingOptions.slice(0, 2 - finalRecommendations.length));
+    }
+    
+    console.log(`Final recommendations count: ${finalRecommendations.length} (fewest: ${fewestStoresOption ? 'yes' : 'no'}, cheapest: ${cheapestOption ? 'yes' : 'no'})`);
+    
     const response = {
       allPrices: itemsWithPrices,
       itemsWithoutPrices: itemsWithoutPrices,
-      recommendations: withinBudget.map((opt, index) => {
+      recommendations: finalRecommendations.map((opt, index) => {
         const marketsCount = opt.isCombination ? new Set(opt.items.map((i: any) => i.supermarket)).size : 1;
         const hasAllItems = (opt.missingCount || 0) === 0;
         const missingNote = opt.missingCount && opt.missingCount > 0 ? ` Faltan ${opt.missingCount} producto(s).` : ' ¡Todos los productos disponibles!';
