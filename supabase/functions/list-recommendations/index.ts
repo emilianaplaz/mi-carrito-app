@@ -294,49 +294,75 @@ serve(async (req) => {
         }
       }
       
-      // If no 2-store solution found, try 3-store combinations
+      // If no 2-store solution found, try combinations with more stores
+      // Keep adding stores until we achieve complete coverage or exceed budget
       if (foundCompleteCombinations.length === 0) {
-        for (let i = 0; i < Math.min(8, supermarketCoverage.length); i++) {
-          for (let j = i + 1; j < Math.min(8, supermarketCoverage.length); j++) {
-            for (let k = j + 1; k < Math.min(8, supermarketCoverage.length); k++) {
-              const stores = [supermarketCoverage[i], supermarketCoverage[j], supermarketCoverage[k]];
+        const maxStores = Math.min(10, supermarketCoverage.length);
+        
+        // Try 3-store, 4-store, etc. combinations until we find complete coverage
+        for (let numStores = 3; numStores <= maxStores && foundCompleteCombinations.length === 0; numStores++) {
+          console.log(`Trying ${numStores}-store combinations...`);
+          
+          // Generate combinations of numStores stores
+          const generateCombinations = (arr: any[], k: number): any[][] => {
+            if (k === 1) return arr.map(x => [x]);
+            const combos: any[][] = [];
+            for (let i = 0; i <= arr.length - k; i++) {
+              const head = arr[i];
+              const tailCombos = generateCombinations(arr.slice(i + 1), k - 1);
+              for (const tail of tailCombos) {
+                combos.push([head, ...tail]);
+              }
+            }
+            return combos;
+          };
+          
+          const storeCombos = generateCombinations(supermarketCoverage.slice(0, Math.min(15, supermarketCoverage.length)), numStores);
+          
+          for (const stores of storeCombos) {
+            const coveredItems = new Set<string>();
+            const combinationItems: any[] = [];
+            let combinationTotal = 0;
+            
+            for (const item of items) {
+              let bestPrice: any = null;
               
-              const coveredItems = new Set<string>();
-              const combinationItems: any[] = [];
-              let combinationTotal = 0;
-              
-              for (const item of items) {
-                let bestPrice: any = null;
-                
-                for (const store of stores) {
-                  const price = store.priceMap.get(item.name);
-                  if (price && (!bestPrice || price.price < bestPrice.price)) {
-                    bestPrice = price;
-                  }
-                }
-                
-                if (bestPrice) {
-                  combinationItems.push({
-                    item: item.name,
-                    price: bestPrice.price,
-                    brand: bestPrice.brand,
-                    supermarket: bestPrice.supermarket
-                  });
-                  combinationTotal += bestPrice.price;
-                  coveredItems.add(item.name);
+              for (const store of stores) {
+                const price = store.priceMap.get(item.name);
+                if (price && (!bestPrice || price.price < bestPrice.price)) {
+                  bestPrice = price;
                 }
               }
               
-              if (coveredItems.size === items.length) {
+              if (bestPrice) {
+                combinationItems.push({
+                  item: item.name,
+                  price: bestPrice.price,
+                  brand: bestPrice.brand,
+                  supermarket: bestPrice.supermarket
+                });
+                combinationTotal += bestPrice.price;
+                coveredItems.add(item.name);
+              }
+            }
+            
+            // Check if this combination provides complete coverage
+            if (coveredItems.size === items.length) {
+              // Check if within budget (if budget is set)
+              if (!budget || budget <= 0 || combinationTotal <= budget) {
                 foundCompleteCombinations.push({
-                  stores: stores.map(s => s.name),
+                  stores: stores.map((s: any) => s.name),
                   items: combinationItems,
                   total: combinationTotal
                 });
-                console.log(`Found 3-store complete: ${stores.map(s => s.name).join(' + ')} = $${combinationTotal.toFixed(2)}`);
-                break; // Found one 3-store, that's enough
+                console.log(`Found ${numStores}-store complete: ${stores.map((s: any) => s.name).join(' + ')} = $${combinationTotal.toFixed(2)}`);
+              } else {
+                console.log(`Found ${numStores}-store complete but exceeds budget: $${combinationTotal.toFixed(2)} > $${budget}`);
               }
             }
+            
+            // Stop after finding a few complete combinations with this store count
+            if (foundCompleteCombinations.length >= 3) break;
           }
         }
       }
@@ -421,13 +447,24 @@ serve(async (req) => {
     // CRITICAL: fewest-stores should be labeled "Mejor Opción", cheapest should be "Opción Más Barata"
     
     // First, try to find COMPLETE coverage options (missingCount === 0)
+    // For "Mejor Opción", prioritize complete coverage even with many stores
     let fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores' && (opt.missingCount || 0) === 0);
-    let cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest' && (opt.missingCount || 0) === 0);
     
-    // If no complete options, fall back to best partial options for each strategy
+    // If no complete fewest-stores option, try to find ANY complete option for Mejor Opción
+    if (!fewestStoresOption) {
+      fewestStoresOption = withinBudget.find(opt => (opt.missingCount || 0) === 0);
+      console.log('No complete fewest-stores option, using any complete option for Mejor Opción');
+    }
+    
+    // If still no complete option, fall back to best partial fewest-stores option
     if (!fewestStoresOption) {
       fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores');
+      console.log('No complete option found, using partial fewest-stores option');
     }
+    
+    let cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest' && (opt.missingCount || 0) === 0);
+    
+    // If no complete cheapest option, fall back to best partial cheapest option
     if (!cheapestOption) {
       cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest');
     }
