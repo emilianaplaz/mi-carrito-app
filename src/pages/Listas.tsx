@@ -43,6 +43,7 @@ const Listas = () => {
   const [productBrands, setProductBrands] = useState<Map<string, string[]>>(new Map());
   const [productSearchResults, setProductSearchResults] = useState<string[]>([]);
   const [isSearchingProducts, setIsSearchingProducts] = useState(false);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -58,6 +59,18 @@ const Listas = () => {
     };
     checkUserAndLoadLists();
   }, [navigate]);
+
+  // Debounce product search input
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (productSearchQuery.length >= 2) {
+        searchProducts(productSearchQuery);
+      } else {
+        setProductSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [productSearchQuery]);
 
   const searchProducts = async (searchTerm: string) => {
     if (!searchTerm || searchTerm.length < 2) {
@@ -416,7 +429,7 @@ const Listas = () => {
                             <Command shouldFilter={false}>
                               <CommandInput 
                                 placeholder="Buscar producto..." 
-                                onValueChange={(search) => searchProducts(search)}
+                                onValueChange={(search) => setProductSearchQuery(search)}
                               />
                               <CommandList>
                                 <CommandEmpty>
@@ -714,7 +727,7 @@ const Listas = () => {
                       <Command shouldFilter={false}>
                         <CommandInput 
                           placeholder="Buscar producto..." 
-                          onValueChange={(search) => searchProducts(search)}
+                          onValueChange={(search) => setProductSearchQuery(search)}
                         />
                         <CommandList>
                           <CommandEmpty>
