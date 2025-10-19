@@ -61,6 +61,8 @@ const ComprarLista = () => {
   const [aiSummary, setAiSummary] = useState("");
   const [itemBrandPreferences, setItemBrandPreferences] = useState<Record<string, string>>({});
   const [userBudget, setUserBudget] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  
   const navigate = useNavigate();
   const {
     toast
@@ -226,12 +228,11 @@ const ComprarLista = () => {
       setLoadingRecommendations(false);
     }
   };
-  const CollapsibleCard = ({ userBudget, list, allPrices, itemBrandPreferences, handleBrandChange }) => {
-  const [isOpen, setIsOpen] = useState(false); // State to manage the open/close status
-
+  
   const toggleCard = () => {
-    setIsOpen(!isOpen); // Toggle the card open/close status
+    setIsOpen(!isOpen);
   };
+  
   const handleBrandChange = (itemName: string, brand: string) => {
     setItemBrandPreferences(prev => ({
       ...prev,
@@ -256,7 +257,8 @@ const ComprarLista = () => {
         </Card>
       </div>;
   }
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -551,6 +553,7 @@ const ComprarLista = () => {
             <Button onClick={() => navigate("/listas")}>Volver a Listas</Button>
           </Card>}
       </main>
-    </div>;
+    </div>
+  );
 };
 export default ComprarLista;
