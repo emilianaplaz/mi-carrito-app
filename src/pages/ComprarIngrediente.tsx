@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Store, TrendingDown, Sparkles, Loader2, Truck } from "lucide-react";
+import { ChefHat, ArrowLeft, Store, TrendingDown, Truck } from "lucide-react";
 
 type Brand = {
   id: string;
@@ -31,20 +31,12 @@ const ComprarIngrediente = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [prices, setPrices] = useState<PriceInfo[]>([]);
-  const [recommendation, setRecommendation] = useState<string>("");
-  const [loadingRecommendation, setLoadingRecommendation] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     loadBrandsAndPrices();
   }, [productName]);
-
-  useEffect(() => {
-    if (selectedBrand && prices.length > 0) {
-      loadRecommendation();
-    }
-  }, [selectedBrand, prices]);
 
   const loadBrandsAndPrices = async () => {
     try {
@@ -115,35 +107,6 @@ const ComprarIngrediente = () => {
     }
   };
 
-  const loadRecommendation = async () => {
-    if (!selectedBrand || selectedBrand === "ANY") return;
-
-    setLoadingRecommendation(true);
-    try {
-      const filteredPrices = prices.filter(p => p.brand_id === selectedBrand);
-      
-      const { data, error } = await supabase.functions.invoke('product-recommendations', {
-        body: {
-          productName,
-          brandId: selectedBrand,
-          prices: filteredPrices,
-        }
-      });
-
-      if (error) throw error;
-      setRecommendation(data.recommendation);
-    } catch (error: any) {
-      console.error("Error loading recommendation:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo obtener la recomendación",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingRecommendation(false);
-    }
-  };
-
   const filteredPrices = selectedBrand
     ? selectedBrand === "ANY"
       ? prices.sort((a, b) => a.price - b.price)
@@ -192,24 +155,6 @@ const ComprarIngrediente = () => {
             </SelectContent>
           </Select>
         </Card>
-
-        {/* AI Recommendation */}
-        {selectedBrand && selectedBrand !== "ANY" && (
-          <Card className="p-6 mb-6 bg-gradient-to-br from-primary/5 to-secondary/5">
-            <div className="flex items-start gap-3 mb-3">
-              <Sparkles className="h-6 w-6 text-primary mt-1" />
-              <h2 className="text-xl font-semibold">Recomendación Inteligente</h2>
-            </div>
-            {loadingRecommendation ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Analizando precios...</span>
-              </div>
-            ) : (
-              <p className="text-sm text-foreground whitespace-pre-wrap">{recommendation}</p>
-            )}
-          </Card>
-        )}
 
         {/* ANY Brand Info */}
         {selectedBrand === "ANY" && filteredPrices.length > 0 && (
