@@ -11,7 +11,21 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Settings, Coffee, UtensilsCrossed, Moon, ThumbsUp, ThumbsDown, ShoppingCart, Clock, Users, ListPlus, CheckSquare } from "lucide-react";
+import {
+  ChefHat,
+  ArrowLeft,
+  Settings,
+  Coffee,
+  UtensilsCrossed,
+  Moon,
+  ThumbsUp,
+  ThumbsDown,
+  ShoppingCart,
+  Clock,
+  Users,
+  ListPlus,
+  CheckSquare,
+} from "lucide-react";
 
 type Recipe = {
   id: string;
@@ -57,7 +71,9 @@ const MiPlan = () => {
   }, [navigate]);
 
   const loadExistingLists = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     const { data } = await supabase
@@ -72,7 +88,9 @@ const MiPlan = () => {
   };
 
   const loadData = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
       return;
@@ -88,29 +106,24 @@ const MiPlan = () => {
       .maybeSingle();
 
     if (plan && plan.recipe_ids) {
-      const recipeIdsData = typeof plan.recipe_ids === 'object' && plan.recipe_ids !== null 
-        ? plan.recipe_ids 
-        : null;
-      
+      const recipeIdsData = typeof plan.recipe_ids === "object" && plan.recipe_ids !== null ? plan.recipe_ids : null;
+
       if (recipeIdsData) {
         setMealPlan(recipeIdsData);
-        
+
         // Collect all recipe IDs
         const allRecipeIds = new Set<string>();
         const days = (recipeIdsData as any).days || [];
         for (const day of days) {
-          [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach(id => allRecipeIds.add(id));
+          [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach((id) => allRecipeIds.add(id));
         }
 
         // Load all recipes
-        const { data: recipesData } = await supabase
-          .from("recipes")
-          .select("*")
-          .in("id", Array.from(allRecipeIds));
+        const { data: recipesData } = await supabase.from("recipes").select("*").in("id", Array.from(allRecipeIds));
 
         if (recipesData) {
           const recipesMap: Record<string, Recipe> = {};
-          recipesData.forEach(r => { 
+          recipesData.forEach((r) => {
             recipesMap[r.id] = {
               ...r,
               ingredients: Array.isArray(r.ingredients) ? r.ingredients : [],
@@ -128,7 +141,9 @@ const MiPlan = () => {
 
         if (prefsData) {
           const prefsMap: Record<string, boolean> = {};
-          prefsData.forEach((p: RecipePreference) => { prefsMap[p.recipe_id] = p.is_liked; });
+          prefsData.forEach((p: RecipePreference) => {
+            prefsMap[p.recipe_id] = p.is_liked;
+          });
           setRecipePrefs(prefsMap);
         }
       }
@@ -146,16 +161,16 @@ const MiPlan = () => {
   };
 
   const handleRecipePreference = async (recipeId: string, isLiked: boolean) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { error } = await supabase
-      .from("user_recipe_preferences")
-      .upsert({
-        user_id: session.user.id,
-        recipe_id: recipeId,
-        is_liked: isLiked,
-      });
+    const { error } = await supabase.from("user_recipe_preferences").upsert({
+      user_id: session.user.id,
+      recipe_id: recipeId,
+      is_liked: isLiked,
+    });
 
     if (error) {
       toast({
@@ -174,39 +189,39 @@ const MiPlan = () => {
 
   const normalizeIngredientName = (name: string): string => {
     const synonyms: Record<string, string> = {
-      'frutas del bosque': 'berries',
-      'frutos del bosque': 'berries',
-      'frutos rojos': 'berries',
-      'bayas': 'berries',
-      'tomate': 'tomate',
-      'jitomate': 'tomate',
-      'papas': 'patatas',
-      'patata': 'patatas',
-      'papa': 'patatas',
-      'ají': 'pimiento',
-      'chile': 'pimiento',
-      'pimentón': 'pimiento',
-      'cebolleta': 'cebolla',
-      'cebollín': 'cebolla',
-      'zanahoria': 'zanahoria',
-      'azúcar': 'azúcar',
-      'azucar': 'azúcar',
+      "frutas del bosque": "berries",
+      "frutos del bosque": "berries",
+      "frutos rojos": "berries",
+      bayas: "berries",
+      tomate: "tomate",
+      jitomate: "tomate",
+      papas: "patatas",
+      patata: "patatas",
+      papa: "patatas",
+      ají: "pimiento",
+      chile: "pimiento",
+      pimentón: "pimiento",
+      cebolleta: "cebolla",
+      cebollín: "cebolla",
+      zanahoria: "zanahoria",
+      azúcar: "azúcar",
+      azucar: "azúcar",
     };
-    
+
     const lowerName = name.toLowerCase().trim();
     return synonyms[lowerName] || lowerName;
   };
 
   const roundToBuyableAmount = (amount: number, unit: string, availableSizes: number[]): number => {
     if (availableSizes.length === 0) return amount;
-    
+
     // Normalize unit to match database
     const normalizedUnit = unit.toLowerCase().trim();
-    
+
     // Find smallest package that fits the need
     const sorted = [...availableSizes].sort((a, b) => a - b);
-    const suitable = sorted.find(size => size >= amount);
-    
+    const suitable = sorted.find((size) => size >= amount);
+
     return suitable || sorted[sorted.length - 1]; // Return biggest if none fit
   };
 
@@ -220,35 +235,38 @@ const MiPlan = () => {
   };
 
   const combineItems = async (items: any[]): Promise<any[]> => {
-    const excludedItems = ['agua', 'sal', 'pimienta', 'pimienta negra', 'aceite de oliva', 'aceite de oliva virgen extra'];
+    const excludedItems = [
+      "agua",
+      "sal",
+      "pimienta",
+      "pimienta negra",
+      "aceite de oliva",
+      "aceite de oliva virgen extra",
+    ];
     const itemMap = new Map<string, any>();
-    
+
     // Fetch available product sizes from database
-    const { data: productsData } = await supabase
-      .from("products")
-      .select("id, name");
-    
-    const { data: pricesData } = await supabase
-      .from("product_prices")
-      .select("product_id, unit");
-    
+    const { data: productsData } = await supabase.from("products").select("id, name");
+
+    const { data: pricesData } = await supabase.from("product_prices").select("product_id, unit");
+
     // Build map of product name -> available sizes per unit type
     const productSizes = new Map<string, Map<string, number[]>>();
-    
+
     if (productsData && pricesData) {
-      const productIdToName = new Map(productsData.map(p => [p.id, p.name.toLowerCase()]));
-      
+      const productIdToName = new Map(productsData.map((p) => [p.id, p.name.toLowerCase()]));
+
       pricesData.forEach((price: any) => {
         const productName = productIdToName.get(price.product_id);
         if (!productName) return;
-        
+
         const parsed = parseUnit(price.unit);
         if (parsed.value === 0) return;
-        
+
         if (!productSizes.has(productName)) {
           productSizes.set(productName, new Map());
         }
-        
+
         const unitMap = productSizes.get(productName)!;
         if (!unitMap.has(parsed.unit)) {
           unitMap.set(parsed.unit, []);
@@ -256,25 +274,25 @@ const MiPlan = () => {
         unitMap.get(parsed.unit)!.push(parsed.value);
       });
     }
-    
-    items.forEach(item => {
+
+    items.forEach((item) => {
       const originalName = item.item || item.name;
       if (!originalName) return;
-      
+
       const lowerName = originalName.toLowerCase().trim();
       // Skip excluded items
-      if (excludedItems.some(excluded => lowerName.includes(excluded))) {
+      if (excludedItems.some((excluded) => lowerName.includes(excluded))) {
         return;
       }
-      
+
       const normalizedKey = normalizeIngredientName(originalName);
-      
+
       if (itemMap.has(normalizedKey)) {
         const existing = itemMap.get(normalizedKey);
         // Only combine if units match
         const itemUnit = (item.unit || "unidad").toLowerCase();
         const existingUnit = (existing.unit || "unidad").toLowerCase();
-        
+
         if (itemUnit === existingUnit) {
           const existingAmount = parseFloat(existing.amount) || 0;
           const newAmount = parseFloat(item.amount) || 0;
@@ -286,7 +304,7 @@ const MiPlan = () => {
             name: originalName,
             brand: item.brand || "",
             amount: item.amount || "1",
-            unit: item.unit || "unidad"
+            unit: item.unit || "unidad",
           });
         }
       } else {
@@ -294,29 +312,28 @@ const MiPlan = () => {
           name: originalName,
           brand: item.brand || "",
           amount: item.amount || "1",
-          unit: item.unit || "unidad"
+          unit: item.unit || "unidad",
         });
       }
     });
-    
+
     // Round up amounts to buyable sizes
     const result: any[] = [];
     for (const item of itemMap.values()) {
       const normalizedProductName = normalizeIngredientName(item.name);
       const unit = (item.unit || "unidad").toLowerCase();
       const amount = parseFloat(item.amount) || 1;
-      
+
       const availableSizesForUnit = productSizes.get(normalizedProductName)?.get(unit) || [];
-      const buyableAmount = availableSizesForUnit.length > 0 
-        ? roundToBuyableAmount(amount, unit, availableSizesForUnit)
-        : amount;
-      
+      const buyableAmount =
+        availableSizesForUnit.length > 0 ? roundToBuyableAmount(amount, unit, availableSizesForUnit) : amount;
+
       result.push({
         ...item,
-        amount: String(buyableAmount)
+        amount: String(buyableAmount),
       });
     }
-    
+
     return result;
   };
 
@@ -348,14 +365,16 @@ const MiPlan = () => {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return;
 
-    const selectedItems = Array.from(selectedIngredients).map(idx => ({
+    const selectedItems = Array.from(selectedIngredients).map((idx) => ({
       name: selectedRecipe.ingredients[idx].item,
       brand: "",
       amount: selectedRecipe.ingredients[idx].amount,
-      unit: selectedRecipe.ingredients[idx].unit
+      unit: selectedRecipe.ingredients[idx].unit,
     }));
 
     if (listChoice === "new") {
@@ -432,7 +451,9 @@ const MiPlan = () => {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     // Collect all ingredients from selected recipes
@@ -442,15 +463,15 @@ const MiPlan = () => {
     // 2. Sum up quantities of the same ingredient across all recipes
     // 3. Normalize ingredient names to avoid duplicates
     const allIngredients: any[] = [];
-    selectedRecipeIds.forEach(recipeId => {
+    selectedRecipeIds.forEach((recipeId) => {
       const recipe = recipes[recipeId];
       if (recipe && recipe.ingredients) {
-        recipe.ingredients.forEach(ing => {
+        recipe.ingredients.forEach((ing) => {
           allIngredients.push({
             name: ing.item,
             brand: "",
             amount: ing.amount,
-            unit: ing.unit
+            unit: ing.unit,
           });
         });
       }
@@ -525,7 +546,7 @@ const MiPlan = () => {
   const handleSelectAllRecipes = () => {
     const allRecipeIds = new Set<string>();
     mealPlan.days?.forEach((day: any) => {
-      [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach(id => allRecipeIds.add(id));
+      [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach((id) => allRecipeIds.add(id));
     });
     setSelectedRecipeIds(allRecipeIds);
   };
@@ -563,9 +584,7 @@ const MiPlan = () => {
             <p className="text-muted-foreground mb-6">
               Completa el test de preferencias para generar tu plan personalizado
             </p>
-            <Button onClick={() => navigate("/test-preferencias")}>
-              Crear Mi Plan
-            </Button>
+            <Button onClick={() => navigate("/test-preferencias")}>Crear Mi Plan</Button>
           </Card>
         </main>
       </div>
@@ -590,10 +609,14 @@ const MiPlan = () => {
           <div className="flex gap-2">
             {!selectionMode ? (
               <>
-                <Button variant="outline" size="sm" onClick={() => {
-                  handleSelectAllRecipes();
-                  setShowBulkAddDialog(true);
-                }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    handleSelectAllRecipes();
+                    setShowBulkAddDialog(true);
+                  }}
+                >
                   <ListPlus className="h-4 w-4 mr-2" />
                   Plan Completo a Lista
                 </Button>
@@ -608,19 +631,23 @@ const MiPlan = () => {
               </>
             ) : (
               <>
-                <Button 
-                  variant="default" 
-                  size="sm" 
+                <Button
+                  variant="default"
+                  size="sm"
                   onClick={() => setShowBulkAddDialog(true)}
                   disabled={selectedRecipeIds.size === 0}
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Crear Lista ({selectedRecipeIds.size})
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => {
-                  setSelectionMode(false);
-                  setSelectedRecipeIds(new Set());
-                }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectionMode(false);
+                    setSelectedRecipeIds(new Set());
+                  }}
+                >
                   Cancelar
                 </Button>
               </>
@@ -634,7 +661,7 @@ const MiPlan = () => {
           {mealPlan.days?.map((day: any) => (
             <Card key={day.day} className="p-6">
               <h2 className="text-2xl font-bold mb-4">Día {day.day}</h2>
-              
+
               <Tabs defaultValue="breakfast" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="breakfast">
@@ -643,7 +670,7 @@ const MiPlan = () => {
                   </TabsTrigger>
                   <TabsTrigger value="lunch">
                     <UtensilsCrossed className="h-4 w-4 mr-2" />
-                    Comida
+                    Almuerzo
                   </TabsTrigger>
                   <TabsTrigger value="dinner">
                     <Moon className="h-4 w-4 mr-2" />
@@ -651,7 +678,7 @@ const MiPlan = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                {['breakfast', 'lunch', 'dinner'].map(mealType => (
+                {["breakfast", "lunch", "dinner"].map((mealType) => (
                   <TabsContent key={mealType} value={mealType} className="mt-4">
                     <div className="grid gap-3">
                       {(day[mealType] || []).map((recipeId: string, idx: number) => {
@@ -660,12 +687,12 @@ const MiPlan = () => {
                         const isLiked = recipePrefs[recipeId];
 
                         return (
-                          <Card 
-                            key={idx} 
+                          <Card
+                            key={idx}
                             className={`p-4 transition-all cursor-pointer ${
-                              selectionMode && selectedRecipeIds.has(recipeId) 
-                                ? 'border-2 border-primary bg-primary/5' 
-                                : ''
+                              selectionMode && selectedRecipeIds.has(recipeId)
+                                ? "border-2 border-primary bg-primary/5"
+                                : ""
                             }`}
                             onClick={() => {
                               if (selectionMode) {
@@ -682,7 +709,7 @@ const MiPlan = () => {
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex-1 flex items-start gap-3">
                                 {selectionMode && (
-                                  <Checkbox 
+                                  <Checkbox
                                     checked={selectedRecipeIds.has(recipeId)}
                                     onCheckedChange={(checked) => {
                                       const newSet = new Set(selectedRecipeIds);
@@ -726,7 +753,7 @@ const MiPlan = () => {
                                 </div>
                               )}
                             </div>
-                            
+
                             <div className="flex gap-4 text-sm text-muted-foreground mb-3">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
@@ -769,11 +796,11 @@ const MiPlan = () => {
           <DialogHeader>
             <DialogTitle>{selectedRecipe?.name}</DialogTitle>
           </DialogHeader>
-          
+
           {selectedRecipe && (
             <div className="space-y-4">
               <p className="text-muted-foreground">{selectedRecipe.description}</p>
-              
+
               <div className="flex gap-4 text-sm">
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
@@ -807,10 +834,7 @@ const MiPlan = () => {
                 </ol>
               </div>
 
-              <Button
-                onClick={() => setShowAddToList(true)}
-                className="w-full"
-              >
+              <Button onClick={() => setShowAddToList(true)} className="w-full">
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Agregar a Lista de Compras
               </Button>
@@ -825,18 +849,22 @@ const MiPlan = () => {
           <DialogHeader>
             <DialogTitle>Agregar a Lista de Compras</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div>
               <Label className="mb-3 block">¿Nueva lista o agregar a existente?</Label>
               <RadioGroup value={listChoice} onValueChange={(value: "new" | "existing") => setListChoice(value)}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="new" id="new" />
-                  <Label htmlFor="new" className="cursor-pointer">Crear nueva lista</Label>
+                  <Label htmlFor="new" className="cursor-pointer">
+                    Crear nueva lista
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="existing" id="existing" />
-                  <Label htmlFor="existing" className="cursor-pointer">Agregar a lista existente</Label>
+                  <Label htmlFor="existing" className="cursor-pointer">
+                    Agregar a lista existente
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
@@ -887,10 +915,7 @@ const MiPlan = () => {
                         setSelectedIngredients(newSet);
                       }}
                     />
-                    <label
-                      htmlFor={`ingredient-${idx}`}
-                      className="text-sm cursor-pointer"
-                    >
+                    <label htmlFor={`ingredient-${idx}`} className="text-sm cursor-pointer">
                       {ing.amount} {ing.unit} {ing.item}
                     </label>
                   </div>
@@ -916,13 +941,12 @@ const MiPlan = () => {
           <DialogHeader>
             <DialogTitle>Crear Lista de Compras</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {selectedRecipeIds.size === 0 
+              {selectedRecipeIds.size === 0
                 ? "Se agregarán todos los ingredientes del plan completo"
-                : `Se agregarán ingredientes de ${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? 's' : ''} seleccionada${selectedRecipeIds.size > 1 ? 's' : ''}`
-              }
+                : `Se agregarán ingredientes de ${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? "s" : ""} seleccionada${selectedRecipeIds.size > 1 ? "s" : ""}`}
             </p>
 
             <div>
@@ -930,11 +954,15 @@ const MiPlan = () => {
               <RadioGroup value={listChoice} onValueChange={(value: "new" | "existing") => setListChoice(value)}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="new" id="bulk-new" />
-                  <Label htmlFor="bulk-new" className="cursor-pointer">Crear nueva lista</Label>
+                  <Label htmlFor="bulk-new" className="cursor-pointer">
+                    Crear nueva lista
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="existing" id="bulk-existing" />
-                  <Label htmlFor="bulk-existing" className="cursor-pointer">Agregar a lista existente</Label>
+                  <Label htmlFor="bulk-existing" className="cursor-pointer">
+                    Agregar a lista existente
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
@@ -972,9 +1000,7 @@ const MiPlan = () => {
             <Button variant="outline" onClick={() => setShowBulkAddDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleBulkAddToList}>
-              {listChoice === "new" ? "Crear Lista" : "Agregar a Lista"}
-            </Button>
+            <Button onClick={handleBulkAddToList}>{listChoice === "new" ? "Crear Lista" : "Agregar a Lista"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
