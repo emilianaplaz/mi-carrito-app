@@ -246,6 +246,10 @@ const Dashboard = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/test-preferencias")} className="cursor-pointer">
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  <span>Editar Preferencias</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Cerrar sesión</span>

@@ -40,6 +40,8 @@ const TestPreferencias = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [hasExistingPreferences, setHasExistingPreferences] = useState(false);
+  const [regeneratePlan, setRegeneratePlan] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -159,7 +161,7 @@ const TestPreferencias = () => {
   ];
 
   useEffect(() => {
-    const checkUser = async () => {
+    const checkUserAndLoadPreferences = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -167,10 +169,44 @@ const TestPreferencias = () => {
         navigate("/auth");
         return;
       }
+
+      // Load existing preferences if they exist
+      try {
+        const { data: existingPrefs, error } = await supabase
+          .from("user_preferences")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (!error && existingPrefs) {
+          setHasExistingPreferences(true);
+          // Pre-populate form with existing preferences
+          setPreferences({
+            planDuration: existingPrefs.plan_duration || "1_week",
+            breakfastOptions: existingPrefs.breakfast_options || 3,
+            lunchOptions: existingPrefs.lunch_options || 3,
+            dinnerOptions: existingPrefs.dinner_options || 3,
+            dietaryRestrictions: Array.isArray(existingPrefs.dietary_restrictions) ? existingPrefs.dietary_restrictions : [],
+            allergies: Array.isArray(existingPrefs.allergies) ? existingPrefs.allergies : [],
+            cookingTime: existingPrefs.cooking_time || "",
+            healthGoals: Array.isArray(existingPrefs.health_goals) ? existingPrefs.health_goals : [],
+            cuisinePreferences: Array.isArray(existingPrefs.cuisine_preferences) ? existingPrefs.cuisine_preferences : [],
+            budget: existingPrefs.budget || undefined,
+          });
+
+          toast({
+            title: "Preferencias cargadas",
+            description: "Puedes editar tus preferencias existentes",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading preferences:", error);
+      }
+
       setLoading(false);
     };
-    checkUser();
-  }, [navigate]);
+    checkUserAndLoadPreferences();
+  }, [navigate, toast]);
 
   const toggleOption = (field: keyof typeof preferences, value: string, single = false) => {
     if (single) {
@@ -196,7 +232,14 @@ const TestPreferencias = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleSubmit();
+      // On final step, if has existing preferences, show option dialog
+      if (hasExistingPreferences) {
+        // Will be handled by the buttons in the UI
+        return;
+      } else {
+        // First time, always generate plan
+        handleSubmit(true);
+      }
     }
   };
 
@@ -206,7 +249,7 @@ const TestPreferencias = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (shouldGeneratePlan: boolean) => {
     try {
       const validated = preferencesSchema.parse(preferences);
       setSaving(true);
@@ -239,6 +282,15 @@ const TestPreferencias = () => {
       });
 
       if (prefsError) throw prefsError;
+
+      if (!shouldGeneratePlan) {
+        toast({
+          title: "¡Preferencias guardadas!",
+          description: "Tus preferencias han sido actualizadas",
+        });
+        navigate("/dashboard");
+        return;
+      }
 
       // Generate AI-powered meal plan
       toast({
@@ -336,6 +388,15 @@ const TestPreferencias = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* Editing info banner */}
+        {hasExistingPreferences && currentStep === 0 && (
+          <Card className="p-4 mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              ℹ️ Estás editando tus preferencias existentes. Puedes navegar por las diferentes secciones y actualizar lo que necesites.
+            </p>
+          </Card>
+        )}
+
         {/* Progress Bar */}
         <div className="mb-8 animate-fade-in">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
@@ -455,9 +516,20 @@ const TestPreferencias = () => {
           <Button variant="outline" onClick={handleBack} disabled={currentStep === 0} className="flex-1">
             Atrás
           </Button>
-          <Button onClick={handleNext} disabled={saving} className="flex-1">
-            {saving ? "Guardando..." : currentStep === steps.length - 1 ? "Finalizar" : "Siguiente"}
-          </Button>
+          {currentStep === steps.length - 1 && hasExistingPreferences ? (
+            <>
+              <Button variant="outline" onClick={() => handleSubmit(false)} disabled={saving} className="flex-1">
+                {saving ? "Guardando..." : "Solo Guardar"}
+              </Button>
+              <Button onClick={() => handleSubmit(true)} disabled={saving} className="flex-1">
+                {saving ? "Generando..." : "Guardar y Regenerar Plan"}
+              </Button>
+            </>
+          ) : (
+            <Button onClick={handleNext} disabled={saving} className="flex-1">
+              {saving ? "Guardando..." : currentStep === steps.length - 1 ? "Finalizar" : "Siguiente"}
+            </Button>
+          )}
         </div>
       </main>
     </div>
