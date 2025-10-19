@@ -10,28 +10,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import miCarritoLogo from "@/assets/mi-carrit-logo.png";
-
 const emailSchema = z.string().email("Email inválido");
 const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres");
-
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Redirect if already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (session) {
         navigate("/dashboard");
       }
     };
     checkSession();
   }, [navigate]);
-
   const validateInputs = (isSignup: boolean) => {
     try {
       emailSchema.parse(email);
@@ -42,34 +45,33 @@ const Auth = () => {
         toast({
           title: "Error de validación",
           description: error.errors[0].message,
-          variant: "destructive",
+          variant: "destructive"
         });
       }
       return false;
     }
   };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateInputs(true)) return;
-    
     setIsLoading(true);
     try {
       const redirectUrl = `${window.location.origin}/`;
-      const { error } = await supabase.auth.signUp({
+      const {
+        error
+      } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
-        },
+          emailRedirectTo: redirectUrl
+        }
       });
-
       if (error) {
         if (error.message.includes("already registered")) {
           toast({
             title: "Usuario ya existe",
             description: "Este email ya está registrado. Por favor, inicia sesión.",
-            variant: "destructive",
+            variant: "destructive"
           });
         } else {
           throw error;
@@ -77,7 +79,7 @@ const Auth = () => {
       } else {
         toast({
           title: "¡Registro exitoso!",
-          description: "Ahora puedes iniciar sesión con tu cuenta.",
+          description: "Ahora puedes iniciar sesión con tu cuenta."
         });
         navigate("/test-preferencias");
       }
@@ -85,53 +87,50 @@ const Auth = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateInputs(false)) return;
-    
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const {
+        error
+      } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
-
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           toast({
             title: "Credenciales incorrectas",
             description: "Email o contraseña incorrectos. Por favor, verifica tus datos.",
-            variant: "destructive",
+            variant: "destructive"
           });
         } else {
           throw error;
         }
       } else {
         // Check if user has meal plan or preferences
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         if (user) {
-          const { data: mealPlan } = await supabase
-            .from("meal_plans")
-            .select("id")
-            .eq("user_id", user.id)
-            .single();
-          
+          const {
+            data: mealPlan
+          } = await supabase.from("meal_plans").select("id").eq("user_id", user.id).single();
           if (mealPlan) {
             navigate("/dashboard");
           } else {
-            const { data: prefs } = await supabase
-              .from("user_preferences")
-              .select("id")
-              .eq("user_id", user.id)
-              .single();
-            
+            const {
+              data: prefs
+            } = await supabase.from("user_preferences").select("id").eq("user_id", user.id).single();
             if (prefs) {
               navigate("/dashboard");
             } else {
@@ -144,19 +143,17 @@ const Auth = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+  return <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md p-8 shadow-strong">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <img src={miCarritoLogo} alt="MiCarrito" className="h-8 w-auto" />
+            
             <span className="text-2xl font-bold text-primary">
               MiCarrito
             </span>
@@ -176,25 +173,11 @@ const Auth = () => {
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Input id="signin-email" type="email" placeholder="tu@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signin-password">Contraseña</Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <Input id="signin-password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Cargando..." : "Iniciar Sesión"}
@@ -206,25 +189,11 @@ const Auth = () => {
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Input id="signup-email" type="email" placeholder="tu@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Contraseña</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <Input id="signup-password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Cargando..." : "Crear Cuenta"}
@@ -234,17 +203,11 @@ const Auth = () => {
         </Tabs>
 
         <div className="mt-6 text-center">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="text-sm"
-          >
+          <Button variant="ghost" onClick={() => navigate("/")} className="text-sm">
             ← Volver al inicio
           </Button>
         </div>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default Auth;
