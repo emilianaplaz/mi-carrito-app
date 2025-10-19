@@ -193,44 +193,39 @@ export type Database = {
       }
       product_prices: {
         Row: {
-          brand_name: string
-          created_at: string
+          created_at: string | null
           id: string
-          last_updated: string
-          price: number
-          product_name: string
-          supermarket_id: string
-          unit: string
+          last_updated: string | null
+          marca: string
+          mercado: string
+          precio: number
+          presentacion: string
+          producto: string
+          subcategoria: string
         }
         Insert: {
-          brand_name: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          last_updated?: string
-          price: number
-          product_name: string
-          supermarket_id: string
-          unit: string
+          last_updated?: string | null
+          marca: string
+          mercado: string
+          precio: number
+          presentacion: string
+          producto: string
+          subcategoria: string
         }
         Update: {
-          brand_name?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
-          last_updated?: string
-          price?: number
-          product_name?: string
-          supermarket_id?: string
-          unit?: string
+          last_updated?: string | null
+          marca?: string
+          mercado?: string
+          precio?: number
+          presentacion?: string
+          producto?: string
+          subcategoria?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "product_prices_supermarket_id_fkey"
-            columns: ["supermarket_id"]
-            isOneToOne: false
-            referencedRelation: "supermarkets"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       products: {
         Row: {
