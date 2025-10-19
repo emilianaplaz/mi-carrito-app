@@ -491,8 +491,8 @@ const Listas = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <Button variant="ghost" onClick={() => navigate("/calendar")} className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+              <Calendar className="h-10 w-10" />
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>

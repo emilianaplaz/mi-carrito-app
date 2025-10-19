@@ -28,6 +28,7 @@ import {
   CheckSquare,
   X,
   Sparkles,
+  Calendar,
 } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
 import { CartButton } from "@/components/Cart";
@@ -586,6 +587,9 @@ const MiPlan = () => {
             </div>
 
             <div className="flex items-center gap-2 flex-1 justify-end">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+                <Calendar className="h-10 w-10" />
+              </Button>
               <CartButton />
               <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
                 <ChefHat className="h-10 w-10" />

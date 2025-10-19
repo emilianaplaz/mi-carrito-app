@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle } from "lucide-react";
+import { ArrowLeft, ShoppingCart, MapPin, Clock, CreditCard, Loader2, CheckCircle, Calendar, ChefHat } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
 
 type CartItem = {
@@ -189,7 +190,15 @@ const DeliveryOrder = () => {
             <img src={logo} alt="MiCarrit" className="h-28" />
           </div>
 
-          <div className="flex-1"></div>
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+              <Calendar className="h-10 w-10" />
+            </Button>
+            <CartButton />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ChefHat className="h-10 w-10" />
+            </Button>
+          </div>
         </div>
       </header>
 

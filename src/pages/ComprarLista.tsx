@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart, AlertCircle, X, Clock, Calendar as CalendarIcon, ToggleLeft, ToggleRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
+import logo from "@/assets/mi-carrit-logo.png";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
@@ -360,7 +361,13 @@ const ComprarLista = () => {
               <span className="text-lg font-bold">Comprar: {list.name}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center">
+            <img src={logo} alt="MiCarrit" className="h-28" />
+          </div>
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+              <Calendar className="h-10 w-10" />
+            </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ChefHat className="h-10 w-10" />

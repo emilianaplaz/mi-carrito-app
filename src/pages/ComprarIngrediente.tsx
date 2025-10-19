@@ -7,9 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ChefHat, ArrowLeft, Store, TrendingDown, Truck, ShoppingCart } from "lucide-react";
+import { ChefHat, ArrowLeft, Store, TrendingDown, Truck, ShoppingCart, Calendar } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
+import logo from "@/assets/mi-carrit-logo.png";
 type PriceInfo = {
   id: string;
   price: number;
@@ -136,7 +137,13 @@ const ComprarIngrediente = () => {
             <Store className="h-5 w-5 text-primary" />
             <span className="text-lg font-bold">Comprar: {productName}</span>
           </div>
+          <div className="flex items-center justify-center flex-1">
+            <img src={logo} alt="MiCarrit" className="h-28" />
+          </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+              <Calendar className="h-10 w-10" />
+            </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ChefHat className="h-10 w-10" />

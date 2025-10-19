@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut, Coffee, UtensilsCrossed, Moon, ThumbsUp, ThumbsDown, Clock, Users } from "lucide-react";
+import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut, Coffee, UtensilsCrossed, Moon, ThumbsUp, ThumbsDown, Clock, Users, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { format, startOfWeek, addDays, isSameDay, parseISO, isWithinInterval, isBefore, isAfter } from "date-fns";
+import { es } from "date-fns/locale";
 type Recipe = {
   id: string;
   name: string;
@@ -23,6 +26,14 @@ type Recipe = {
   cuisine_type: string;
   dietary_tags: string[];
   meal_type: string;
+};
+
+type AutomatedList = {
+  id: string;
+  name: string;
+  next_scheduled_date: string;
+  automation_frequency: string;
+  items: any[];
 };
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -37,6 +48,8 @@ const Dashboard = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [showPreferencesPrompt, setShowPreferencesPrompt] = useState(false);
   const [hasPreferences, setHasPreferences] = useState(false);
+  const [automatedLists, setAutomatedLists] = useState<AutomatedList[]>([]);
+  const [weekDays, setWeekDays] = useState<Date[]>([]);
   const navigate = useNavigate();
   const {
     toast
@@ -73,6 +86,11 @@ const Dashboard = () => {
         
         // Load today's recipes
         await loadTodayRecipes(session.user.id);
+        
+        // Load automated lists and current week
+        await loadAutomatedLists(session.user.id);
+        initializeWeek();
+        
         setLoading(false);
       }
       return () => subscription.unsubscribe();
@@ -181,6 +199,122 @@ const Dashboard = () => {
       });
     }
   };
+
+  const initializeWeek = () => {
+    const today = new Date();
+    const weekStart = startOfWeek(today, { weekStartsOn: 0 }); // Sunday
+    const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    setWeekDays(days);
+  };
+
+  const loadAutomatedLists = async (userId: string) => {
+    const { data } = await supabase
+      .from("grocery_lists")
+      .select("id, name, next_scheduled_date, automation_frequency, items")
+      .eq("user_id", userId)
+      .eq("is_automated", true)
+      .order("next_scheduled_date", { ascending: true });
+
+    if (data) {
+      setAutomatedLists(data.map(list => ({
+        ...list,
+        items: Array.isArray(list.items) ? list.items : []
+      })));
+    }
+  };
+
+  const getListOccurrencesInWeek = (list: AutomatedList) => {
+    const occurrences: Date[] = [];
+    if (!list.next_scheduled_date || !list.automation_frequency || weekDays.length === 0) return occurrences;
+    
+    const weekStart = weekDays[0];
+    const weekEnd = weekDays[6];
+    let currentDate = parseISO(list.next_scheduled_date);
+    
+    // Go backwards to find occurrences before next_scheduled_date
+    if (isAfter(currentDate, weekEnd)) {
+      let backwardDate = currentDate;
+      while (isAfter(backwardDate, weekStart)) {
+        if (list.automation_frequency === "weekly") {
+          backwardDate = addDays(backwardDate, -7);
+        } else if (list.automation_frequency === "bi-weekly") {
+          backwardDate = addDays(backwardDate, -14);
+        } else if (list.automation_frequency === "monthly") {
+          backwardDate = addDays(backwardDate, -30);
+        } else if (list.automation_frequency === "buy_once") {
+          break;
+        }
+        
+        if (isWithinInterval(backwardDate, { start: weekStart, end: weekEnd })) {
+          occurrences.push(backwardDate);
+        }
+      }
+      return occurrences.sort((a, b) => a.getTime() - b.getTime());
+    }
+    
+    // Go forward from next_scheduled_date
+    while (isBefore(currentDate, weekEnd) || isSameDay(currentDate, weekEnd)) {
+      if (isWithinInterval(currentDate, { start: weekStart, end: weekEnd })) {
+        occurrences.push(currentDate);
+      }
+      
+      if (list.automation_frequency === "weekly") {
+        currentDate = addDays(currentDate, 7);
+      } else if (list.automation_frequency === "bi-weekly") {
+        currentDate = addDays(currentDate, 14);
+      } else if (list.automation_frequency === "monthly") {
+        currentDate = addDays(currentDate, 30);
+      } else if (list.automation_frequency === "buy_once") {
+        break;
+      } else {
+        break;
+      }
+    }
+    
+    return occurrences;
+  };
+
+  const getListsForDay = (day: Date) => {
+    const listsForThisDay: AutomatedList[] = [];
+    automatedLists.forEach(list => {
+      const occurrences = getListOccurrencesInWeek(list);
+      if (occurrences.some(occurrence => isSameDay(occurrence, day))) {
+        listsForThisDay.push(list);
+      }
+    });
+    return listsForThisDay;
+  };
+
+  const frequencyBadgeColor = (frequency: string) => {
+    switch (frequency) {
+      case "weekly":
+        return "bg-blue-500";
+      case "bi-weekly":
+        return "bg-purple-500";
+      case "monthly":
+        return "bg-green-500";
+      case "buy_once":
+        return "bg-orange-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const frequencyLabel = (frequency: string) => {
+    switch (frequency) {
+      case "weekly":
+        return "Semanal";
+      case "bi-weekly":
+        return "Quincenal";
+      case "monthly":
+        return "Mensual";
+      case "buy_once":
+        return "Una Vez";
+      default:
+        return frequency;
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       const {
@@ -241,6 +375,9 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+              <Calendar className="h-10 w-10" />
+            </Button>
             <CartButton />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -345,9 +482,86 @@ const Dashboard = () => {
               })}
                     {todayRecipes[mealType as keyof typeof todayRecipes].length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No hay recetas</p>}
                   </div>
-                </TabsContent>)}
+              </TabsContent>)}
             </Tabs>
           </Card>}
+
+        {/* Current Week Calendar */}
+        {weekDays.length > 0 && (
+          <Card className="p-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Listas de Esta Semana
+              </h3>
+              <Button variant="outline" size="sm" onClick={() => navigate("/calendar")}>
+                Ver Calendario Completo
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2">
+              {weekDays.map((day) => {
+                const listsForDay = getListsForDay(day);
+                const isToday = isSameDay(day, new Date());
+
+                return (
+                  <Card
+                    key={day.toISOString()}
+                    className={`p-3 min-h-[120px] ${
+                      isToday ? "border-2 border-primary" : ""
+                    } ${listsForDay.length > 0 ? "bg-primary/5" : ""}`}
+                  >
+                    <div className="text-center mb-2">
+                      <div className="text-xs font-medium text-muted-foreground">
+                        {format(day, "EEE", { locale: es })}
+                      </div>
+                      <div className="text-lg font-bold">
+                        {format(day, "d")}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      {listsForDay.map((list) => (
+                        <div
+                          key={list.id}
+                          className="text-xs p-1 rounded bg-card border cursor-pointer hover:bg-accent/50 transition-colors"
+                          onClick={() => navigate(`/comprar-lista?id=${list.id}`)}
+                        >
+                          <div className="font-medium truncate text-center mb-1">{list.name}</div>
+                          <Badge
+                            className={`text-xs w-full justify-center ${frequencyBadgeColor(list.automation_frequency)}`}
+                          >
+                            {frequencyLabel(list.automation_frequency)}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {automatedLists.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-3 justify-center text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-blue-500"></div>
+                  <span>Semanal</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-purple-500"></div>
+                  <span>Quincenal</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-green-500"></div>
+                  <span>Mensual</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-orange-500"></div>
+                  <span>Una Vez</span>
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
       </main>
 
       {/* Recipe Detail Dialog */}

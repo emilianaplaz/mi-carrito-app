@@ -237,6 +237,9 @@ const Pantry = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+              <Calendar className="h-10 w-10" />
+            </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ChefHat className="h-10 w-10" />

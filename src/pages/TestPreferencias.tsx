@@ -19,9 +19,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/mi-carrit-logo.png";
+import { CartButton } from "@/components/Cart";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
-import logo from "@/assets/mi-carrit-logo.png";
 
 const preferencesSchema = z.object({
   planDuration: z.string(),
@@ -387,7 +388,15 @@ const TestPreferencias = () => {
             <img src={logo} alt="MiCarrit" className="h-28" />
           </div>
 
-          <div className="flex-1"></div>
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
+              <Calendar className="h-10 w-10" />
+            </Button>
+            <CartButton />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ChefHat className="h-10 w-10" />
+            </Button>
+          </div>
         </div>
       </header>
 
