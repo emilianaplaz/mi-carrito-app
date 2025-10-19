@@ -374,46 +374,51 @@ const ComprarLista = () => {
                   <p className="text-sm text-muted-foreground">Elige la estrategia que prefieras</p>
                 </div>
                 
-                {recommendations.slice(0, 2).map((rec, index) => (
-                  <Card key={index} className={`p-6 border-2 ${(rec.missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
-                    <div className="flex items-start gap-3 mb-4">
-                      <Sparkles className={`h-7 w-7 mt-1 flex-shrink-0 ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
-                      <div className="flex-1">
-                        <h3 className={`text-xl font-bold mb-2 ${(rec.missingCount || 0) === 0 ? 'text-green-800 dark:text-green-300' : 'text-orange-800 dark:text-orange-300'}`}>
-                          {index === 0 ? '🎯 Menos Tiendas' : '💰 Más Barato'}
-                        </h3>
-                        
-                        {/* Recommendation details */}
-                        <div className={`rounded-lg p-4 border ${(rec.missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <Store className={`h-8 w-8 ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
-                              <div>
-                                <h4 className="font-bold text-lg">{rec.supermarket}</h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {rec.items.length} de {list.items.length} artículos
+                {recommendations.slice(0, 2).map((rec, index) => {
+                  const isBestOption = rec.supermarket.includes('Mejor Opción');
+                  const isCheapest = rec.supermarket.includes('Más Barata');
+                  
+                  return (
+                    <Card key={index} className={`p-6 border-2 ${(rec.missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
+                      <div className="flex items-start gap-3 mb-4">
+                        <Sparkles className={`h-7 w-7 mt-1 flex-shrink-0 ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
+                        <div className="flex-1">
+                          <h3 className={`text-xl font-bold mb-2 ${(rec.missingCount || 0) === 0 ? 'text-green-800 dark:text-green-300' : 'text-orange-800 dark:text-orange-300'}`}>
+                            {isBestOption ? '🎯 Mejor Opción' : isCheapest ? '💰 Opción Más Barata' : rec.supermarket}
+                          </h3>
+                          
+                          {/* Recommendation details */}
+                          <div className={`rounded-lg p-4 border ${(rec.missingCount || 0) === 0 ? 'bg-card border-primary' : 'bg-card border-accent'}`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <Store className={`h-8 w-8 ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
+                                <div>
+                                  <h4 className="font-bold text-lg">{rec.supermarket.replace('Mejor Opción: ', '').replace('Opción Más Barata: ', '')}</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {rec.items.length} de {list.items.length} artículos
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className={`text-3xl font-bold ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                                  ${rec.totalPrice.toFixed(2)}
+                                </p>
+                                <p className={`text-xs font-semibold ${(rec.missingCount || 0) === 0 ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'}`}>
+                                  {(rec.missingCount || 0) === 0 ? '¡Cobertura Total!' : 'Cobertura Parcial'}
                                 </p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className={`text-3xl font-bold ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                                ${rec.totalPrice.toFixed(2)}
-                              </p>
-                              <p className={`text-xs font-semibold ${(rec.missingCount || 0) === 0 ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'}`}>
-                                {(rec.missingCount || 0) === 0 ? '¡Cobertura Total!' : 'Cobertura Parcial'}
-                              </p>
-                            </div>
+                            <p className="text-sm text-muted-foreground italic mb-4">{rec.reasoning}</p>
+                            <Button className="w-full" size="lg" onClick={() => handleAddToCart(rec.supermarket, rec.items)}>
+                              <ShoppingCart className="mr-2 h-5 w-5" />
+                              Agregar Todo al Carrito
+                            </Button>
                           </div>
-                          <p className="text-sm text-muted-foreground italic mb-4">{rec.reasoning}</p>
-                          <Button className="w-full" size="lg" onClick={() => handleAddToCart(rec.supermarket, rec.items)}>
-                            <ShoppingCart className="mr-2 h-5 w-5" />
-                            Agregar Todo al Carrito
-                          </Button>
                         </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
             )}
 

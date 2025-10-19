@@ -181,10 +181,10 @@ serve(async (req) => {
       }
     }
     
+    const cheapestStoreCount = cheapestUsedSupermarkets.size;
     if (cheapestCombination.length === items.length) {
-      const cheapestStoreCount = cheapestUsedSupermarkets.size;
       supermarketOptions.push({
-        supermarket: `Combinación más barata: ${Array.from(cheapestUsedSupermarkets).join(' + ')}`,
+        supermarket: `Opción Más Barata: ${Array.from(cheapestUsedSupermarkets).join(' + ')}`,
         items: cheapestCombination,
         totalPrice: cheapestTotal,
         isCombination: true,
@@ -193,6 +193,17 @@ serve(async (req) => {
         storeCount: cheapestStoreCount
       });
       console.log(`Cheapest overall: ${cheapestStoreCount} stores for $${cheapestTotal.toFixed(2)}`);
+    } else if (cheapestCombination.length > 0) {
+      // Partial coverage with cheapest
+      supermarketOptions.push({
+        supermarket: `Opción Más Barata: ${Array.from(cheapestUsedSupermarkets).join(' + ')}`,
+        items: cheapestCombination,
+        totalPrice: cheapestTotal,
+        isCombination: true,
+        missingCount: items.length - cheapestCombination.length,
+        strategy: 'cheapest',
+        storeCount: cheapestStoreCount
+      });
     }
     
     // Option 2B: Generate smart combination strategies that minimize store count
@@ -335,11 +346,11 @@ serve(async (req) => {
         const storeNames = combo.stores.join(' + ');
         const storeCount = combo.stores.length;
         const alreadyExists = supermarketOptions.some(opt => 
-          opt.isCombination && opt.supermarket === `Combinación: ${storeNames}`
+          opt.isCombination && opt.supermarket === `Mejor Opción: ${storeNames}`
         );
         if (!alreadyExists) {
           supermarketOptions.push({
-            supermarket: `Combinación con menos tiendas: ${storeNames}`,
+            supermarket: `Mejor Opción: ${storeNames}`,
             items: combo.items,
             totalPrice: combo.total,
             isCombination: true,
