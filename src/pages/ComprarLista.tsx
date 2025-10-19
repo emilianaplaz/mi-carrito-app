@@ -623,7 +623,7 @@ const ComprarLista = () => {
                         <Sparkles className={`h-7 w-7 mt-1 flex-shrink-0 ${(rec.missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
                         <div className="flex-1">
                           <h3 className={`text-xl font-bold mb-2 ${(rec.missingCount || 0) === 0 ? 'text-green-800 dark:text-green-300' : 'text-orange-800 dark:text-orange-300'}`}>
-                            {index === 0 ? '🎯 Mejor Opción' : '💰 Opción Más Barata'}
+                            {isBestOption ? '🎯 Mejor Opción' : '💰 Opción Más Barata'}
                           </h3>
                           
                           {/* Recommendation details */}
