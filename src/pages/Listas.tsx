@@ -386,48 +386,111 @@ const Listas = () => {
                   {newItems.map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex gap-2">
-                        <Select
-                          value={item.name}
-                          onValueChange={(value) => updateItemField(index, "name", value)}
-                        >
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Seleccionar producto..." />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-[300px]">
-                            {subcategories.map((subcat) => (
-                              <SelectItem key={subcat} value={subcat}>
-                                {subcat}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      <Select
-                        value={item.brand || "ANY"}
-                        onValueChange={(value) => updateItemField(index, "brand", value === "ANY" ? "" : value)}
-                        disabled={!item.name}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Marca (opcional)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                          {(subcategoryBrands.get(item.name) || []).map((brand) => (
-                            <SelectItem key={brand} value={brand}>
-                              {brand}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {newItems.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeItemField(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "flex-1 justify-between",
+                                !item.name && "text-muted-foreground"
+                              )}
+                            >
+                              {item.name || "Seleccionar producto..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
+                            <Command>
+                              <CommandInput placeholder="Buscar producto..." />
+                              <CommandList>
+                                <CommandEmpty>No se encontró el producto.</CommandEmpty>
+                                <CommandGroup>
+                                  {subcategories.map((subcat) => (
+                                    <CommandItem
+                                      key={subcat}
+                                      value={subcat}
+                                      onSelect={() => updateItemField(index, "name", subcat)}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          item.name === subcat ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {subcat}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              disabled={!item.name}
+                              className={cn(
+                                "flex-1 justify-between",
+                                !item.brand && "text-muted-foreground"
+                              )}
+                            >
+                              {item.brand || "Marca (opcional)"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0 z-50 bg-popover" align="start">
+                            <Command>
+                              <CommandInput placeholder="Buscar marca..." />
+                              <CommandList>
+                                <CommandEmpty>No se encontró la marca.</CommandEmpty>
+                                <CommandGroup>
+                                  <CommandItem
+                                    value="ANY"
+                                    onSelect={() => updateItemField(index, "brand", "")}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        !item.brand ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    CUALQUIER MARCA
+                                  </CommandItem>
+                                  {(subcategoryBrands.get(item.name) || []).map((brand) => (
+                                    <CommandItem
+                                      key={brand}
+                                      value={brand}
+                                      onSelect={() => updateItemField(index, "brand", brand)}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          item.brand === brand ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {brand}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+
+                        {newItems.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeItemField(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   <Button
@@ -616,38 +679,101 @@ const Listas = () => {
               <Label>Artículos</Label>
               {newItems.map((item, index) => (
                 <div key={index} className="flex gap-2">
-                  <Select
-                    value={item.name}
-                    onValueChange={(value) => updateItemField(index, "name", value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Seleccionar producto..." />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {subcategories.map((subcat) => (
-                        <SelectItem key={subcat} value={subcat}>
-                          {subcat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={item.brand || "ANY"}
-                    onValueChange={(value) => updateItemField(index, "brand", value === "ANY" ? "" : value)}
-                    disabled={!item.name}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Marca (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                      {(subcategoryBrands.get(item.name) || []).map((brand) => (
-                        <SelectItem key={brand} value={brand}>
-                          {brand}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "flex-1 justify-between",
+                          !item.name && "text-muted-foreground"
+                        )}
+                      >
+                        {item.name || "Seleccionar producto..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar producto..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró el producto.</CommandEmpty>
+                          <CommandGroup>
+                            {subcategories.map((subcat) => (
+                              <CommandItem
+                                key={subcat}
+                                value={subcat}
+                                onSelect={() => updateItemField(index, "name", subcat)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    item.name === subcat ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {subcat}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        disabled={!item.name}
+                        className={cn(
+                          "flex-1 justify-between",
+                          !item.brand && "text-muted-foreground"
+                        )}
+                      >
+                        {item.brand || "Marca (opcional)"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0 z-50 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar marca..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró la marca.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="ANY"
+                              onSelect={() => updateItemField(index, "brand", "")}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  !item.brand ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              CUALQUIER MARCA
+                            </CommandItem>
+                            {(subcategoryBrands.get(item.name) || []).map((brand) => (
+                              <CommandItem
+                                key={brand}
+                                value={brand}
+                                onSelect={() => updateItemField(index, "brand", brand)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    item.brand === brand ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {brand}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
                   {newItems.length > 1 && (
                     <Button
                       variant="ghost"
