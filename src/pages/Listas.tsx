@@ -64,27 +64,27 @@ const Listas = () => {
         .order("name", { ascending: true });
       if (brandsError) throw brandsError;
 
-      // Fetch products and brands from product_prices
+      // Fetch subcategorias and brands from product_prices
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
-        .select("producto, marca");
+        .select("subcategoria, marca");
       if (pricesError) throw pricesError;
 
       const brandMap = new Map<string, Set<string>>();
       pricesData?.forEach((row: any) => {
-        const productName = row.producto;
+        const subcategoriaName = row.subcategoria;
         const brandName = row.marca || "Sin marca";
-        if (!productName) return;
-        if (!brandMap.has(productName)) brandMap.set(productName, new Set());
-        brandMap.get(productName)!.add(brandName);
+        if (!subcategoriaName) return;
+        if (!brandMap.has(subcategoriaName)) brandMap.set(subcategoriaName, new Set());
+        brandMap.get(subcategoriaName)!.add(brandName);
       });
 
-      // Create products list from unique productos in product_prices
+      // Create products list from unique subcategorias in product_prices
       const products = Array.from(brandMap.keys())
         .sort()
-        .map((productName) => ({
-          name: productName,
-          brands: Array.from(brandMap.get(productName) || []),
+        .map((subcategoriaName) => ({
+          name: subcategoriaName,
+          brands: Array.from(brandMap.get(subcategoriaName) || []),
         }));
 
       setAvailableProducts(products);
