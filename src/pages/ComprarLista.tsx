@@ -174,9 +174,9 @@ const ComprarLista = () => {
         .select(`
           price,
           unit,
+          brand_name,
           products (name),
-          supermarkets (name),
-          brands (name)
+          supermarkets (name)
         `)
         .in("product_id", productIds);
 

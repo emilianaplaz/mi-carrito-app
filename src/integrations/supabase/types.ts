@@ -193,7 +193,7 @@ export type Database = {
       }
       product_prices: {
         Row: {
-          brand_id: string
+          brand_name: string
           created_at: string
           id: string
           last_updated: string
@@ -203,7 +203,7 @@ export type Database = {
           unit: string
         }
         Insert: {
-          brand_id: string
+          brand_name: string
           created_at?: string
           id?: string
           last_updated?: string
@@ -213,7 +213,7 @@ export type Database = {
           unit: string
         }
         Update: {
-          brand_id?: string
+          brand_name?: string
           created_at?: string
           id?: string
           last_updated?: string
@@ -223,13 +223,6 @@ export type Database = {
           unit?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "product_prices_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "product_prices_product_id_fkey"
             columns: ["product_id"]

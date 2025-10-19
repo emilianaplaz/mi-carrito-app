@@ -29,7 +29,7 @@ serve(async (req) => {
       const productName = price.products?.name;
       if (!productName) return; // Skip if no product name
       
-      const brandName = price.brands?.name || undefined;
+      const brandName = price.brand_name || undefined;
       const productKey = `${productName}-${brandName || 'sin marca'}`;
       
       if (!pricesBySupermarket[supermarketName]) {

@@ -13,7 +13,6 @@ type PriceInfo = {
   unit: string;
   supermarket_id: string;
   supermarket_name: string;
-  brand_id: string;
   brand_name: string;
 };
 
@@ -54,10 +53,9 @@ const ComprarIngrediente = () => {
           price,
           unit,
           supermarket_id,
-          brand_id,
+          brand_name,
           products (name),
-          supermarkets (name),
-          brands (name)
+          supermarkets (name)
         `)
         .eq("product_id", productData.id);
 
@@ -69,8 +67,7 @@ const ComprarIngrediente = () => {
         unit: p.unit,
         supermarket_id: p.supermarket_id,
         supermarket_name: p.supermarkets?.name || "Desconocido",
-        brand_id: p.brand_id,
-        brand_name: p.brands?.name || "Desconocida",
+        brand_name: p.brand_name || "Desconocida",
       }));
 
       setPrices(formattedPrices);
