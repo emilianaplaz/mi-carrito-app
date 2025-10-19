@@ -417,7 +417,7 @@ const Listas = () => {
                         <PopoverContent className="w-[400px] p-0" align="start">
                           <Command>
                             <CommandInput placeholder="Buscar producto..." />
-                            <CommandList>
+                            <CommandList className="max-h-[300px] overflow-y-auto">
                               <CommandEmpty>No se encontraron productos.</CommandEmpty>
                               <CommandGroup>
                                 {availableProducts.map((product) => (
@@ -672,7 +672,7 @@ const Listas = () => {
                     <PopoverContent className="w-[400px] p-0" align="start">
                       <Command>
                         <CommandInput placeholder="Buscar producto..." />
-                        <CommandList>
+                        <CommandList className="max-h-[300px] overflow-y-auto">
                           <CommandEmpty>No se encontraron productos.</CommandEmpty>
                           <CommandGroup>
                             {availableProducts.map((product) => (
