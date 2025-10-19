@@ -224,7 +224,7 @@ const Dashboard = () => {
           <div className="flex-1"></div>
           
           <div className="flex items-center justify-center">
-            <img src={logo} alt="MiCarrit" className="h-12" />
+            <img src={logo} alt="MiCarrit" className="h-20" />
           </div>
           
           <div className="flex items-center gap-2 flex-1 justify-end">
