@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart } from "lucide-react";
+import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart, AlertCircle, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 type GroceryItem = {
   name: string;
   brand: string;
@@ -62,6 +63,7 @@ const ComprarLista = () => {
   const [itemBrandPreferences, setItemBrandPreferences] = useState<Record<string, string>>({});
   const [userBudget, setUserBudget] = useState<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [showMissingAlert, setShowMissingAlert] = useState(true);
   
   const navigate = useNavigate();
   const {
@@ -280,6 +282,29 @@ const ComprarLista = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Missing Items Alert */}
+        {itemsWithoutPrices.length > 0 && showMissingAlert && (
+          <Alert className="mb-6 border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+            <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <div className="flex-1">
+              <AlertTitle className="text-orange-800 dark:text-orange-300 font-bold">
+                {itemsWithoutPrices.length} producto(s) no encontrado(s)
+              </AlertTitle>
+              <AlertDescription className="text-orange-700 dark:text-orange-400">
+                Los siguientes productos no están disponibles en ningún supermercado: {itemsWithoutPrices.map(item => item.name).join(', ')}
+              </AlertDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+              onClick={() => setShowMissingAlert(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </Alert>
+        )}
+
         {/* Brand Selection Section */}
   <Card className="p-6 mb-6">
       <div className="flex items-center justify-between mb-4">

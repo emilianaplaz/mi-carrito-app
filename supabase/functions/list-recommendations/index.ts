@@ -198,68 +198,103 @@ serve(async (req) => {
       // Get all unique supermarkets
       const allSupermarketsSet = new Set(Object.keys(pricesBySupermarket));
       
-      // Try combinations starting with supermarkets that have the most items
-      const supermarketCoverage: { name: string; itemCount: number; items: Set<string> }[] = [];
+      // Build supermarket coverage map
+      const supermarketCoverage: { name: string; itemCount: number; items: Set<string>; priceMap: Map<string, any> }[] = [];
       for (const [supermarket, prices] of Object.entries(pricesBySupermarket)) {
         const coveredItems = new Set<string>();
+        const priceMap = new Map<string, any>();
         for (const item of items) {
-          const hasItem = (prices as any[]).some((p: any) => 
+          const matchingPrice = (prices as any[]).find((p: any) => 
             p.product === item.name && (!item.brand || (p.brand || 'sin marca') === (item.brand || 'sin marca'))
           );
-          if (hasItem) {
+          if (matchingPrice) {
             coveredItems.add(item.name);
+            priceMap.set(item.name, matchingPrice);
           }
         }
-        supermarketCoverage.push({ name: supermarket, itemCount: coveredItems.size, items: coveredItems });
+        supermarketCoverage.push({ name: supermarket, itemCount: coveredItems.size, items: coveredItems, priceMap });
       }
       
       // Sort by coverage (most items first)
       supermarketCoverage.sort((a, b) => b.itemCount - a.itemCount);
       
-      // Try to build a complete combination by greedily adding supermarkets
-      const greedyCombination: any[] = [];
-      let greedyTotal = 0;
-      const greedyUsedSupermarkets = new Set<string>();
-      const coveredItemsSet = new Set<string>();
-      const itemToSupermarket: Record<string, { supermarket: string; price: any }> = {};
+      // STRATEGY: Build combinations that minimize store count
+      // Try 2-store, 3-store, etc combinations intelligently
       
-      // First pass: try to get one option for each item from the best supermarkets
-      for (const item of items) {
-        if (coveredItemsSet.has(item.name)) continue;
+      for (let maxStores = 2; maxStores <= Math.min(5, supermarketCoverage.length); maxStores++) {
+        // Try combinations starting with top coverage supermarkets
+        const tryBuildCombination = (startIdx: number, currentStores: typeof supermarketCoverage, depth: number): any => {
+          if (currentStores.length >= maxStores || depth > supermarketCoverage.length) return null;
+          
+          const coveredItems = new Set<string>();
+          const combinationItems: any[] = [];
+          let combinationTotal = 0;
+          
+          // Combine items from selected stores
+          for (const store of currentStores) {
+            for (const item of items) {
+              if (!coveredItems.has(item.name) && store.items.has(item.name)) {
+                const price = store.priceMap.get(item.name);
+                if (price) {
+                  combinationItems.push({
+                    item: item.name,
+                    price: price.price,
+                    brand: price.brand,
+                    supermarket: store.name
+                  });
+                  combinationTotal += price.price;
+                  coveredItems.add(item.name);
+                }
+              }
+            }
+          }
+          
+          // If complete, return it
+          if (coveredItems.size === items.length) {
+            return {
+              items: combinationItems,
+              total: combinationTotal,
+              stores: currentStores.map(s => s.name)
+            };
+          }
+          
+          // If not complete and can add more stores, try adding next best store
+          if (currentStores.length < maxStores && startIdx < supermarketCoverage.length) {
+            for (let i = startIdx; i < supermarketCoverage.length; i++) {
+              const nextStore = supermarketCoverage[i];
+              // Only add if it contributes new items
+              const wouldAddItems = Array.from(nextStore.items).some(itemName => !coveredItems.has(itemName));
+              if (wouldAddItems) {
+                const result = tryBuildCombination(i + 1, [...currentStores, nextStore], depth + 1);
+                if (result) return result;
+              }
+            }
+          }
+          
+          return null;
+        };
         
-        // Find cheapest price for this item across all supermarkets
-        const productKey = `${item.name}-${item.brand || 'sin marca'}`;
-        const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
-        
-        if (prices.length > 0) {
-          const cheapest = prices.reduce((min: any, p: any) => (min && min.price <= p.price) ? min : p, undefined as any);
-          greedyCombination.push({ 
-            item: item.name, 
-            price: cheapest.price, 
-            brand: cheapest.brand, 
-            supermarket: cheapest.supermarket 
-          });
-          greedyTotal += cheapest.price;
-          greedyUsedSupermarkets.add(cheapest.supermarket);
-          coveredItemsSet.add(item.name);
-        }
-      }
-      
-      const greedyMissing = items.length - greedyCombination.length;
-      
-      // Only add if it's actually complete (no missing items)
-      if (greedyMissing === 0 && greedyCombination.length > 0) {
-        // Check if this combination is different from the cheapest one
-        const isDifferent = greedyTotal !== combinationTotal || greedyUsedSupermarkets.size !== usedSupermarkets.size;
-        if (isDifferent) {
-          supermarketOptions.push({
-            supermarket: `Combinación: ${Array.from(greedyUsedSupermarkets).join(' + ')}`,
-            items: greedyCombination,
-            totalPrice: greedyTotal,
-            isCombination: true,
-            missingCount: 0
-          });
-          console.log('Found complete coverage alternative combination');
+        // Try building with this number of stores
+        for (let i = 0; i < supermarketCoverage.length && i < 3; i++) {
+          const result = tryBuildCombination(i + 1, [supermarketCoverage[i]], 0);
+          if (result) {
+            const storeNames = result.stores.join(' + ');
+            // Check if we already have this combination
+            const alreadyExists = supermarketOptions.some(opt => 
+              opt.isCombination && opt.supermarket === `Combinación: ${storeNames}`
+            );
+            if (!alreadyExists) {
+              supermarketOptions.push({
+                supermarket: `Combinación: ${storeNames}`,
+                items: result.items,
+                totalPrice: result.total,
+                isCombination: true,
+                missingCount: 0
+              });
+              console.log(`Found ${maxStores}-store complete combination: ${storeNames} for $${result.total.toFixed(2)}`);
+              break; // Found one for this store count, move to next
+            }
+          }
         }
       }
     }
