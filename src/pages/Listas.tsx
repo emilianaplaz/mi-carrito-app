@@ -491,7 +491,7 @@ const Listas = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <Button onClick={() => navigate("/calendar")} className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => navigate("/calendar")} className="flex items-center gap-2">
               <CalendarIcon className="h-4 w-4" />
             </Button>
             <CartButton />
@@ -986,7 +986,7 @@ const Listas = () => {
                     <Label>Primera fecha programada</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <Button variant="ghost" className="w-full justify-start text-left font-normal">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {nextScheduledDate ? (
                             format(nextScheduledDate, "PPP", { locale: es })
