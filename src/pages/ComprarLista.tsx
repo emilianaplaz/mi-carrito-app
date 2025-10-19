@@ -153,12 +153,12 @@ const ComprarLista = () => {
         .from("product_prices")
         .select(`
           price,
-          unit,
-          brand_name,
-          product_name,
-          supermarkets (name)
+          presentacion,
+          marca,
+          producto,
+          mercado
         `)
-        .in("product_name", itemNames);
+        .in("producto", itemNames);
 
       if (pricesError) throw pricesError;
 

@@ -9,10 +9,9 @@ import { ChefHat, ArrowLeft, Store, TrendingDown, Truck } from "lucide-react";
 type PriceInfo = {
   id: string;
   price: number;
-  unit: string;
-  supermarket_id: string;
-  supermarket_name: string;
-  brand_name: string;
+  presentacion: string;
+  mercado: string;
+  marca: string;
 };
 const ComprarIngrediente = () => {
   const [searchParams] = useSearchParams();
@@ -38,25 +37,23 @@ const ComprarIngrediente = () => {
       } = await supabase.from("product_prices").select(`
           id,
           price,
-          unit,
-          supermarket_id,
-          brand_name,
-          product_name,
-          supermarkets (name)
-        `).eq("product_name", productName);
+          presentacion,
+          mercado,
+          marca,
+          producto
+        `).eq("producto", productName);
       if (pricesError) throw pricesError;
       const formattedPrices: PriceInfo[] = (pricesData || []).map((p: any) => ({
         id: p.id,
         price: parseFloat(p.price),
-        unit: p.unit,
-        supermarket_id: p.supermarket_id,
-        supermarket_name: p.supermarkets?.name || "Desconocido",
-        brand_name: p.brand_name || "Desconocida"
+        presentacion: p.presentacion,
+        mercado: p.mercado || "Desconocido",
+        marca: p.marca || "Desconocida"
       }));
       setPrices(formattedPrices);
 
       // Extract unique brands from prices
-      const brands = Array.from(new Set(formattedPrices.map(p => p.brand_name))).sort();
+      const brands = Array.from(new Set(formattedPrices.map(p => p.marca))).sort();
       setAvailableBrands(brands);
     } catch (error: any) {
       console.error("Error loading data:", error);
@@ -71,7 +68,7 @@ const ComprarIngrediente = () => {
   };
 
   // Filter and sort prices
-  const filteredPrices = selectedBrand === "ALL" ? [...prices].sort((a, b) => a.price - b.price) : prices.filter(p => p.brand_name === selectedBrand).sort((a, b) => a.price - b.price);
+  const filteredPrices = selectedBrand === "ALL" ? [...prices].sort((a, b) => a.price - b.price) : prices.filter(p => p.marca === selectedBrand).sort((a, b) => a.price - b.price);
   const cheapestPrice = filteredPrices.length > 0 ? filteredPrices[0].price : 0;
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
@@ -147,9 +144,9 @@ const ComprarIngrediente = () => {
                   <div className="flex items-center gap-4">
                     <Store className="h-8 w-8 text-primary" />
                     <div>
-                      <h3 className="font-semibold text-lg">{price.supermarket_name}</h3>
+                      <h3 className="font-semibold text-lg">{price.mercado}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Marca: {price.brand_name}
+                        Marca: {price.marca}
                       </p>
                     </div>
                   </div>
@@ -157,7 +154,7 @@ const ComprarIngrediente = () => {
                     <p className="text-2xl font-bold text-primary">
                       €{price.price.toFixed(2)}
                     </p>
-                    <p className="text-sm text-muted-foreground">por {price.unit}</p>
+                    <p className="text-sm text-muted-foreground">por {price.presentacion}</p>
                     {index === 0 && <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
                         ¡Mejor Precio!
                       </p>}

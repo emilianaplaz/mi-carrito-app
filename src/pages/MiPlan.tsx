@@ -250,17 +250,17 @@ const MiPlan = () => {
     // Fetch available product sizes from database
     const { data: productsData } = await supabase.from("products").select("id, name");
 
-    const { data: pricesData } = await supabase.from("product_prices").select("product_name, unit");
+    const { data: pricesData } = await supabase.from("product_prices").select("producto, presentacion");
 
     // Build map of product name -> available sizes per unit type
     const productSizes = new Map<string, Map<string, number[]>>();
 
     if (productsData && pricesData) {
       pricesData.forEach((price: any) => {
-        const productName = price.product_name?.toLowerCase();
+        const productName = price.producto?.toLowerCase();
         if (!productName) return;
 
-        const parsed = parseUnit(price.unit);
+        const parsed = parseUnit(price.presentacion);
         if (parsed.value === 0) return;
 
         if (!productSizes.has(productName)) {

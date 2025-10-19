@@ -74,13 +74,13 @@ const Listas = () => {
       // Fetch brand availability per product based on existing price records
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
-        .select("product_name, brand_name");
+        .select("producto, marca");
       if (pricesError) throw pricesError;
 
       const brandMap = new Map<string, Set<string>>();
       pricesData?.forEach((row: any) => {
-        const productName = row.product_name;
-        const brandName = row.brand_name || "Sin marca";
+        const productName = row.producto;
+        const brandName = row.marca || "Sin marca";
         if (!productName) return;
         if (!brandMap.has(productName)) brandMap.set(productName, new Set());
         brandMap.get(productName)!.add(brandName);
