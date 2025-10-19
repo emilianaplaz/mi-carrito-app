@@ -13,7 +13,7 @@ export const CartButton = () => {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <img src={cartIcon} alt="Cart" className="h-10 w-10 object-contain" />
+          <img src={cartIcon} alt="Cart" className="h-12 w-12 object-contain" />
           {totalItems > 0 && (
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
               {totalItems}
@@ -38,7 +38,7 @@ const CartContent = () => {
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-        <img src={cartIcon} alt="Cart" className="h-16 w-16 object-contain mb-4 opacity-50" />
+        <img src={cartIcon} alt="Cart" className="h-20 w-20 object-contain mb-4 opacity-50" />
         <h3 className="text-lg font-semibold mb-2">Tu carrito está vacío</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Agrega productos desde la lista de compras

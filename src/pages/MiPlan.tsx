@@ -952,7 +952,7 @@ const MiPlan = () => {
               </div>
 
               <Button onClick={() => setShowAddToList(true)} className="w-full">
-                <img src={cartIcon} alt="Cart" className="h-4 w-4 mr-2 object-contain" />
+                <img src={cartIcon} alt="Cart" className="h-5 w-5 mr-2 object-contain" />
                 Agregar a Lista de Compras
               </Button>
             </div>

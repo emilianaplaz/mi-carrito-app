@@ -803,7 +803,7 @@ const ComprarLista = () => {
                                   handleAddToCart(supermarket, itemsForCart);
                                 }}
                               >
-                                <img src={cartIcon} alt="Cart" className="mr-2 h-4 w-4 object-contain" />
+                                <img src={cartIcon} alt="Cart" className="mr-2 h-5 w-5 object-contain" />
                                 Agregar al Carrito
                               </Button>
                             </div>
@@ -845,7 +845,7 @@ const ComprarLista = () => {
                                     <span className="font-semibold text-green-700 dark:text-green-400">
                                       ${prod.price.toFixed(2)}
                                     </span>
-                                    <img src={cartIcon} alt="Cart" className="h-3 w-3 object-contain opacity-50" />
+                                    <img src={cartIcon} alt="Cart" className="h-4 w-4 object-contain opacity-50" />
                                   </div>
                                 </div>
                               ))}
