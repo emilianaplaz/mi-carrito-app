@@ -284,9 +284,17 @@ const ComprarLista = () => {
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Missing Items Alert */}
         {itemsWithoutPrices.length > 0 && showMissingAlert && (
-          <Alert className="mb-6 border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+          <Alert className="mb-6 border-orange-500 bg-orange-50 dark:bg-orange-950/20 relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 h-6 w-6 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+              onClick={() => setShowMissingAlert(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
             <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            <div className="flex-1">
+            <div className="flex-1 pr-8">
               <AlertTitle className="text-orange-800 dark:text-orange-300 font-bold">
                 {itemsWithoutPrices.length} producto(s) no encontrado(s)
               </AlertTitle>
@@ -294,14 +302,6 @@ const ComprarLista = () => {
                 Los siguientes productos no están disponibles en ningún supermercado: {itemsWithoutPrices.map(item => item.name).join(', ')}
               </AlertDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
-              onClick={() => setShowMissingAlert(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </Alert>
         )}
 
