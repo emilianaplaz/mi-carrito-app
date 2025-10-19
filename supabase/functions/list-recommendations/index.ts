@@ -185,8 +185,26 @@ serve(async (req) => {
       });
     }
     
-    // Sort by price
-    supermarketOptions.sort((a, b) => a.totalPrice - b.totalPrice);
+    // CRITICAL SORTING: Prioritize complete coverage, then minimum stores, then cost
+    supermarketOptions.sort((a, b) => {
+      const aMissing = a.missingCount || 0;
+      const bMissing = b.missingCount || 0;
+      
+      // 1. Prioritize complete coverage (all items) over partial
+      if (aMissing === 0 && bMissing > 0) return -1;
+      if (bMissing === 0 && aMissing > 0) return 1;
+      
+      // If both are incomplete, prioritize more items covered
+      if (aMissing !== bMissing) return aMissing - bMissing;
+      
+      // 2. Among equal coverage, prioritize fewer stores
+      const aStores = a.isCombination ? new Set(a.items.map((i: any) => i.supermarket)).size : 1;
+      const bStores = b.isCombination ? new Set(b.items.map((i: any) => i.supermarket)).size : 1;
+      if (aStores !== bStores) return aStores - bStores;
+      
+      // 3. Finally, prioritize lower cost
+      return a.totalPrice - b.totalPrice;
+    });
     
     // Filter by budget if provided
     let withinBudget = supermarketOptions;
@@ -195,21 +213,28 @@ serve(async (req) => {
     if (budget && budget > 0) {
       withinBudget = supermarketOptions.filter(opt => opt.totalPrice <= budget);
       exceededBudget = supermarketOptions.filter(opt => opt.totalPrice > budget);
+      
+      // If budget prevents complete coverage, consider showing exceededBudget options that are complete
+      const completeWithinBudget = withinBudget.filter(opt => (opt.missingCount || 0) === 0);
+      const completeExceedsBudget = exceededBudget.filter(opt => (opt.missingCount || 0) === 0);
+      
+      // If no complete options within budget but there are complete options that exceed it,
+      // keep the sorting but maintain both lists
+      if (completeWithinBudget.length === 0 && completeExceedsBudget.length > 0) {
+        // Sort exceededBudget with same priority logic
+        exceededBudget.sort((a, b) => {
+          const aMissing = a.missingCount || 0;
+          const bMissing = b.missingCount || 0;
+          if (aMissing === 0 && bMissing > 0) return -1;
+          if (bMissing === 0 && aMissing > 0) return 1;
+          if (aMissing !== bMissing) return aMissing - bMissing;
+          const aStores = a.isCombination ? new Set(a.items.map((i: any) => i.supermarket)).size : 1;
+          const bStores = b.isCombination ? new Set(b.items.map((i: any) => i.supermarket)).size : 1;
+          if (aStores !== bStores) return aStores - bStores;
+          return a.totalPrice - b.totalPrice;
+        });
+      }
     }
-    
-    // CRITICAL: Prioritize complete coverage over price
-    // Move options with all items to the front
-    withinBudget.sort((a, b) => {
-      const aMissing = a.missingCount || 0;
-      const bMissing = b.missingCount || 0;
-      
-      // If one has all items and other doesn't, prioritize the complete one
-      if (aMissing === 0 && bMissing > 0) return -1;
-      if (bMissing === 0 && aMissing > 0) return 1;
-      
-      // If both complete or both incomplete, sort by price
-      return a.totalPrice - b.totalPrice;
-    });
     
     // Return structured data with all available prices
     const response = {
