@@ -186,7 +186,7 @@ const ComprarIngrediente = () => {
                 </div>}
             </div>
 
-            <RadioGroup value={selectedPriceId} onValueChange={setSelectedPriceId}>
+            <RadioGroup value={selectedPriceId} onValueChange={setSelectedPriceId} className="space-y-4">
               {filteredPrices.map((price, index) => <Card key={price.id} className={`p-4 transition-all cursor-pointer ${
                   selectedPriceId === price.id 
                     ? "border-2 border-primary shadow-lg" 
@@ -195,7 +195,7 @@ const ComprarIngrediente = () => {
                     : "hover:shadow-md"
                 }`}>
                   <Label htmlFor={price.id} className="cursor-pointer">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-4">
                         <RadioGroupItem value={price.id} id={price.id} />
                         <Store className="h-8 w-8 text-primary" />
@@ -217,18 +217,21 @@ const ComprarIngrediente = () => {
                       </div>
                     </div>
                   </Label>
+                  {selectedPriceId === price.id && (
+                    <Button 
+                      className="w-full mt-3" 
+                      size="lg" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart();
+                      }}
+                    >
+                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      Agregar al Carrito
+                    </Button>
+                  )}
                 </Card>)}
             </RadioGroup>
-
-            <Button 
-              className="w-full" 
-              size="lg" 
-              onClick={handleAddToCart}
-              disabled={!selectedPriceId}
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Agregar al Carrito
-            </Button>
           </div> : <Card className="p-8 text-center">
             <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No hay precios disponibles</h3>
