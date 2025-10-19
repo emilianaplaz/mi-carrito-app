@@ -374,7 +374,17 @@ const ComprarLista = () => {
                   <p className="text-sm text-muted-foreground">Elige la estrategia que prefieras</p>
                 </div>
                 
-                {recommendations.slice(0, 2).map((rec, index) => {
+                {/* Sort recommendations: Best Option first, then Cheapest */}
+                {[...recommendations]
+                  .sort((a, b) => {
+                    const aIsBest = a.supermarket.includes('Mejor Opción');
+                    const bIsBest = b.supermarket.includes('Mejor Opción');
+                    if (aIsBest && !bIsBest) return -1;
+                    if (!aIsBest && bIsBest) return 1;
+                    return 0;
+                  })
+                  .slice(0, 2)
+                  .map((rec, index) => {
                   const isBestOption = rec.supermarket.includes('Mejor Opción');
                   const isCheapest = rec.supermarket.includes('Más Barata');
                   
