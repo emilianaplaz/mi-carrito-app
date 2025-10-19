@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ChefHat, ShoppingCart, Sparkles, TrendingDown, Bell, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage from "@/assets/hero-nutrition.jpg";
+import heroImage from "@/assets/hero-carrito.jpg";
 const Landing = () => {
   const navigate = useNavigate();
 
