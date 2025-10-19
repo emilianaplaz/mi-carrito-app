@@ -13,6 +13,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from "lucide-react";
+import logo from "@/assets/mi-carrit-logo.png";
 
 type GroceryItem = {
   name: string;
@@ -383,6 +384,8 @@ const Listas = () => {
               <span className="text-lg font-bold">Mis Listas</span>
             </div>
           </div>
+
+          <img src={logo} alt="MiCarrit" className="h-20" />
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>

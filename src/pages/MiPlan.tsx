@@ -29,6 +29,7 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
+import logo from "@/assets/mi-carrit-logo.png";
 
 type Recipe = {
   id: string;
@@ -570,14 +571,17 @@ const MiPlan = () => {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3 flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <ChefHat className="h-5 w-5 text-primary" />
-              <span className="text-lg font-bold">Mi Plan</span>
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <ChefHat className="h-5 w-5 text-primary" />
+                <span className="text-lg font-bold">Mi Plan</span>
+              </div>
             </div>
+            <img src={logo} alt="MiCarrit" className="h-20" />
           </div>
         </header>
 
@@ -628,25 +632,28 @@ const MiPlan = () => {
               </div>
             </div>
 
-            {/* Plan Completo Button - Always visible on right */}
-            {!selectionMode ? (
-              <Button
-                variant="default"
-                size="lg"
-                onClick={() => {
-                  handleSelectAllRecipes();
-                  setShowBulkAddDialog(true);
-                }}
-                className="group relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <ListPlus className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
-                <div className="relative z-10">
-                  <div className="font-semibold">Plan Completo</div>
-                  <div className="text-xs opacity-90">Agregar todo a lista</div>
-                </div>
-              </Button>
-            ) : (
+            <div className="flex items-center gap-4">
+              <img src={logo} alt="MiCarrit" className="h-20" />
+              
+              {/* Plan Completo Button - Always visible on right */}
+              {!selectionMode ? (
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={() => {
+                    handleSelectAllRecipes();
+                    setShowBulkAddDialog(true);
+                  }}
+                  className="group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ListPlus className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+                  <div className="relative z-10">
+                    <div className="font-semibold">Plan Completo</div>
+                    <div className="text-xs opacity-90">Agregar todo a lista</div>
+                  </div>
+                </Button>
+              ) : (
               <Button
                 variant="default"
                 size="lg"
@@ -668,7 +675,8 @@ const MiPlan = () => {
                   <Badge className="ml-2 relative z-10 bg-white text-primary">{selectedRecipeIds.size}</Badge>
                 )}
               </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>

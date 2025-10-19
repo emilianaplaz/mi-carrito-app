@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
+import logo from "@/assets/mi-carrit-logo.png";
 
 const preferencesSchema = z.object({
   planDuration: z.string(),
@@ -303,14 +304,17 @@ const TestPreferencias = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <ChefHat className="h-5 w-5 text-primary" />
-            <span className="text-lg font-bold">Test de Preferencias</span>
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <ChefHat className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold">Test de Preferencias</span>
+            </div>
           </div>
+          <img src={logo} alt="MiCarrit" className="h-20" />
         </div>
       </header>
 

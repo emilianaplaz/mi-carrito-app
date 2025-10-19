@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, ThumbsUp, Clock, Users, Heart, Eye, Trash2, UtensilsCrossed } from "lucide-react";
+import logo from "@/assets/mi-carrit-logo.png";
 
 type Recipe = {
   id: string;
@@ -113,14 +114,17 @@ const Recetas = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <ThumbsUp className="h-5 w-5 text-primary" />
-            <span className="text-lg font-bold">Mis Recetas Favoritas</span>
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <ThumbsUp className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold">Mis Recetas Favoritas</span>
+            </div>
           </div>
+          <img src={logo} alt="MiCarrit" className="h-20" />
         </div>
       </header>
 
