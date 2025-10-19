@@ -62,49 +62,42 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      // Fetch products from subcategories table
-      const { data: subcategoriesData, error: subcategoriesError } = await supabase
-        .from("subcategories")
-        .select("name")
-        .order("name", { ascending: true });
-      
-      if (subcategoriesError) throw subcategoriesError;
-
-      // For each subcategory, get available brands from product_prices
+      // Paginate through product_prices to get all unique product names
       const pageSize = 1000;
       const brandMap = new Map<string, Set<string>>();
       
-      // Paginate through product_prices to get brands for each subcategory
       let from = 0;
       while (true) {
         const { data: pricesPage, error: pricesError } = await supabase
           .from("product_prices")
-          .select("subcategoria, marca")
+          .select("producto, marca")
           .range(from, from + pageSize - 1);
         
         if (pricesError) throw pricesError;
         if (!pricesPage || pricesPage.length === 0) break;
 
         pricesPage.forEach((row: any) => {
-          const subcategoria = row.subcategoria;
+          const productName = row.producto;
           const brandName = row.marca || "Sin marca";
-          if (!subcategoria) return;
+          if (!productName) return;
           
-          if (!brandMap.has(subcategoria)) {
-            brandMap.set(subcategoria, new Set());
+          if (!brandMap.has(productName)) {
+            brandMap.set(productName, new Set());
           }
-          brandMap.get(subcategoria)!.add(brandName);
+          brandMap.get(productName)!.add(brandName);
         });
 
         if (pricesPage.length < pageSize) break;
         from += pageSize;
       }
 
-      // Create products list from subcategories with their brands
-      const products = (subcategoriesData || []).map((sub: any) => ({
-        name: sub.name,
-        brands: Array.from(brandMap.get(sub.name) || []),
-      }));
+      // Create products list from unique product names with their brands
+      const products = Array.from(brandMap.entries())
+        .map(([productName, brands]) => ({
+          name: productName,
+          brands: Array.from(brands),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
       setAvailableProducts(products);
       
