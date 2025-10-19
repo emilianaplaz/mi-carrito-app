@@ -448,7 +448,7 @@ const Listas = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                          {allBrands.map((brand) => (
+                          {item.name && availableProducts.find(p => p.name === item.name)?.brands.map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
                             </SelectItem>
@@ -703,7 +703,7 @@ const Listas = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                          {allBrands.map((brand) => (
+                          {item.name && availableProducts.find(p => p.name === item.name)?.brands.map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
                             </SelectItem>
