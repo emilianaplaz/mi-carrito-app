@@ -14,7 +14,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ChefHat,
+  UserIcon,
   ArrowLeft,
   Plus,
   Star,
@@ -499,7 +499,7 @@ const Listas = () => {
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-              <ChefHat className="h-10 w-10" />
+              <UserIcon className="h-10 w-10" />
             </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
