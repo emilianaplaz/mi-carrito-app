@@ -16,7 +16,7 @@ const ImportPrices = () => {
 
     try {
       // Fetch the CSV file from public folder
-      const response = await fetch('/dataprecio_products.csv');
+      const response = await fetch('/cleaned_dataprecio_products.csv');
       const csvData = await response.text();
 
       console.log('CSV file loaded, total lines:', csvData.split('\n').length);
@@ -70,7 +70,7 @@ const ImportPrices = () => {
           <Card className="p-4 bg-muted">
             <h3 className="font-semibold mb-2">Información del archivo:</h3>
             <p className="text-sm text-muted-foreground">
-              Archivo: <code className="bg-background px-2 py-1 rounded">public/dataprecio_products.csv</code>
+              Archivo: <code className="bg-background px-2 py-1 rounded">public/cleaned_dataprecio_products.csv</code>
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               Este proceso eliminará todos los precios existentes y los reemplazará con los nuevos datos.
