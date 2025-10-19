@@ -16,7 +16,6 @@ import TestPreferencias from "./pages/TestPreferencias";
 import ComprarIngrediente from "./pages/ComprarIngrediente";
 import ComprarLista from "./pages/ComprarLista";
 import DeliveryOrder from "./pages/DeliveryOrder";
-import ImportData from "./pages/ImportData";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -48,7 +47,6 @@ function App() {
             <Route path="/comprar-ingrediente" element={<ComprarIngrediente />} />
             <Route path="/comprar-lista" element={<ComprarLista />} />
             <Route path="/delivery-order" element={<DeliveryOrder />} />
-            <Route path="/import-data" element={<ImportData />} />
             <Route path="/test-preferencias" element={<TestPreferencias />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
