@@ -34,24 +34,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addItem = (item: Omit<CartItem, "id">) => {
     const id = `${item.name}-${item.brand}-${item.supermarket}`;
-    const existingItem = items.find((i) => i.id === id);
-
-    if (existingItem) {
-      setItems(items.map((i) => (i.id === id ? { ...i, quantity: i.quantity + item.quantity } : i)));
-    } else {
-      setItems([...items, { ...item, id }]);
-    }
+    
+    setItems((prevItems) => {
+      const existingItem = prevItems.find((i) => i.id === id);
+      
+      if (existingItem) {
+        return prevItems.map((i) => 
+          i.id === id ? { ...i, quantity: i.quantity + item.quantity } : i
+        );
+      } else {
+        return [...prevItems, { ...item, id }];
+      }
+    });
   };
 
   const removeItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       removeItem(id);
     } else {
-      setItems(items.map((item) => (item.id === id ? { ...item, quantity } : item)));
+      setItems((prevItems) => 
+        prevItems.map((item) => (item.id === id ? { ...item, quantity } : item))
+      );
     }
   };
 
