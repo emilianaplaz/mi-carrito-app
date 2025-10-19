@@ -40,8 +40,9 @@ const Listas = () => {
   const [viewingList, setViewingList] = useState<GroceryList | null>(null);
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [products, setProducts] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<Map<string, string[]>>(new Map());
+  const [productSearchResults, setProductSearchResults] = useState<string[]>([]);
+  const [isSearchingProducts, setIsSearchingProducts] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -53,61 +54,81 @@ const Listas = () => {
         return;
       }
       await loadLists();
-      await loadProductsAndBrands();
       setLoading(false);
     };
     checkUserAndLoadLists();
   }, [navigate]);
 
-  const loadProductsAndBrands = async () => {
+  const searchProducts = async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setProductSearchResults([]);
+      return;
+    }
+
+    setIsSearchingProducts(true);
     try {
-      // Fetch all product prices to build producto -> brands mapping
-      const brandMap = new Map<string, Set<string>>();
-      const pageSize = 1000;
-      let from = 0;
-      
-      while (true) {
-        const { data: pricesPage, error: pricesError } = await supabase
-          .from("product_prices")
-          .select("producto, marca")
-          .range(from, from + pageSize - 1);
-        
-        if (pricesError) throw pricesError;
-        if (!pricesPage || pricesPage.length === 0) break;
+      const normalize = (str: string) =>
+        (str || "")
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .trim();
 
-        pricesPage.forEach((row: any) => {
-          const product = row.producto;
-          const brand = row.marca;
-          if (!product || !brand) return;
-          
-          if (!brandMap.has(product)) {
-            brandMap.set(product, new Set());
+      const normSearch = normalize(searchTerm);
+
+      // Fetch matching products (limit to 50 results for performance)
+      const { data, error } = await supabase
+        .from("product_prices")
+        .select("producto")
+        .ilike("producto", `%${searchTerm}%`)
+        .limit(1000);
+
+      if (error) throw error;
+
+      // Deduplicate and filter client-side with fuzzy matching
+      const uniqueProducts = new Set<string>();
+      (data || []).forEach((row: any) => {
+        if (row.producto) {
+          const normProduct = normalize(row.producto);
+          if (normProduct.includes(normSearch) || normSearch.includes(normProduct)) {
+            uniqueProducts.add(row.producto);
           }
-          brandMap.get(product)!.add(brand);
-        });
-
-        if (pricesPage.length < pageSize) break;
-        from += pageSize;
-      }
-
-      // Convert to arrays and create final map
-      const finalMap = new Map<string, string[]>();
-      const productList: string[] = [];
-      
-      brandMap.forEach((brands, product) => {
-        productList.push(product);
-        finalMap.set(product, Array.from(brands).sort());
+        }
       });
-      
-      setProducts(productList.sort());
-      setProductBrands(finalMap);
+
+      setProductSearchResults(Array.from(uniqueProducts).sort().slice(0, 50));
     } catch (error) {
-      console.error("Error loading products and brands:", error);
+      console.error("Error searching products:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los productos",
+        description: "No se pudieron buscar productos",
         variant: "destructive",
       });
+    } finally {
+      setIsSearchingProducts(false);
+    }
+  };
+
+  const loadBrandsForProduct = async (productName: string) => {
+    // If already loaded, skip
+    if (productBrands.has(productName)) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("product_prices")
+        .select("marca")
+        .eq("producto", productName);
+
+      if (error) throw error;
+
+      const brands = new Set<string>();
+      (data || []).forEach((row: any) => {
+        if (row.marca) brands.add(row.marca);
+      });
+
+      setProductBrands(prev => new Map(prev).set(productName, Array.from(brands).sort()));
+    } catch (error) {
+      console.error("Error loading brands:", error);
     }
   };
 
@@ -202,6 +223,10 @@ const Listas = () => {
       updated[index].name = value;
       // Reset brand when product changes to avoid invalid brand selection
       updated[index].brand = "";
+      // Load brands for this product
+      if (value) {
+        loadBrandsForProduct(value);
+      }
     } else {
       (updated[index] as any)[field] = value;
     }
@@ -396,12 +421,17 @@ const Listas = () => {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
-                            <Command>
-                              <CommandInput placeholder="Buscar producto..." />
+                            <Command shouldFilter={false}>
+                              <CommandInput 
+                                placeholder="Buscar producto..." 
+                                onValueChange={(search) => searchProducts(search)}
+                              />
                               <CommandList>
-                                <CommandEmpty>No se encontró el producto.</CommandEmpty>
+                                <CommandEmpty>
+                                  {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
+                                </CommandEmpty>
                                 <CommandGroup>
-                                  {products.map((product) => (
+                                  {productSearchResults.map((product) => (
                                     <CommandItem
                                       key={product}
                                       value={product}
@@ -689,12 +719,17 @@ const Listas = () => {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar producto..." />
+                      <Command shouldFilter={false}>
+                        <CommandInput 
+                          placeholder="Buscar producto..." 
+                          onValueChange={(search) => searchProducts(search)}
+                        />
                         <CommandList>
-                          <CommandEmpty>No se encontró el producto.</CommandEmpty>
+                          <CommandEmpty>
+                            {isSearchingProducts ? "Buscando..." : "Escribe para buscar productos"}
+                          </CommandEmpty>
                           <CommandGroup>
-                            {products.map((product) => (
+                            {productSearchResults.map((product) => (
                               <CommandItem
                                 key={product}
                                 value={product}
