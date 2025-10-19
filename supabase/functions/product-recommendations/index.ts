@@ -35,7 +35,7 @@ serve(async (req) => {
 
     // Format prices for AI
     const priceList = prices.map((p: any) => 
-      `${p.supermarket_name}: €${p.price}/${p.unit}`
+      `${p.supermarket_name}: $${p.price}/${p.unit}`
     ).join(', ');
 
     const systemPrompt = `Eres un asistente experto en compras de supermercado en España. 

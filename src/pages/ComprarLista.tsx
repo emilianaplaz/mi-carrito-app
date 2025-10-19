@@ -279,7 +279,7 @@ const ComprarLista = () => {
               <h2 className="text-xl font-bold">Preferencias de Marca</h2>
               {userBudget && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  Presupuesto: <span className="font-semibold text-primary">€{userBudget.toFixed(2)}</span>
+                  Presupuesto: <span className="font-semibold text-primary">${userBudget.toFixed(2)}</span>
                 </p>
               )}
             </div>
@@ -339,13 +339,13 @@ const ComprarLista = () => {
                           <div>
                             <h3 className="font-bold text-lg">{recommendations[0].supermarket}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {recommendations[0].items.length} de {list.items.length} artículos • €{recommendations[0].totalPrice.toFixed(2)}
+                              {recommendations[0].items.length} de {list.items.length} artículos • ${recommendations[0].totalPrice.toFixed(2)}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className={`text-3xl font-bold ${(recommendations[0].missingCount || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                            €{recommendations[0].totalPrice.toFixed(2)}
+                            ${recommendations[0].totalPrice.toFixed(2)}
                           </p>
                           <p className={`text-xs font-semibold ${(recommendations[0].missingCount || 0) === 0 ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'}`}>
                             {(recommendations[0].missingCount || 0) === 0 ? '¡Cobertura Total!' : 'Cobertura Parcial'}
@@ -432,7 +432,7 @@ const ComprarLista = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold text-primary">€{data.total.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-primary">${data.total.toFixed(2)}</p>
                             <p className="text-xs text-muted-foreground">
                               {(data.available.length / list.items.length * 100).toFixed(0)}% cobertura
                             </p>
@@ -480,7 +480,7 @@ const ComprarLista = () => {
                                   {prod.brand && <span className="text-xs text-muted-foreground">({prod.brand})</span>}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-green-700 dark:text-green-400">€{prod.price.toFixed(2)}</span>
+                                  <span className="font-semibold text-green-700 dark:text-green-400">${prod.price.toFixed(2)}</span>
                                   <ShoppingCart className="h-3 w-3 text-muted-foreground" />
                                 </div>
                               </div>)}

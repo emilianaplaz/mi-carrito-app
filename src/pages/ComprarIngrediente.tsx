@@ -188,7 +188,7 @@ const ComprarIngrediente = () => {
               {filteredPrices.length > 1 && <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
                   <TrendingDown className="h-4 w-4" />
                   <span>
-                    Ahorra hasta €{(filteredPrices[filteredPrices.length - 1].price - cheapestPrice).toFixed(2)}
+                    Ahorra hasta ${(filteredPrices[filteredPrices.length - 1].price - cheapestPrice).toFixed(2)}
                   </span>
                 </div>}
             </div>
@@ -215,7 +215,7 @@ const ComprarIngrediente = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-primary">
-                          €{price.price.toFixed(2)}
+                          ${price.price.toFixed(2)}
                         </p>
                         <p className="text-sm text-muted-foreground">por {price.presentacion}</p>
                         {index === 0 && <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">

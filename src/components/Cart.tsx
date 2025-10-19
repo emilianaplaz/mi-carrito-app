@@ -61,7 +61,7 @@ const CartContent = () => {
               )}
               <p className="text-xs text-muted-foreground">Tienda: {item.supermarket}</p>
               <p className="text-sm text-primary font-semibold mt-1">
-                €{item.price.toFixed(2)} / {item.unit}
+                ${item.price.toFixed(2)} / {item.unit}
               </p>
             </div>
             <Button
@@ -94,7 +94,7 @@ const CartContent = () => {
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
-            <p className="font-bold">€{(item.price * item.quantity).toFixed(2)}</p>
+            <p className="font-bold">${(item.price * item.quantity).toFixed(2)}</p>
           </div>
         </div>
       ))}
@@ -102,7 +102,7 @@ const CartContent = () => {
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-lg font-bold">
           <span>Total</span>
-          <span className="text-primary">€{totalPrice.toFixed(2)}</span>
+          <span className="text-primary">${totalPrice.toFixed(2)}</span>
         </div>
         <Button
           className="w-full"

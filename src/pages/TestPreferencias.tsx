@@ -33,7 +33,7 @@ const preferencesSchema = z.object({
   cookingTime: z.string().min(1, "Por favor selecciona un tiempo de cocina"),
   healthGoals: z.array(z.string()).min(1, "Por favor selecciona al menos un objetivo"),
   cuisinePreferences: z.array(z.string()),
-  budget: z.number().min(10, "El presupuesto debe ser al menos 10€").optional(),
+  budget: z.number().min(10, "El presupuesto debe ser al menos $10").optional(),
 });
 
 const TestPreferencias = () => {
@@ -399,7 +399,7 @@ const TestPreferencias = () => {
           ) : currentStepData.isBudgetInput ? (
             <div className="space-y-6 max-w-md mx-auto">
               <div className="space-y-2">
-                <Label htmlFor="budget">Presupuesto Semanal (€)</Label>
+                <Label htmlFor="budget">Presupuesto Semanal ($)</Label>
                 <Input
                   id="budget"
                   type="number"

@@ -221,8 +221,8 @@ serve(async (req) => {
         const missingNote = opt.missingCount && opt.missingCount > 0 ? ` Faltan ${opt.missingCount} producto(s).` : ' ¡Todos los productos disponibles!';
         
         const base = opt.isCombination
-          ? `Combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por €${opt.totalPrice.toFixed(2)}.`
-          : `${opt.supermarket} por €${opt.totalPrice.toFixed(2)}.`;
+          ? `Combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por $${opt.totalPrice.toFixed(2)}.`
+          : `${opt.supermarket} por $${opt.totalPrice.toFixed(2)}.`;
         
         let prefix = '';
         if (index === 0 && hasAllItems) {
@@ -233,7 +233,7 @@ serve(async (req) => {
           prefix = 'Alternativa: ';
         }
         
-        const budgetNote = budget && budget > 0 ? ` (Dentro del presupuesto de €${budget.toFixed(2)})` : '';
+        const budgetNote = budget && budget > 0 ? ` (Dentro del presupuesto de $${budget.toFixed(2)})` : '';
         
         return { ...opt, reasoning: prefix + base + missingNote + budgetNote };
       }),
@@ -243,28 +243,28 @@ serve(async (req) => {
         const missingNote = opt.missingCount && opt.missingCount > 0 ? ` Faltan ${opt.missingCount} producto(s).` : ' ¡Todos los productos disponibles!';
         
         const base = opt.isCombination
-          ? `Combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por €${opt.totalPrice.toFixed(2)}.`
-          : `${opt.supermarket} por €${opt.totalPrice.toFixed(2)}.`;
+          ? `Combinación${marketsCount > 1 ? ` en ${marketsCount} supermercados` : ''} por $${opt.totalPrice.toFixed(2)}.`
+          : `${opt.supermarket} por $${opt.totalPrice.toFixed(2)}.`;
         
-        return { ...opt, reasoning: `⚠️ Excede presupuesto: ${base} ${missingNote} (Excede por €${(opt.totalPrice - budget).toFixed(2)})` };
+        return { ...opt, reasoning: `⚠️ Excede presupuesto: ${base} ${missingNote} (Excede por $${(opt.totalPrice - budget).toFixed(2)})` };
       }) : [],
       summary: withinBudget.length > 0
         ? (() => {
             const best = withinBudget[0];
             const marketsCount = best.isCombination ? new Set(best.items.map((i: any) => i.supermarket)).size : 1;
             const hasAllItems = (best.missingCount || 0) === 0;
-            const budgetNote = budget && budget > 0 ? ` dentro del presupuesto de €${budget.toFixed(2)}` : '';
+            const budgetNote = budget && budget > 0 ? ` dentro del presupuesto de $${budget.toFixed(2)}` : '';
             
             if (!hasAllItems) {
-              return `Ningún supermercado tiene todos los productos${budgetNote}. La mejor opción parcial es ${best.supermarket} con ${best.items.length} de ${items.length} artículos por €${best.totalPrice.toFixed(2)}.`;
+              return `Ningún supermercado tiene todos los productos${budgetNote}. La mejor opción parcial es ${best.supermarket} con ${best.items.length} de ${items.length} artículos por $${best.totalPrice.toFixed(2)}.`;
             }
             
             return best.isCombination
-              ? `¡Puedes conseguir TODOS los productos${budgetNote}! La opción más completa es combinar ${marketsCount} supermercados por €${best.totalPrice.toFixed(2)}.`
-              : `¡Puedes conseguir TODOS los productos en ${best.supermarket} por €${best.totalPrice.toFixed(2)}${budgetNote}!`;
+              ? `¡Puedes conseguir TODOS los productos${budgetNote}! La opción más completa es combinar ${marketsCount} supermercados por $${best.totalPrice.toFixed(2)}.`
+              : `¡Puedes conseguir TODOS los productos en ${best.supermarket} por $${best.totalPrice.toFixed(2)}${budgetNote}!`;
           })()
         : budget && budget > 0 && exceededBudget.length > 0
-          ? `⚠️ Ninguna opción está dentro del presupuesto de €${budget.toFixed(2)}. La opción más económica cuesta €${exceededBudget[0].totalPrice.toFixed(2)}.`
+          ? `⚠️ Ninguna opción está dentro del presupuesto de $${budget.toFixed(2)}. La opción más económica cuesta $${exceededBudget[0].totalPrice.toFixed(2)}.`
           : "No se encontraron precios suficientes para hacer recomendaciones."
     };
 
