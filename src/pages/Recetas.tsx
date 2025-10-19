@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, ThumbsUp, Clock, Users } from "lucide-react";
+import { ChefHat, ArrowLeft, ThumbsUp, Clock, Users, Heart, Eye, Trash2, UtensilsCrossed } from "lucide-react";
 
 type Recipe = {
   id: string;
@@ -135,58 +137,107 @@ const Recetas = () => {
             </Button>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-6 md:grid-cols-2">
             {likedRecipes.map((recipe) => (
-              <Card key={recipe.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl font-semibold">{recipe.name}</h3>
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                        {recipe.meal_type}
-                      </span>
+              <Card 
+                key={recipe.id} 
+                className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-2 hover:border-primary/50"
+              >
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                <div className="relative p-6">
+                  {/* Header Section */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <UtensilsCrossed className="h-5 w-5 text-primary" />
+                        <Badge variant="secondary" className="text-xs">
+                          {recipe.meal_type || 'Receta'}
+                        </Badge>
+                      </div>
+                      <h3 className="text-xl font-bold leading-tight group-hover:text-primary transition-colors">
+                        {recipe.name}
+                      </h3>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">{recipe.description}</p>
-                    
-                    <div className="flex gap-4 text-sm text-muted-foreground mb-3">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {recipe.prep_time + recipe.cook_time} min
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {recipe.servings} porciones
-                      </span>
-                      {recipe.cuisine_type && (
-                        <span>• {recipe.cuisine_type}</span>
+                    <Heart className="h-5 w-5 text-destructive fill-destructive flex-shrink-0" />
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {recipe.description}
+                  </p>
+                  
+                  <Separator className="mb-4" />
+
+                  {/* Recipe Info Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">Tiempo Total</span>
+                        <span className="text-sm font-semibold">
+                          {recipe.prep_time + recipe.cook_time} min
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                      <Users className="h-4 w-4 text-primary" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground">Porciones</span>
+                        <span className="text-sm font-semibold">
+                          {recipe.servings}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cuisine Type */}
+                  {recipe.cuisine_type && (
+                    <div className="mb-4">
+                      <Badge variant="outline" className="text-xs">
+                        🌍 {recipe.cuisine_type}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Dietary Tags */}
+                  {recipe.dietary_tags && recipe.dietary_tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {recipe.dietary_tags.slice(0, 3).map((tag, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {recipe.dietary_tags.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{recipe.dietary_tags.length - 3}
+                        </Badge>
                       )}
                     </div>
+                  )}
+                  
+                  <Separator className="mb-4" />
 
-                    {recipe.dietary_tags && recipe.dietary_tags.length > 0 && (
-                      <div className="flex gap-2 mb-3">
-                        {recipe.dietary_tags.map((tag, idx) => (
-                          <span key={idx} className="text-xs bg-accent px-2 py-1 rounded">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="default"
+                      onClick={() => setSelectedRecipe(recipe)}
+                      className="w-full group/btn"
+                    >
+                      <Eye className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                      Ver Receta Completa
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleRemoveLike(recipe.id)}
+                      className="w-full group/btn hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                      Remover
+                    </Button>
                   </div>
-                </div>
-                
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedRecipe(recipe)}
-                  >
-                    Ver Receta
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleRemoveLike(recipe.id)}
-                  >
-                    Remover
-                  </Button>
                 </div>
               </Card>
             ))}
@@ -196,46 +247,123 @@ const Recetas = () => {
 
       {/* Recipe Detail Dialog */}
       <Dialog open={!!selectedRecipe} onOpenChange={(open) => !open && setSelectedRecipe(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedRecipe?.name}</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="space-y-3">
+            <div className="flex items-center gap-3">
+              <UtensilsCrossed className="h-6 w-6 text-primary" />
+              <DialogTitle className="text-2xl">{selectedRecipe?.name}</DialogTitle>
+            </div>
+            {selectedRecipe?.meal_type && (
+              <Badge variant="secondary" className="w-fit">
+                {selectedRecipe.meal_type}
+              </Badge>
+            )}
           </DialogHeader>
           
           {selectedRecipe && (
-            <div className="space-y-4">
-              <p className="text-muted-foreground">{selectedRecipe.description}</p>
-              
-              <div className="flex gap-4 text-sm">
-                <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  Prep: {selectedRecipe.prep_time} min | Cook: {selectedRecipe.cook_time} min
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {selectedRecipe.servings} porciones
-                </span>
+            <div className="space-y-6 pt-4">
+              {/* Description */}
+              <div>
+                <p className="text-muted-foreground leading-relaxed">
+                  {selectedRecipe.description}
+                </p>
               </div>
 
+              <Separator />
+
+              {/* Recipe Info */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex flex-col items-center p-4 rounded-lg bg-muted/50">
+                  <Clock className="h-5 w-5 text-primary mb-2" />
+                  <span className="text-xs text-muted-foreground">Prep</span>
+                  <span className="text-sm font-semibold">{selectedRecipe.prep_time} min</span>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-lg bg-muted/50">
+                  <Clock className="h-5 w-5 text-primary mb-2" />
+                  <span className="text-xs text-muted-foreground">Cocción</span>
+                  <span className="text-sm font-semibold">{selectedRecipe.cook_time} min</span>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-lg bg-muted/50">
+                  <Users className="h-5 w-5 text-primary mb-2" />
+                  <span className="text-xs text-muted-foreground">Porciones</span>
+                  <span className="text-sm font-semibold">{selectedRecipe.servings}</span>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-lg bg-muted/50">
+                  <Clock className="h-5 w-5 text-primary mb-2" />
+                  <span className="text-xs text-muted-foreground">Total</span>
+                  <span className="text-sm font-semibold">
+                    {selectedRecipe.prep_time + selectedRecipe.cook_time} min
+                  </span>
+                </div>
+              </div>
+
+              {/* Dietary Tags */}
+              {selectedRecipe.dietary_tags && selectedRecipe.dietary_tags.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Badge variant="outline" className="h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                      ✓
+                    </Badge>
+                    Características
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRecipe.dietary_tags.map((tag, idx) => (
+                      <Badge key={idx} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Ingredients */}
               <div>
-                <h4 className="font-semibold mb-2">Ingredientes:</h4>
-                <ul className="space-y-1">
+                <h4 className="font-semibold mb-4 text-lg flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    🥗
+                  </div>
+                  Ingredientes
+                </h4>
+                <div className="grid gap-2">
                   {selectedRecipe.ingredients?.map((ing: any, idx: number) => (
-                    <li key={idx} className="text-sm">
-                      • {ing.amount} {ing.unit} {ing.item}
-                    </li>
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                      <span className="text-sm">
+                        <span className="font-semibold">{ing.amount} {ing.unit}</span> {ing.item}
+                      </span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
+              <Separator />
+
+              {/* Instructions */}
               <div>
-                <h4 className="font-semibold mb-2">Instrucciones:</h4>
-                <ol className="space-y-2">
+                <h4 className="font-semibold mb-4 text-lg flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    👨‍🍳
+                  </div>
+                  Instrucciones
+                </h4>
+                <div className="space-y-4">
                   {selectedRecipe.instructions?.map((step: string, idx: number) => (
-                    <li key={idx} className="text-sm">
-                      {idx + 1}. {step}
-                    </li>
+                    <div 
+                      key={idx} 
+                      className="flex gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                        {idx + 1}
+                      </div>
+                      <p className="text-sm leading-relaxed pt-1">{step}</p>
+                    </div>
                   ))}
-                </ol>
+                </div>
               </div>
             </div>
           )}
