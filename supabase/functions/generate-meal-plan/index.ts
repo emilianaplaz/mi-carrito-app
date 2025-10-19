@@ -44,19 +44,21 @@ serve(async (req) => {
 
     const days = planDuration === "2_weeks" ? 14 : 7;
 
-    // Fetch available products from database
+    // Fetch available products from product_prices table (using subcategoria)
     console.log("Fetching available products...");
     const { data: productsData, error: productsError } = await supabase
-      .from('products')
-      .select('name');
+      .from('product_prices')
+      .select('subcategoria');
     
     if (productsError) {
       console.error("Error fetching products:", productsError);
       throw new Error("Failed to fetch available products");
     }
     
-    const availableProducts = productsData?.map(p => p.name).join(", ") || "";
-    console.log("Available products:", availableProducts);
+    // Get unique subcategorias (product names)
+    const uniqueProducts = [...new Set(productsData?.map(p => p.subcategoria) || [])];
+    const availableProducts = uniqueProducts.join(", ");
+    console.log("Available products from product_prices:", availableProducts);
 
     // Build detailed prompt in Spanish
     const dietaryInfo = [];
