@@ -883,6 +883,22 @@ const MiPlan = () => {
                               </span>
                             </div>
 
+                            {/* Dietary Tags */}
+                            {recipe.dietary_tags && recipe.dietary_tags.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {recipe.dietary_tags.slice(0, 4).map((tag, tagIdx) => (
+                                  <Badge key={tagIdx} variant="secondary" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                                {recipe.dietary_tags.length > 4 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    +{recipe.dietary_tags.length - 4}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+
                             {!selectionMode && (
                               <Button
                                 variant="outline"
@@ -929,6 +945,25 @@ const MiPlan = () => {
                   {selectedRecipe.servings} porciones
                 </span>
               </div>
+
+              {/* Dietary Tags in Dialog */}
+              {selectedRecipe.dietary_tags && selectedRecipe.dietary_tags.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Badge variant="outline" className="h-5 w-5 rounded-full p-0 flex items-center justify-center">
+                      ✓
+                    </Badge>
+                    Tus Preferencias
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRecipe.dietary_tags.map((tag, tagIdx) => (
+                      <Badge key={tagIdx} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h4 className="font-semibold mb-2">Ingredientes:</h4>
