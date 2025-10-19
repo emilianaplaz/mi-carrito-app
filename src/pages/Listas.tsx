@@ -62,54 +62,59 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      // Fetch ALL brands from the brands table
-      const { data: brandsData, error: brandsError } = await supabase
-        .from("brands")
+      // Fetch products from subcategories table
+      const { data: subcategoriesData, error: subcategoriesError } = await supabase
+        .from("subcategories")
         .select("name")
         .order("name", { ascending: true });
-      if (brandsError) throw brandsError;
+      
+      if (subcategoriesError) throw subcategoriesError;
 
-      // Paginate through product_prices to ensure we get ALL subcategorias
+      // For each subcategory, get available brands from product_prices
       const pageSize = 1000;
-      let from = 0;
       const brandMap = new Map<string, Set<string>>();
-      const displayNameMap = new Map<string, string>();
-      const norm = (s: string) => s?.toString().normalize('NFKC').trim().replace(/\s+/g, ' ');
-
+      
+      // Paginate through product_prices to get brands for each subcategory
+      let from = 0;
       while (true) {
         const { data: pricesPage, error: pricesError } = await supabase
           .from("product_prices")
           .select("subcategoria, marca")
           .range(from, from + pageSize - 1);
+        
         if (pricesError) throw pricesError;
-
         if (!pricesPage || pricesPage.length === 0) break;
 
         pricesPage.forEach((row: any) => {
-          const rawSub = row.subcategoria;
+          const subcategoria = row.subcategoria;
           const brandName = row.marca || "Sin marca";
-          if (!rawSub) return;
-          const key = norm(rawSub).toLowerCase();
-          const display = norm(rawSub);
-          if (!display) return;
-          if (!displayNameMap.has(key)) displayNameMap.set(key, display);
-          if (!brandMap.has(key)) brandMap.set(key, new Set());
-          brandMap.get(key)!.add(brandName);
+          if (!subcategoria) return;
+          
+          if (!brandMap.has(subcategoria)) {
+            brandMap.set(subcategoria, new Set());
+          }
+          brandMap.get(subcategoria)!.add(brandName);
         });
 
         if (pricesPage.length < pageSize) break;
         from += pageSize;
       }
 
-      // Create products list from unique normalized subcategorias
-      const products = Array.from(brandMap.keys())
-        .map((key) => ({
-          name: displayNameMap.get(key) || key,
-          brands: Array.from(brandMap.get(key) || []),
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      // Create products list from subcategories with their brands
+      const products = (subcategoriesData || []).map((sub: any) => ({
+        name: sub.name,
+        brands: Array.from(brandMap.get(sub.name) || []),
+      }));
 
       setAvailableProducts(products);
+      
+      // Fetch ALL brands from the brands table for the brand dropdown
+      const { data: brandsData, error: brandsError } = await supabase
+        .from("brands")
+        .select("name")
+        .order("name", { ascending: true });
+      if (brandsError) throw brandsError;
+      
       setAllBrands((brandsData || []).map((b: any) => b.name));
     } catch (error) {
       console.error("Error loading products:", error);
