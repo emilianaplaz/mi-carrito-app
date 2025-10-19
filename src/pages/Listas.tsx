@@ -457,7 +457,11 @@ const Listas = () => {
                           </PopoverContent>
                         </Popover>
 
-                        <Popover>
+                        <Popover onOpenChange={(open) => {
+                          if (open && item.name) {
+                            loadBrandsForProduct(item.name);
+                          }
+                        }}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
@@ -755,7 +759,11 @@ const Listas = () => {
                     </PopoverContent>
                   </Popover>
 
-                  <Popover>
+                  <Popover onOpenChange={(open) => {
+                    if (open && item.name) {
+                      loadBrandsForProduct(item.name);
+                    }
+                  }}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
