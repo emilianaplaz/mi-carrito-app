@@ -4,9 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut } from "lucide-react";
+import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut, Coffee, UtensilsCrossed, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
+
+type Recipe = {
+  id: string;
+  name: string;
+  description: string;
+};
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +25,7 @@ import {
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [todayRecipes, setTodayRecipes] = useState<{ breakfast: Recipe[]; lunch: Recipe[]; dinner: Recipe[] } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -36,7 +43,8 @@ const Dashboard = () => {
       if (!session) {
         navigate("/auth");
       } else {
-        // Always allow access to dashboard once authenticated
+        // Load today's recipes
+        await loadTodayRecipes(session.user.id);
         setLoading(false);
       }
 
@@ -45,6 +53,63 @@ const Dashboard = () => {
 
     initAuth();
   }, [navigate]);
+
+  const loadTodayRecipes = async (userId: string) => {
+    // Load the most recent meal plan
+    const { data: plan } = await supabase
+      .from("meal_plans")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!plan || !plan.recipe_ids) {
+      setTodayRecipes(null);
+      return;
+    }
+
+    const planData = plan.recipe_ids as any;
+    const planStartDate = new Date(plan.created_at);
+    const today = new Date();
+    
+    // Calculate which day of the plan today is
+    const daysDiff = Math.floor((today.getTime() - planStartDate.getTime()) / (1000 * 60 * 60 * 24));
+    const dayIndex = daysDiff % (planData.days?.length || 7); // Loop through the plan
+
+    const todayDay = planData.days?.[dayIndex];
+    if (!todayDay) {
+      setTodayRecipes(null);
+      return;
+    }
+
+    // Collect all recipe IDs for today
+    const recipeIds = [
+      ...(todayDay.breakfast || []),
+      ...(todayDay.lunch || []),
+      ...(todayDay.dinner || [])
+    ];
+
+    if (recipeIds.length === 0) {
+      setTodayRecipes(null);
+      return;
+    }
+
+    // Fetch recipes
+    const { data: recipesData } = await supabase
+      .from("recipes")
+      .select("id, name, description")
+      .in("id", recipeIds);
+
+    if (recipesData) {
+      const recipesMap = new Map(recipesData.map(r => [r.id, r]));
+      setTodayRecipes({
+        breakfast: (todayDay.breakfast || []).map((id: string) => recipesMap.get(id)).filter(Boolean),
+        lunch: (todayDay.lunch || []).map((id: string) => recipesMap.get(id)).filter(Boolean),
+        dinner: (todayDay.dinner || []).map((id: string) => recipesMap.get(id)).filter(Boolean),
+      });
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -164,28 +229,67 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* Metrics Card */}
-        <Card className="p-6 bg-gradient-to-br from-accent/20 to-secondary/20 animate-fade-in">
-          <h3 className="text-lg font-semibold mb-4">Resumen de Hoy</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary">0</p>
-              <p className="text-xs text-muted-foreground mt-1">Calorías</p>
+        {/* Today's Recipes */}
+        {todayRecipes && (
+          <Card className="p-6 bg-gradient-to-br from-accent/20 to-secondary/20 animate-fade-in">
+            <h3 className="text-lg font-semibold mb-4">Recetas de Hoy</h3>
+            <div className="space-y-4">
+              {/* Breakfast */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Coffee className="h-4 w-4 text-primary" />
+                  <h4 className="font-semibold">Desayuno</h4>
+                </div>
+                <div className="space-y-1">
+                  {todayRecipes.breakfast.map((recipe) => (
+                    <p key={recipe.id} className="text-sm text-muted-foreground ml-6">
+                      • {recipe.name}
+                    </p>
+                  ))}
+                  {todayRecipes.breakfast.length === 0 && (
+                    <p className="text-sm text-muted-foreground ml-6">No hay recetas</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Lunch */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <UtensilsCrossed className="h-4 w-4 text-primary" />
+                  <h4 className="font-semibold">Almuerzo</h4>
+                </div>
+                <div className="space-y-1">
+                  {todayRecipes.lunch.map((recipe) => (
+                    <p key={recipe.id} className="text-sm text-muted-foreground ml-6">
+                      • {recipe.name}
+                    </p>
+                  ))}
+                  {todayRecipes.lunch.length === 0 && (
+                    <p className="text-sm text-muted-foreground ml-6">No hay recetas</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Dinner */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Moon className="h-4 w-4 text-primary" />
+                  <h4 className="font-semibold">Cena</h4>
+                </div>
+                <div className="space-y-1">
+                  {todayRecipes.dinner.map((recipe) => (
+                    <p key={recipe.id} className="text-sm text-muted-foreground ml-6">
+                      • {recipe.name}
+                    </p>
+                  ))}
+                  {todayRecipes.dinner.length === 0 && (
+                    <p className="text-sm text-muted-foreground ml-6">No hay recetas</p>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary">0</p>
-              <p className="text-xs text-muted-foreground mt-1">Recetas</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary">0</p>
-              <p className="text-xs text-muted-foreground mt-1">Listas</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary">0</p>
-              <p className="text-xs text-muted-foreground mt-1">Comidas</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </main>
     </div>
   );

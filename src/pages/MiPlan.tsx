@@ -49,6 +49,7 @@ type RecipePreference = {
 const MiPlan = () => {
   const [loading, setLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState<any>(null);
+  const [planStartDate, setPlanStartDate] = useState<Date | null>(null);
   const [recipes, setRecipes] = useState<Record<string, Recipe>>({});
   const [preferences, setPreferences] = useState<any>(null);
   const [recipePrefs, setRecipePrefs] = useState<Record<string, boolean>>({});
@@ -106,6 +107,7 @@ const MiPlan = () => {
       .maybeSingle();
 
     if (plan && plan.recipe_ids) {
+      setPlanStartDate(new Date(plan.created_at));
       const recipeIdsData = typeof plan.recipe_ids === "object" && plan.recipe_ids !== null ? plan.recipe_ids : null;
 
       if (recipeIdsData) {
@@ -593,6 +595,13 @@ const MiPlan = () => {
 
   const daysCount = mealPlan.days?.length || 0;
 
+  const getDayDate = (dayNumber: number): string => {
+    if (!planStartDate) return "";
+    const date = new Date(planStartDate);
+    date.setDate(date.getDate() + dayNumber - 1);
+    return date.toLocaleDateString('es-VE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -660,7 +669,10 @@ const MiPlan = () => {
         <div className="space-y-6">
           {mealPlan.days?.map((day: any) => (
             <Card key={day.day} className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Día {day.day}</h2>
+              <div className="mb-4">
+                <h2 className="text-2xl font-bold">Día {day.day}</h2>
+                <p className="text-sm text-muted-foreground capitalize">{getDayDate(day.day)}</p>
+              </div>
 
               <Tabs defaultValue="breakfast" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
