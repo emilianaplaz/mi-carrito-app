@@ -600,7 +600,7 @@ const MiPlan = () => {
     if (!planStartDate) return "";
     const date = new Date(planStartDate);
     date.setDate(date.getDate() + dayNumber - 1);
-    return date.toLocaleDateString('es-VE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString("es-VE", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   };
 
   return (
@@ -609,9 +609,9 @@ const MiPlan = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => navigate("/dashboard")}
                 className="hover:bg-primary/10 hover:text-primary transition-all"
               >
@@ -627,7 +627,7 @@ const MiPlan = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Plan Completo Button - Always visible on right */}
             {!selectionMode ? (
               <Button
@@ -659,16 +659,13 @@ const MiPlan = () => {
                 <div className="relative z-10">
                   <div className="font-semibold">Crear Lista de Compras</div>
                   <div className="text-xs opacity-90">
-                    {selectedRecipeIds.size === 0 
-                      ? "Selecciona recetas" 
-                      : `${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? 's' : ''} seleccionada${selectedRecipeIds.size > 1 ? 's' : ''}`
-                    }
+                    {selectedRecipeIds.size === 0
+                      ? "Selecciona recetas"
+                      : `${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? "s" : ""} seleccionada${selectedRecipeIds.size > 1 ? "s" : ""}`}
                   </div>
                 </div>
                 {selectedRecipeIds.size > 0 && (
-                  <Badge className="ml-2 relative z-10 bg-white text-primary">
-                    {selectedRecipeIds.size}
-                  </Badge>
+                  <Badge className="ml-2 relative z-10 bg-white text-primary">{selectedRecipeIds.size}</Badge>
                 )}
               </Button>
             )}
@@ -677,12 +674,12 @@ const MiPlan = () => {
       </header>
 
       {/* Action Buttons Below Header */}
-      <div className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-[73px] z-40">
+      <div className="border-b border-border sticky top-[73px] z-40">
         <div className="container mx-auto px-4 py-3">
           {!selectionMode ? (
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
                 onClick={() => setSelectionMode(true)}
                 className="flex-1 group hover:bg-primary/5 hover:border-primary transition-all"
@@ -693,9 +690,9 @@ const MiPlan = () => {
                   <div className="text-xs text-muted-foreground">Elegir algunas recetas</div>
                 </div>
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 size="lg"
                 onClick={handleEditPreferences}
                 className="flex-1 group hover:bg-accent/50 hover:border-accent transition-all"
@@ -933,9 +930,11 @@ const MiPlan = () => {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="list-select" className="mb-3 block">Selecciona o crea una lista</Label>
-              <Select 
-                value={listChoice === "new" ? "new" : selectedListId} 
+              <Label htmlFor="list-select" className="mb-3 block">
+                Selecciona o crea una lista
+              </Label>
+              <Select
+                value={listChoice === "new" ? "new" : selectedListId}
                 onValueChange={(value) => {
                   if (value === "new") {
                     setListChoice("new");
@@ -1025,9 +1024,11 @@ const MiPlan = () => {
             </p>
 
             <div>
-              <Label htmlFor="bulk-list-select" className="mb-3 block">Selecciona o crea una lista</Label>
-              <Select 
-                value={listChoice === "new" ? "new" : selectedListId} 
+              <Label htmlFor="bulk-list-select" className="mb-3 block">
+                Selecciona o crea una lista
+              </Label>
+              <Select
+                value={listChoice === "new" ? "new" : selectedListId}
                 onValueChange={(value) => {
                   if (value === "new") {
                     setListChoice("new");
