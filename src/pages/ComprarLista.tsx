@@ -134,33 +134,60 @@ const ComprarLista = () => {
         ...item,
         brand: itemBrandPreferences[item.name] === "ANY" ? undefined : itemBrandPreferences[item.name]
       }));
-      const itemNames = groceryList.items.map(item => item.name);
 
-      // Get all prices for the items in the list by subcategoria
-      const {
-        data: pricesData,
-        error: pricesError
-      } = await supabase.from("product_prices").select(`
+      // Fetch ALL product prices to do fuzzy matching
+      const { data: allPricesData, error: pricesError } = await supabase
+        .from("product_prices")
+        .select(`
           precio,
           presentacion,
           marca,
           subcategoria,
           mercado
-        `).in("subcategoria", itemNames);
+        `);
       if (pricesError) throw pricesError;
+
+      // Create a fuzzy matcher function
+      const normalize = (str: string) => 
+        str.toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // remove accents
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      const fuzzyMatch = (searchTerm: string, subcategoria: string): boolean => {
+        const normSearch = normalize(searchTerm);
+        const normSub = normalize(subcategoria);
+        
+        // Direct match
+        if (normSub.includes(normSearch) || normSearch.includes(normSub)) return true;
+        
+        // Split and check each word
+        const searchWords = normSearch.split(' ');
+        const subWords = normSub.split(' ');
+        
+        // Check if any significant word matches (length > 3)
+        return searchWords.some(sw => 
+          sw.length > 3 && subWords.some(subw => 
+            subw.includes(sw) || sw.includes(subw)
+          )
+        );
+      };
+
+      // Filter prices to only matching items using fuzzy matching
+      const matchedPrices = (allPricesData || []).filter((price: any) => 
+        groceryList.items.some(item => fuzzyMatch(item.name, price.subcategoria))
+      );
 
       // Fetch ALL supermarkets to show complete breakdown
       const {
         data: allSupermarkets
       } = await supabase.from("supermarkets").select("name").order("name");
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('list-recommendations', {
+      const { data, error } = await supabase.functions.invoke('list-recommendations', {
         body: {
           listName: groceryList.name,
           items: itemsWithPreferences,
-          availablePrices: pricesData || [],
+          availablePrices: matchedPrices || [],
           allSupermarkets: (allSupermarkets || []).map((s: any) => s.name)
         }
       });
