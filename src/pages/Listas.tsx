@@ -41,9 +41,11 @@ const Listas = () => {
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<{ name: string; brands: string[] }[]>([]);
+  const [genericProducts, setGenericProducts] = useState<string[]>([]);
   const [allBrands, setAllBrands] = useState<string[]>([]);
   const [openProductPopovers, setOpenProductPopovers] = useState<{ [key: number]: boolean }>({});
   const [productValidation, setProductValidation] = useState<{ [key: number]: boolean }>({});
+  const [loadingGenericProducts, setLoadingGenericProducts] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -63,7 +65,25 @@ const Listas = () => {
 
   const loadAvailableProducts = async () => {
     try {
-      // Paginate through product_prices to get all product data for fuzzy matching
+      // Fetch generic products from AI
+      setLoadingGenericProducts(true);
+      const { data: genericData, error: genericError } = await supabase.functions.invoke(
+        'generate-product-list'
+      );
+      
+      if (genericError) {
+        console.error("Error loading generic products:", genericError);
+        toast({
+          title: "Advertencia",
+          description: "No se pudieron cargar los productos genéricos",
+          variant: "destructive",
+        });
+      } else if (genericData?.products) {
+        setGenericProducts(genericData.products);
+      }
+      setLoadingGenericProducts(false);
+
+      // Fetch all products for validation
       const pageSize = 1000;
       const allProducts: string[] = [];
       
@@ -86,10 +106,9 @@ const Listas = () => {
         from += pageSize;
       }
 
-      // Store unique products for validation
       setAvailableProducts(Array.from(new Set(allProducts)).map(name => ({ name, brands: [] })));
       
-      // Fetch ALL brands from the brands table
+      // Fetch ALL brands
       const { data: brandsData, error: brandsError } = await supabase
         .from("brands")
         .select("name")
@@ -414,26 +433,35 @@ const Listas = () => {
                   {newItems.map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex gap-2">
-                        <div className="flex-1">
-                          <Input
-                            placeholder="Nombre genérico (ej: aceite de oliva, tomate)"
-                            value={item.name}
-                            onChange={(e) => updateItemField(index, "name", e.target.value)}
-                            className={cn(
-                              item.name && !productValidation[index] && "border-destructive focus-visible:ring-destructive"
+                        <Select
+                          value={item.name}
+                          onValueChange={(value) => {
+                            updateItemField(index, "name", value);
+                            const isValid = validateProductName(value);
+                            setProductValidation(prev => ({ ...prev, [index]: isValid }));
+                          }}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Seleccionar producto..." />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {loadingGenericProducts ? (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                Cargando productos...
+                              </div>
+                            ) : genericProducts.length > 0 ? (
+                              genericProducts.map((product) => (
+                                <SelectItem key={product} value={product}>
+                                  {product}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                No hay productos disponibles
+                              </div>
                             )}
-                          />
-                          {item.name && !productValidation[index] && (
-                            <p className="text-xs text-destructive mt-1">
-                              ⚠️ No se encontró coincidencia en la base de datos
-                            </p>
-                          )}
-                          {item.name && productValidation[index] && (
-                            <p className="text-xs text-green-600 mt-1">
-                              ✓ Producto válido
-                            </p>
-                          )}
-                        </div>
+                          </SelectContent>
+                        </Select>
                       <Select
                         value={item.brand || "ANY"}
                         onValueChange={(value) => updateItemField(index, "brand", value === "ANY" ? "" : value)}
