@@ -359,10 +359,7 @@ const Dashboard = () => {
   }];
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <img src={loadingCart} alt="Cargando" className="h-24 w-24 mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Cargando...</p>
-        </div>
+        <img src={loadingCart} alt="Loading" className="w-32 h-auto object-contain animate-pulse" />
       </div>;
   }
   return <div className="min-h-screen bg-background">

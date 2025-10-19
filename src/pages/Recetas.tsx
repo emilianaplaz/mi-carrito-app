@@ -108,7 +108,7 @@ const Recetas = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <img src={loadingCart} alt="Cargando" className="h-24 w-24 animate-pulse" />
+        <img src={loadingCart} alt="Loading" className="w-32 h-auto object-contain animate-pulse" />
       </div>
     );
   }
