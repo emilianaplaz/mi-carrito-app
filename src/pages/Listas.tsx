@@ -67,7 +67,8 @@ const Listas = () => {
       // Fetch subcategorias and brands from product_prices
       const { data: pricesData, error: pricesError } = await supabase
         .from("product_prices")
-        .select("subcategoria, marca");
+        .select("subcategoria, marca")
+        .limit(10000);
       if (pricesError) throw pricesError;
 
       const brandMap = new Map<string, Set<string>>();
