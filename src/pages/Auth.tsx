@@ -154,9 +154,7 @@ const Auth = () => {
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2 mb-2">
             
-            <span className="text-2xl font-bold text-primary">
-              MiCarrito
-            </span>
+            <img src={miCarritoLogo} alt="MiCarrito" className="h-8 w-auto" />
           </div>
           <p className="text-muted-foreground text-center">
             Tu asistente inteligente de nutrición y compras
