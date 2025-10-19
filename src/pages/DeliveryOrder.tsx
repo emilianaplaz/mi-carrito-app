@@ -74,25 +74,12 @@ const DeliveryOrder = () => {
   const [pagoMovilCedula, setPagoMovilCedula] = useState("");
   const [pagoMovilBank, setPagoMovilBank] = useState("");
   const [pagoMovilPhone, setPagoMovilPhone] = useState("");
-  const [bcvRate, setBcvRate] = useState<number | null>(null);
+  const [bcvRate] = useState<number>(230); // Using hardcoded value
 
-  // Load saved payment methods and BCV rate
+  // Load saved payment methods
   useEffect(() => {
     loadSavedPaymentMethods();
-    fetchBCVRate();
   }, []);
-
-  const fetchBCVRate = async () => {
-    try {
-      const response = await fetch("https://api.dolarvzla.com/public/exchange-rate");
-      const data = await response.json();
-      if (data && data.usd) {
-        setBcvRate(data.usd);
-      }
-    } catch (error) {
-      console.error("Error fetching BCV rate:", error);
-    }
-  };
   const loadSavedPaymentMethods = async () => {
     try {
       const {
@@ -347,15 +334,30 @@ const DeliveryOrder = () => {
                 <div className="space-y-2 pt-4 border-t">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>
+                      {paymentMethod === "pago_movil" 
+                        ? `Bs. ${(subtotal * bcvRate).toFixed(2)}`
+                        : `$${subtotal.toFixed(2)}`
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Envío</span>
-                    <span>${deliveryFee.toFixed(2)}</span>
+                    <span>
+                      {paymentMethod === "pago_movil" 
+                        ? `Bs. ${(deliveryFee * bcvRate).toFixed(2)}`
+                        : `$${deliveryFee.toFixed(2)}`
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span>Total</span>
-                    <span className="text-primary">${total.toFixed(2)}</span>
+                    <span className="text-primary">
+                      {paymentMethod === "pago_movil" 
+                        ? `Bs. ${(total * bcvRate).toFixed(2)}`
+                        : `$${total.toFixed(2)}`
+                      }
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -565,16 +567,14 @@ const DeliveryOrder = () => {
 
                 {/* Pago Movil Form - Only show if pago_movil is selected */}
                 {paymentMethod === "pago_movil" && <div className="space-y-4">
-                    {bcvRate && (
-                      <div className="bg-primary/10 rounded-lg p-4 mb-4">
-                        <p className="text-sm font-semibold">
-                          Total a pagar: Bs. {(total * bcvRate).toFixed(2)}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Tasa BCV: Bs. {bcvRate.toFixed(2)} / USD
-                        </p>
-                      </div>
-                    )}
+                    <div className="bg-primary/10 rounded-lg p-4 mb-4">
+                      <p className="text-sm font-semibold">
+                        Total a pagar: Bs. {(total * bcvRate).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tasa BCV: Bs. {bcvRate.toFixed(2)} / USD
+                      </p>
+                    </div>
                     <div>
                       <Label htmlFor="pagoMovilCedula">Cédula</Label>
                       <Input 
@@ -644,7 +644,7 @@ const DeliveryOrder = () => {
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Procesando pedido...
                   </> : <>
-                    {paymentMethod === "pago_movil" && bcvRate ? (
+                    {paymentMethod === "pago_movil" ? (
                       <>Verificar Pago - Bs. {(total * bcvRate).toFixed(2)}</>
                     ) : (
                       <>Confirmar Pedido - ${total.toFixed(2)}</>
