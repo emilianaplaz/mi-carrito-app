@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChefHat, User as UserIcon, Calendar, List, BookOpen, ClipboardList, LogOut, Coffee, UtensilsCrossed, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/Cart";
@@ -233,61 +234,65 @@ const Dashboard = () => {
         {todayRecipes && (
           <Card className="p-6 bg-gradient-to-br from-accent/20 to-secondary/20 animate-fade-in">
             <h3 className="text-lg font-semibold mb-4">Recetas de Hoy</h3>
-            <div className="space-y-4">
-              {/* Breakfast */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Coffee className="h-4 w-4 text-primary" />
-                  <h4 className="font-semibold">Desayuno</h4>
-                </div>
-                <div className="space-y-1">
+            
+            <Tabs defaultValue="breakfast" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="breakfast">
+                  <Coffee className="h-4 w-4 mr-2" />
+                  Desayuno
+                </TabsTrigger>
+                <TabsTrigger value="lunch">
+                  <UtensilsCrossed className="h-4 w-4 mr-2" />
+                  Almuerzo
+                </TabsTrigger>
+                <TabsTrigger value="dinner">
+                  <Moon className="h-4 w-4 mr-2" />
+                  Cena
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="breakfast" className="mt-4">
+                <div className="space-y-2">
                   {todayRecipes.breakfast.map((recipe) => (
-                    <p key={recipe.id} className="text-sm text-muted-foreground ml-6">
-                      • {recipe.name}
-                    </p>
+                    <Card key={recipe.id} className="p-4">
+                      <h4 className="font-bold text-lg">{recipe.name}</h4>
+                      <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                    </Card>
                   ))}
                   {todayRecipes.breakfast.length === 0 && (
-                    <p className="text-sm text-muted-foreground ml-6">No hay recetas</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">No hay recetas</p>
                   )}
                 </div>
-              </div>
+              </TabsContent>
 
-              {/* Lunch */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <UtensilsCrossed className="h-4 w-4 text-primary" />
-                  <h4 className="font-semibold">Almuerzo</h4>
-                </div>
-                <div className="space-y-1">
+              <TabsContent value="lunch" className="mt-4">
+                <div className="space-y-2">
                   {todayRecipes.lunch.map((recipe) => (
-                    <p key={recipe.id} className="text-sm text-muted-foreground ml-6">
-                      • {recipe.name}
-                    </p>
+                    <Card key={recipe.id} className="p-4">
+                      <h4 className="font-bold text-lg">{recipe.name}</h4>
+                      <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                    </Card>
                   ))}
                   {todayRecipes.lunch.length === 0 && (
-                    <p className="text-sm text-muted-foreground ml-6">No hay recetas</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">No hay recetas</p>
                   )}
                 </div>
-              </div>
+              </TabsContent>
 
-              {/* Dinner */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Moon className="h-4 w-4 text-primary" />
-                  <h4 className="font-semibold">Cena</h4>
-                </div>
-                <div className="space-y-1">
+              <TabsContent value="dinner" className="mt-4">
+                <div className="space-y-2">
                   {todayRecipes.dinner.map((recipe) => (
-                    <p key={recipe.id} className="text-sm text-muted-foreground ml-6">
-                      • {recipe.name}
-                    </p>
+                    <Card key={recipe.id} className="p-4">
+                      <h4 className="font-bold text-lg">{recipe.name}</h4>
+                      <p className="text-sm text-muted-foreground">{recipe.description}</p>
+                    </Card>
                   ))}
                   {todayRecipes.dinner.length === 0 && (
-                    <p className="text-sm text-muted-foreground ml-6">No hay recetas</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">No hay recetas</p>
                   )}
                 </div>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </Card>
         )}
       </main>
