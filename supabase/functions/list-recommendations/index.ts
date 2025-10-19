@@ -157,46 +157,9 @@ serve(async (req) => {
       }
     }
 
-    // Option 2: Generate multiple combination strategies
-    // Strategy 1: Cheapest combination (picks lowest price for each item)
-    const cheapestCombination: any[] = [];
-    let combinationTotal = 0;
-    const usedSupermarkets = new Set<string>();
-    const cheapestMissingItems: string[] = [];
-    
-    for (const item of items) {
-      const productKey = `${item.name}-${item.brand || 'sin marca'}`;
-      const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
-      
-      if (prices.length > 0) {
-        const cheapest = prices.reduce((min: any, p: any) => (min && min.price <= p.price) ? min : p, undefined as any);
-        if (cheapest) {
-          cheapestCombination.push({ item: item.name, price: cheapest.price, brand: cheapest.brand, supermarket: cheapest.supermarket });
-          combinationTotal += cheapest.price;
-          usedSupermarkets.add(cheapest.supermarket);
-        }
-      } else {
-        cheapestMissingItems.push(item.name);
-      }
-    }
-    
-    if (cheapestCombination.length > 0) {
-      supermarketOptions.push({
-        supermarket: `Combinación: ${Array.from(usedSupermarkets).join(' + ') || 'Único supermercado'}`,
-        items: cheapestCombination,
-        totalPrice: combinationTotal,
-        isCombination: true,
-        missingCount: cheapestMissingItems.length
-      });
-    }
-    
-    // Strategy 2: Try to build complete coverage combinations by exploring different supermarket sets
-    // This ensures we find complete coverage options even if they're not the absolute cheapest
-    if (cheapestMissingItems.length > 0) {
-      console.log('Cheapest combination is missing items, exploring alternative combinations...');
-      
-      // Get all unique supermarkets
-      const allSupermarketsSet = new Set(Object.keys(pricesBySupermarket));
+    // Option 2: Generate smart combination strategies that minimize store count
+    // Strategy: Try to build complete coverage combinations with minimum stores
+    console.log('Exploring smart combinations that minimize store count...');
       
       // Build supermarket coverage map with price details
       const supermarketCoverage: { name: string; itemCount: number; items: Set<string>; priceMap: Map<string, any> }[] = [];
@@ -347,7 +310,6 @@ serve(async (req) => {
           });
         }
       }
-    }
     
     // CRITICAL SORTING: Prioritize complete coverage, then minimum stores, then cost
     supermarketOptions.sort((a, b) => {
