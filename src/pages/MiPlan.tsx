@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import {
   ChefHat,
   ArrowLeft,
@@ -25,6 +26,8 @@ import {
   Users,
   ListPlus,
   CheckSquare,
+  X,
+  Sparkles,
 } from "lucide-react";
 
 type Recipe = {
@@ -602,64 +605,134 @@ const MiPlan = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent/10 via-background to-secondary/10">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <ChefHat className="h-5 w-5 text-primary" />
-              <span className="text-lg font-bold">Mi Plan de {daysCount} Días</span>
+      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate("/dashboard")}
+                className="hover:bg-primary/10 hover:text-primary transition-all"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ChefHat className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold">Mi Plan de Comidas</h1>
+                  <p className="text-xs text-muted-foreground">{daysCount} días de nutrición</p>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          
+          {/* Action Buttons */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {!selectionMode ? (
               <>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="default"
+                  size="lg"
                   onClick={() => {
                     handleSelectAllRecipes();
                     setShowBulkAddDialog(true);
                   }}
+                  className="flex-1 md:flex-initial min-w-[200px] group relative overflow-hidden"
                 >
-                  <ListPlus className="h-4 w-4 mr-2" />
-                  Plan Completo a Lista
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ListPlus className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+                  <div className="relative z-10">
+                    <div className="font-semibold">Plan Completo</div>
+                    <div className="text-xs opacity-90">Agregar todo a lista</div>
+                  </div>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setSelectionMode(true)}>
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                  Seleccionar Recetas
+                
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setSelectionMode(true)}
+                  className="flex-1 md:flex-initial min-w-[180px] group hover:bg-primary/5 hover:border-primary transition-all"
+                >
+                  <CheckSquare className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <div className="font-semibold">Seleccionar</div>
+                    <div className="text-xs text-muted-foreground">Elegir recetas</div>
+                  </div>
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleEditPreferences}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Editar Preferencias
+                
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={handleEditPreferences}
+                  className="flex-1 md:flex-initial min-w-[180px] group hover:bg-accent/50 hover:border-accent transition-all"
+                >
+                  <Settings className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                  <div>
+                    <div className="font-semibold">Preferencias</div>
+                    <div className="text-xs text-muted-foreground">Personalizar plan</div>
+                  </div>
                 </Button>
               </>
             ) : (
               <>
                 <Button
                   variant="default"
-                  size="sm"
+                  size="lg"
                   onClick={() => setShowBulkAddDialog(true)}
                   disabled={selectedRecipeIds.size === 0}
+                  className="flex-1 md:flex-initial min-w-[220px] group relative overflow-hidden disabled:opacity-50"
                 >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Crear Lista ({selectedRecipeIds.size})
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ShoppingCart className="h-5 w-5 mr-2 relative z-10 group-hover:scale-110 transition-transform" />
+                  <div className="relative z-10">
+                    <div className="font-semibold">Crear Lista de Compras</div>
+                    <div className="text-xs opacity-90">
+                      {selectedRecipeIds.size === 0 
+                        ? "Selecciona recetas" 
+                        : `${selectedRecipeIds.size} receta${selectedRecipeIds.size > 1 ? 's' : ''} seleccionada${selectedRecipeIds.size > 1 ? 's' : ''}`
+                      }
+                    </div>
+                  </div>
+                  {selectedRecipeIds.size > 0 && (
+                    <Badge className="ml-2 relative z-10 bg-white text-primary">
+                      {selectedRecipeIds.size}
+                    </Badge>
+                  )}
                 </Button>
+                
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="lg"
                   onClick={() => {
                     setSelectionMode(false);
                     setSelectedRecipeIds(new Set());
                   }}
+                  className="group hover:bg-destructive/10 hover:border-destructive hover:text-destructive transition-all"
                 >
-                  Cancelar
+                  <X className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform" />
+                  <div>
+                    <div className="font-semibold">Cancelar</div>
+                    <div className="text-xs opacity-70">Salir de selección</div>
+                  </div>
                 </Button>
               </>
             )}
           </div>
+          
+          {/* Selection Mode Indicator */}
+          {selectionMode && (
+            <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                <span className="text-sm font-medium text-primary">
+                  Modo de selección activado - Toca las recetas para seleccionarlas
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
