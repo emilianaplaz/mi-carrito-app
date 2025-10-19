@@ -17,6 +17,7 @@ import {
   Calendar,
   UtensilsCrossed,
   Wallet,
+  ClipboardList,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/mi-carrit-logo.png";
@@ -39,6 +40,7 @@ const preferencesSchema = z.object({
 const EditPreferencias = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isFirstTime, setIsFirstTime] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -169,10 +171,10 @@ const EditPreferencias = () => {
               : [],
             budget: existingPrefs.budget || undefined,
           });
+          setIsFirstTime(false);
         } else {
-          // No preferences found, redirect to test
-          navigate("/test-preferencias");
-          return;
+          // No preferences found, first time user
+          setIsFirstTime(true);
         }
       } catch (error) {
         console.error("Error loading preferences:", error);
@@ -346,6 +348,22 @@ const EditPreferencias = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {isFirstTime && (
+          <Card className="p-6 mb-6 bg-primary/10 border-primary/20">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-primary rounded-full">
+                <ClipboardList className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-2">¡Bienvenido a MiCarrito!</h3>
+                <p className="text-muted-foreground">
+                  Configura tus preferencias alimentarias para comenzar a generar planes de comidas personalizados.
+                  Una vez que guardes tus preferencias, podrás regresar aquí en cualquier momento para actualizarlas.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
         <div className="space-y-6">
           {/* Meal Options */}
           <Card className="p-6">

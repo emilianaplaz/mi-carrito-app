@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import logo from "@/assets/mi-carrit-logo.png";
+import loadingCart from "@/assets/loading-cart.jpeg";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -351,15 +352,15 @@ const Dashboard = () => {
     description: "Explora y guarda recetas",
     path: "/recetas"
   }, {
-    title: hasPreferences ? "Editar Preferencias" : "Test Preferencias",
+    title: "Preferencias",
     icon: ClipboardList,
-    description: hasPreferences ? "Actualizar tus preferencias" : "Define tus preferencias alimentarias",
-    path: hasPreferences ? "/editar-preferencias" : "/test-preferencias"
+    description: "Define y actualiza tus preferencias alimentarias",
+    path: "/editar-preferencias"
   }];
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <ChefHat className="h-12 w-12 text-primary animate-pulse mx-auto mb-4" />
+          <img src={loadingCart} alt="Cargando" className="h-24 w-24 mx-auto mb-4 animate-pulse" />
           <p className="text-muted-foreground">Cargando...</p>
         </div>
       </div>;
@@ -619,10 +620,10 @@ const Dashboard = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <Button onClick={() => {
               setShowPreferencesPrompt(false);
-              navigate("/test-preferencias");
+              navigate("/editar-preferencias");
             }} className="flex-1">
                 <ClipboardList className="mr-2 h-4 w-4" />
-                Completar Test de Preferencias
+                Configurar Preferencias
               </Button>
               
             </div>

@@ -602,9 +602,9 @@ const MiPlan = () => {
           <Card className="p-8 text-center">
             <h1 className="text-3xl font-bold mb-4">No tienes un plan todavía</h1>
             <p className="text-muted-foreground mb-6">
-              Completa el test de preferencias para generar tu plan personalizado
+              Configura tus preferencias para generar tu plan personalizado
             </p>
-            <Button onClick={() => navigate("/test-preferencias")}>Crear Mi Plan</Button>
+            <Button onClick={() => navigate("/editar-preferencias")}>Crear Mi Plan</Button>
           </Card>
         </main>
       </div>
