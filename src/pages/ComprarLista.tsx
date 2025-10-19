@@ -411,12 +411,13 @@ const ComprarLista = () => {
                 }
               });
 
-              // Add missing items
-              allPrices.forEach(item => {
+              // Add missing items - for each supermarket, check which items from the original list are missing
+              list.items.forEach(listItem => {
                 supermarketMap.forEach((data, supermarket) => {
-                  const hasItem = data.available.some((a: any) => a.name === item.name);
-                  if (!hasItem && item.hasPrices) {
-                    data.missing.push(item.name);
+                  const hasItem = data.available.some((a: any) => a.name.toLowerCase() === listItem.name.toLowerCase());
+                  if (!hasItem) {
+                    // This item from the list is not available at this supermarket
+                    data.missing.push(listItem.name);
                   }
                 });
               });
