@@ -67,32 +67,24 @@ const Listas = () => {
 
     setIsSearchingProducts(true);
     try {
-      const normalize = (str: string) =>
-        (str || "")
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .trim();
+      const typed = (searchTerm || "").trim();
 
-      const normSearch = normalize(searchTerm);
-
-      // Fetch matching products (limit to 50 results for performance)
+      // Fetch matching products from backend using exact literal substring (case-insensitive)
       const { data, error } = await supabase
         .from("product_prices")
         .select("producto")
-        .ilike("producto", `%${searchTerm}%`)
-        .limit(1000);
+        .ilike("producto", `%${typed}%`)
+        .limit(500);
 
       if (error) throw error;
 
-      // Deduplicate and filter client-side with fuzzy matching
+      // Deduplicate and enforce exact literal containment of the typed text
+      const lowerTyped = typed.toLowerCase();
       const uniqueProducts = new Set<string>();
       (data || []).forEach((row: any) => {
-        if (row.producto) {
-          const normProduct = normalize(row.producto);
-          if (normProduct.includes(normSearch) || normSearch.includes(normProduct)) {
-            uniqueProducts.add(row.producto);
-          }
+        const p = row.producto as string;
+        if (p && p.toLowerCase().includes(lowerTyped)) {
+          uniqueProducts.add(p);
         }
       });
 
