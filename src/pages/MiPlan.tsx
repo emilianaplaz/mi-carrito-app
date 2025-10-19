@@ -548,13 +548,11 @@ const MiPlan = () => {
     loadExistingLists();
   };
 
-  const handleSelectAllRecipes = () => {
-    const allRecipeIds = new Set<string>();
-    mealPlan.days?.forEach((day: any) => {
-      [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach((id) => allRecipeIds.add(id));
-    });
-    setSelectedRecipeIds(allRecipeIds);
+  const handleCancelSelection = () => {
+    setSelectionMode(false);
+    setSelectedRecipeIds(new Set());
   };
+
 
   const handleEditPreferences = () => {
     navigate("/test-preferencias");
@@ -655,7 +653,12 @@ const MiPlan = () => {
                     variant="default"
                     size="lg"
                     onClick={() => {
-                      handleSelectAllRecipes();
+                      const allRecipeIds = new Set<string>();
+                      mealPlan.days?.forEach((day: any) => {
+                        [...(day.breakfast || []), ...(day.lunch || []), ...(day.dinner || [])].forEach((id) => allRecipeIds.add(id));
+                      });
+                      setSelectedRecipeIds(allRecipeIds);
+                      setSelectionMode(true);
                       setShowBulkAddDialog(true);
                     }}
                     className="group relative overflow-hidden"
@@ -749,10 +752,7 @@ const MiPlan = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    setSelectionMode(false);
-                    setSelectedRecipeIds(new Set());
-                  }}
+                  onClick={handleCancelSelection}
                   className="group hover:bg-destructive/10 hover:text-destructive transition-all"
                 >
                   <X className="h-4 w-4 mr-1 group-hover:rotate-90 transition-transform" />
