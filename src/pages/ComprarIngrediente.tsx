@@ -3,14 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Store, TrendingDown, Truck } from "lucide-react";
-
-type Brand = {
-  id: string;
-  name: string;
-};
 
 type PriceInfo = {
   id: string;
@@ -28,8 +23,6 @@ const ComprarIngrediente = () => {
   const listId = searchParams.get("lista") || "";
   
   const [loading, setLoading] = useState(true);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [prices, setPrices] = useState<PriceInfo[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,15 +33,6 @@ const ComprarIngrediente = () => {
 
   const loadBrandsAndPrices = async () => {
     try {
-      // Load all brands
-      const { data: brandsData, error: brandsError } = await supabase
-        .from("brands")
-        .select("*")
-        .order("name");
-
-      if (brandsError) throw brandsError;
-      setBrands(brandsData || []);
-
       // Load prices for this product
       // First get the product ID
       const { data: productData } = await supabase
@@ -90,11 +74,6 @@ const ComprarIngrediente = () => {
       }));
 
       setPrices(formattedPrices);
-
-      // Auto-select "ANY" if prices are available
-      if (formattedPrices.length > 0) {
-        setSelectedBrand("ANY");
-      }
     } catch (error: any) {
       console.error("Error loading data:", error);
       toast({
@@ -107,13 +86,9 @@ const ComprarIngrediente = () => {
     }
   };
 
-  const filteredPrices = selectedBrand
-    ? selectedBrand === "ANY"
-      ? prices.sort((a, b) => a.price - b.price)
-      : prices.filter(p => p.brand_id === selectedBrand).sort((a, b) => a.price - b.price)
-    : [];
-
-  const cheapestPrice = filteredPrices.length > 0 ? filteredPrices[0].price : 0;
+  // Sort all prices by cheapest first
+  const sortedPrices = [...prices].sort((a, b) => a.price - b.price);
+  const cheapestPrice = sortedPrices.length > 0 ? sortedPrices[0].price : 0;
 
   if (loading) {
     return (
@@ -138,33 +113,15 @@ const ComprarIngrediente = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Brand Selection */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Selecciona la Marca</h2>
-          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger>
-              <SelectValue placeholder="Elige una marca" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ANY">CUALQUIER MARCA (Mejores Precios)</SelectItem>
-              {brands.map((brand) => (
-                <SelectItem key={brand.id} value={brand.id}>
-                  {brand.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Card>
-
-        {/* ANY Brand Info */}
-        {selectedBrand === "ANY" && filteredPrices.length > 0 && (
+        {/* Price Info Banner */}
+        {sortedPrices.length > 0 && (
           <Card className="p-6 mb-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-200 dark:border-green-800">
             <div className="flex items-start gap-3">
               <TrendingDown className="h-6 w-6 text-green-600 dark:text-green-400 mt-1" />
               <div>
-                <h2 className="text-xl font-semibold mb-2">Mostrando Todas las Marcas</h2>
+                <h2 className="text-xl font-semibold mb-2">Precios Disponibles</h2>
                 <p className="text-sm text-foreground">
-                  Comparando precios de todas las marcas disponibles, ordenados de menor a mayor precio para que puedas ahorrar más.
+                  Mostrando todos los precios disponibles ordenados de menor a mayor para que encuentres la mejor opción.
                 </p>
               </div>
             </div>
@@ -172,7 +129,7 @@ const ComprarIngrediente = () => {
         )}
 
         {/* Delivery Option */}
-        {selectedBrand && filteredPrices.length > 0 && (
+        {sortedPrices.length > 0 && (
           <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-2 border-blue-200 dark:border-blue-800">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -197,21 +154,21 @@ const ComprarIngrediente = () => {
         )}
 
         {/* Price Comparison */}
-        {filteredPrices.length > 0 ? (
+        {sortedPrices.length > 0 ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Comparación de Precios</h2>
-              {filteredPrices.length > 1 && (
+              {sortedPrices.length > 1 && (
                 <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
                   <TrendingDown className="h-4 w-4" />
                   <span>
-                    Ahorra hasta €{(filteredPrices[filteredPrices.length - 1].price - cheapestPrice).toFixed(2)}
+                    Ahorra hasta €{(sortedPrices[sortedPrices.length - 1].price - cheapestPrice).toFixed(2)}
                   </span>
                 </div>
               )}
             </div>
 
-            {filteredPrices.map((price, index) => (
+            {sortedPrices.map((price, index) => (
               <Card
                 key={price.id}
                 className={`p-4 transition-all ${
@@ -245,20 +202,12 @@ const ComprarIngrediente = () => {
               </Card>
             ))}
           </div>
-        ) : selectedBrand ? (
+        ) : (
           <Card className="p-8 text-center">
             <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No hay precios disponibles</h3>
             <p className="text-muted-foreground">
-              No se encontraron precios para esta marca del producto seleccionado
-            </p>
-          </Card>
-        ) : (
-          <Card className="p-8 text-center">
-            <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Selecciona una marca</h3>
-            <p className="text-muted-foreground">
-              Elige una marca para ver los precios disponibles
+              No se encontraron precios para este producto
             </p>
           </Card>
         )}
