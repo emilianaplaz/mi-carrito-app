@@ -23,7 +23,6 @@ import { CartButton } from "@/components/Cart";
 import { BCVRate } from "@/components/BCVRate";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
-import cartIcon from "@/assets/cart-icon.png";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
@@ -694,7 +693,7 @@ const ComprarLista = () => {
                               size="lg"
                               onClick={() => handleAddToCart(rec.supermarket, rec.items)}
                             >
-                              <img src={cartIcon} alt="Cart" className="mr-2 h-5 w-5 object-contain" />
+                              <ShoppingCart className="mr-2 h-5 w-5" />
                               Agregar Todo al Carrito
                             </Button>
                           </div>
@@ -805,7 +804,7 @@ const ComprarLista = () => {
                                   handleAddToCart(supermarket, itemsForCart);
                                 }}
                               >
-                                <img src={cartIcon} alt="Cart" className="mr-2 h-5 w-5 object-contain" />
+                                <ShoppingCart className="mr-2 h-5 w-5" />
                                 Agregar al Carrito
                               </Button>
                             </div>
@@ -847,7 +846,7 @@ const ComprarLista = () => {
                                     <span className="font-semibold text-green-700 dark:text-green-400">
                                       ${prod.price.toFixed(2)}
                                     </span>
-                                    <img src={cartIcon} alt="Cart" className="h-4 w-4 object-contain opacity-50" />
+                                    <ShoppingCart className="h-4 w-4 opacity-50" />
                                   </div>
                                 </div>
                               ))}

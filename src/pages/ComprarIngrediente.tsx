@@ -13,7 +13,6 @@ import { CartButton } from "@/components/Cart";
 import { BCVRate } from "@/components/BCVRate";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
-import cartIcon from "@/assets/cart-icon.png";
 type PriceInfo = {
   id: string;
   price: number;
@@ -254,7 +253,7 @@ const ComprarIngrediente = () => {
                         handleAddToCart();
                       }}
                     >
-                      <img src={cartIcon} alt="Cart" className="mr-2 h-5 w-5 object-contain" />
+                      <ShoppingCart className="mr-2 h-5 w-5" />
                       Agregar al Carrito
                     </Button>
                   )}

@@ -8,7 +8,6 @@ import { ChefHat, ArrowLeft, Calendar as CalendarIcon, Clock, ShoppingCart } fro
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/mi-carrit-logo.png";
 import loadingCart from "@/assets/loading-cart.png";
-import cartIcon from "@/assets/cart-icon.png";
 import { CartButton } from "@/components/Cart";
 import { BCVRate } from "@/components/BCVRate";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addDays, addWeeks, isWithinInterval, isBefore, isAfter, getDay, startOfWeek } from "date-fns";
@@ -334,7 +333,7 @@ const Calendar = () => {
                       {frequencyLabel(list.automation_frequency)}
                     </Badge>
                   </div>
-                  <img src={cartIcon} alt="Cart" className="h-5 w-5 object-contain ml-4 opacity-50" />
+                  <ShoppingCart className="h-5 w-5 ml-4 opacity-50" />
                 </div>
               ))}
             </div>
