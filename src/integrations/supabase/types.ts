@@ -107,6 +107,51 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          address: Json
+          created_at: string
+          delivery_fee: number
+          estimated_delivery: string | null
+          id: string
+          items: Json
+          payment_method: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: Json
+          created_at?: string
+          delivery_fee: number
+          estimated_delivery?: string | null
+          id?: string
+          items?: Json
+          payment_method?: string
+          status?: string
+          subtotal: number
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: Json
+          created_at?: string
+          delivery_fee?: number
+          estimated_delivery?: string | null
+          id?: string
+          items?: Json
+          payment_method?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pantry_items: {
         Row: {
           category: string | null
