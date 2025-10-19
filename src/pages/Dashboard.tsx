@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import logo from "@/assets/mi-carrit-logo.png";
-import loadingCart from "@/assets/loading-cart.jpeg";
+import loadingCart from "@/assets/loading-cart.png";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
