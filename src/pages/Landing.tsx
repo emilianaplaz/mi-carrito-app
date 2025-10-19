@@ -67,22 +67,16 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-20">
-        {/* Hero Banner Image */}
-        <div className="w-full">
-          <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
-        </div>
-        
-        {/* Hero Text Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center px-4">
-          <div className="max-w-4xl mx-auto text-center space-y-6 animate-fade-in">
-            <h1 className="text-5xl lg:text-6xl font-bold leading-tight text-white drop-shadow-lg">
+      <section className="px-4 bg-background pt-20">
+        <div className="container mx-auto">
+          <div className="max-w-4xl mx-auto text-center space-y-6 animate-fade-in pt-2">
+            <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
               Planifica tu nutrición,{" "}
               <span className="text-primary">
                 optimiza tu presupuesto
               </span>
             </h1>
-            <p className="text-xl text-white drop-shadow-lg">
+            <p className="text-xl text-muted-foreground">
               Menús personalizados, autogeneración de listas de compra, comparación de precios entre supermercados y
               gestión inteligente de tu despensa. Todo en una sola plataforma.
             </p>
@@ -90,6 +84,13 @@ const Landing = () => {
               Comenzar Ahora
             </Button>
           </div>
+        </div>
+      </section>
+
+      {/* Hero Banner Image */}
+      <section className="-mt-8 relative">
+        <div className="w-full">
+          <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
         </div>
       </section>
 
