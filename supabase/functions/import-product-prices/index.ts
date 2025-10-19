@@ -12,22 +12,66 @@ serve(async (req) => {
   }
 
   try {
+    const { csvData } = await req.json();
+    
+    if (!csvData) {
+      return new Response(
+        JSON.stringify({ error: 'No CSV data provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log('Starting product prices import...');
 
-    // Sample of the data - you'll need to add ALL the rows from the Excel
-    const products = [
-      {subcategoria: "Aceites De Coco", producto: "Aceite De Coco Virgen Kaldini Tarro Vidrio × 500Ml", marca: "Kaldini", presentacion: "500 ml", mercado: "Central Madeirense", precio: 16.68},
-      {subcategoria: "Aceites De Coco", producto: "Aceite De Coco Virgen Kaldini Tarro Vidrio × 500Ml", marca: "Kaldini", presentacion: "500 ml", mercado: "Farmatodo", precio: 17.17},
-      {subcategoria: "Aceites De Coco", producto: "Aceite De Coco Virgen Kaldini Tarro Vidrio × 500Ml", marca: "Kaldini", presentacion: "500 ml", mercado: "Plansuarez", precio: 13.87},
-      // Add all other products here...
-    ];
+    // Parse CSV - skip header row
+    const lines = csvData.trim().split('\n');
+    const products = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue;
+      
+      // Parse CSV line (handle commas in quoted fields)
+      const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+      if (!matches || matches.length < 6) continue;
+      
+      const [subcategoria, producto, marca, presentacion, mercado, precioStr] = matches.map(
+        (field: string) => field.replace(/^"|"$/g, '').trim()
+      );
+      
+      const precio = parseFloat(precioStr);
+      if (isNaN(precio)) continue;
+      
+      products.push({
+        subcategoria,
+        producto,
+        marca,
+        presentacion,
+        mercado,
+        precio
+      });
+    }
 
-    // Insert in batches of 1000
-    const batchSize = 1000;
+    console.log(`Parsed ${products.length} products from CSV`);
+
+    // Clear existing data
+    console.log('Clearing existing product_prices data...');
+    const { error: deleteError } = await supabase
+      .from('product_prices')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+    
+    if (deleteError) {
+      console.error('Delete error:', deleteError);
+      throw deleteError;
+    }
+
+    // Insert in batches of 500 (Supabase limit)
+    const batchSize = 500;
     let imported = 0;
     
     for (let i = 0; i < products.length; i += batchSize) {
@@ -37,7 +81,7 @@ serve(async (req) => {
         .insert(batch);
       
       if (error) {
-        console.error('Batch error:', error);
+        console.error('Batch error at row', i, ':', error);
         throw error;
       }
       

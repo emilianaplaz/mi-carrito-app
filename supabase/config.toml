@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.list-recommendations]
 verify_jwt = false
+
+[functions.import-product-prices]
+verify_jwt = false
