@@ -555,7 +555,7 @@ const MiPlan = () => {
 
 
   const handleEditPreferences = () => {
-    navigate("/test-preferencias");
+    navigate("/editar-preferencias");
   };
 
   if (loading) {

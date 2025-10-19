@@ -36,6 +36,7 @@ const Dashboard = () => {
   const [recipePrefs, setRecipePrefs] = useState<Record<string, boolean>>({});
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [showPreferencesPrompt, setShowPreferencesPrompt] = useState(false);
+  const [hasPreferences, setHasPreferences] = useState(false);
   const navigate = useNavigate();
   const {
     toast
@@ -61,6 +62,15 @@ const Dashboard = () => {
       if (!session) {
         navigate("/auth");
       } else {
+        // Check if user has preferences
+        const { data: prefs } = await supabase
+          .from("user_preferences")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+        
+        setHasPreferences(!!prefs);
+        
         // Load today's recipes
         await loadTodayRecipes(session.user.id);
         setLoading(false);
@@ -207,10 +217,10 @@ const Dashboard = () => {
     description: "Explora y guarda recetas",
     path: "/recetas"
   }, {
-    title: "Test Preferencias",
+    title: hasPreferences ? "Editar Preferencias" : "Test Preferencias",
     icon: ClipboardList,
-    description: "Define tus preferencias alimentarias",
-    path: "/test-preferencias"
+    description: hasPreferences ? "Actualizar tus preferencias" : "Define tus preferencias alimentarias",
+    path: hasPreferences ? "/editar-preferencias" : "/test-preferencias"
   }];
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
@@ -246,7 +256,7 @@ const Dashboard = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/test-preferencias")} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => navigate("/editar-preferencias")} className="cursor-pointer">
                   <ClipboardList className="mr-2 h-4 w-4" />
                   <span>Editar Preferencias</span>
                 </DropdownMenuItem>

@@ -13,6 +13,7 @@ import MiPlan from "./pages/MiPlan";
 import Listas from "./pages/Listas";
 import Recetas from "./pages/Recetas";
 import TestPreferencias from "./pages/TestPreferencias";
+import EditPreferencias from "./pages/EditPreferencias";
 import ComprarIngrediente from "./pages/ComprarIngrediente";
 import ComprarLista from "./pages/ComprarLista";
 import DeliveryOrder from "./pages/DeliveryOrder";
@@ -52,6 +53,7 @@ function App() {
             <Route path="/import-prices" element={<ImportPrices />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/test-preferencias" element={<TestPreferencias />} />
+            <Route path="/editar-preferencias" element={<EditPreferencias />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -19,7 +19,6 @@ import {
   Wallet,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
 import { z } from "zod";
 import logo from "@/assets/mi-carrit-logo.png";
 
@@ -36,12 +35,9 @@ const preferencesSchema = z.object({
   budget: z.number().min(10, "El presupuesto debe ser al menos $10").optional(),
 });
 
-const TestPreferencias = () => {
+const EditPreferencias = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [hasExistingPreferences, setHasExistingPreferences] = useState(false);
-  const [regeneratePlan, setRegeneratePlan] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -58,11 +54,10 @@ const TestPreferencias = () => {
     budget: undefined as number | undefined,
   });
 
-  const steps = [
+  const sections = [
     {
       title: "Duración del Plan",
       icon: Calendar,
-      description: "¿Cuánto tiempo quieres planificar?",
       field: "planDuration" as const,
       single: true,
       options: [
@@ -71,17 +66,8 @@ const TestPreferencias = () => {
       ],
     },
     {
-      title: "Opciones de Comidas",
-      icon: UtensilsCrossed,
-      description: "¿Cuántas opciones diferentes quieres para cada comida?",
-      field: "planDuration" as const,
-      isNumberInput: true,
-      options: [],
-    },
-    {
       title: "Restricciones Dietéticas",
       icon: Leaf,
-      description: "Selecciona todas las que apliquen",
       field: "dietaryRestrictions" as const,
       options: [
         { value: "vegetariano", label: "Vegetariano", icon: "🥗" },
@@ -96,7 +82,6 @@ const TestPreferencias = () => {
     {
       title: "Alergias",
       icon: Apple,
-      description: "Indica tus alergias alimentarias",
       field: "allergies" as const,
       options: [
         { value: "nueces", label: "Nueces", icon: "🥜" },
@@ -111,7 +96,6 @@ const TestPreferencias = () => {
     {
       title: "Tiempo de Cocina",
       icon: Clock,
-      description: "¿Cuánto tiempo tienes para cocinar?",
       field: "cookingTime" as const,
       options: [
         { value: "15-min", label: "15 minutos", icon: "⚡" },
@@ -124,7 +108,6 @@ const TestPreferencias = () => {
     {
       title: "Objetivos de Salud",
       icon: Target,
-      description: "¿Qué quieres lograr?",
       field: "healthGoals" as const,
       options: [
         { value: "perder-peso", label: "Perder Peso", icon: "📉" },
@@ -138,7 +121,6 @@ const TestPreferencias = () => {
     {
       title: "Preferencias de Cocina",
       icon: Utensils,
-      description: "¿Qué tipos de cocina prefieres?",
       field: "cuisinePreferences" as const,
       options: [
         { value: "mexicana", label: "Mexicana", icon: "🌮" },
@@ -150,18 +132,10 @@ const TestPreferencias = () => {
         { value: "todas", label: "Todas", icon: "🌍" },
       ],
     },
-    {
-      title: "Presupuesto Semanal",
-      icon: Wallet,
-      description: "¿Cuál es tu presupuesto para compras?",
-      field: "budget" as const,
-      isBudgetInput: true,
-      options: [],
-    },
   ];
 
   useEffect(() => {
-    const checkUserAndLoadPreferences = async () => {
+    const loadPreferences = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -170,7 +144,6 @@ const TestPreferencias = () => {
         return;
       }
 
-      // Load existing preferences if they exist
       try {
         const { data: existingPrefs, error } = await supabase
           .from("user_preferences")
@@ -179,8 +152,6 @@ const TestPreferencias = () => {
           .single();
 
         if (!error && existingPrefs) {
-          setHasExistingPreferences(true);
-          // Pre-populate form with existing preferences
           setPreferences({
             planDuration: existingPrefs.plan_duration || "1_week",
             breakfastOptions: existingPrefs.breakfast_options || 3,
@@ -197,19 +168,23 @@ const TestPreferencias = () => {
               : [],
             budget: existingPrefs.budget || undefined,
           });
-
-          toast({
-            title: "Preferencias cargadas",
-            description: "Puedes editar tus preferencias existentes",
-          });
+        } else {
+          // No preferences found, redirect to test
+          navigate("/test-preferencias");
+          return;
         }
       } catch (error) {
         console.error("Error loading preferences:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar tus preferencias",
+          variant: "destructive",
+        });
       }
 
       setLoading(false);
     };
-    checkUserAndLoadPreferences();
+    loadPreferences();
   }, [navigate, toast]);
 
   const toggleOption = (field: keyof typeof preferences, value: string, single = false) => {
@@ -230,27 +205,6 @@ const TestPreferencias = () => {
       ...preferences,
       [field]: value,
     });
-  };
-
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      // On final step, if has existing preferences, show option dialog
-      if (hasExistingPreferences) {
-        // Will be handled by the buttons in the UI
-        return;
-      } else {
-        // First time, always generate plan
-        handleSubmit(true);
-      }
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
   };
 
   const handleSubmit = async (shouldGeneratePlan: boolean) => {
@@ -292,7 +246,7 @@ const TestPreferencias = () => {
           title: "¡Preferencias guardadas!",
           description: "Tus preferencias han sido actualizadas",
         });
-        navigate("/editar-preferencias");
+        navigate("/dashboard");
         return;
       }
 
@@ -306,15 +260,11 @@ const TestPreferencias = () => {
         body: { preferences: validated },
       });
 
-      console.log("Plan generation response:", { planData, planGenError });
-
       if (planGenError) {
-        console.error("Plan generation error:", planGenError);
         throw new Error(`Error generando plan: ${planGenError.message || "Error desconocido"}`);
       }
 
       if (!planData?.success) {
-        console.error("Plan generation failed:", planData);
         throw new Error(planData?.error || "No se pudo generar el plan de comidas");
       }
 
@@ -326,7 +276,6 @@ const TestPreferencias = () => {
       });
 
       if (planError) {
-        console.error("Error saving plan:", planError);
         throw planError;
       }
 
@@ -365,10 +314,6 @@ const TestPreferencias = () => {
     );
   }
 
-  const currentStepData = steps[currentStep];
-  const Icon = currentStepData.icon;
-  const progress = ((currentStep + 1) / steps.length) * 100;
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
@@ -379,7 +324,7 @@ const TestPreferencias = () => {
             </Button>
             <div className="flex items-center gap-2">
               <ChefHat className="h-5 w-5 text-primary" />
-              <span className="text-lg font-bold">Preferencias</span>
+              <span className="text-lg font-bold">Editar Preferencias</span>
             </div>
           </div>
 
@@ -391,43 +336,17 @@ const TestPreferencias = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Editing info banner */}
-        {hasExistingPreferences && currentStep === 0 && (
-          <Card className="p-4 mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
-              ℹ️ Estás editando tus preferencias existentes. Puedes navegar por las diferentes secciones y actualizar lo
-              que necesites.
-            </p>
-          </Card>
-        )}
-
-        {/* Progress Bar */}
-        <div className="mb-8 animate-fade-in">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>
-              Paso {currentStep + 1} de {steps.length}
-            </span>
-            <span>{Math.round(progress)}% completado</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-
-        {/* Question Card */}
-        <Card className="p-8 mb-6 animate-scale-in">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <Icon className="h-8 w-8 text-primary" />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="space-y-6">
+          {/* Meal Options */}
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-primary/10 rounded-full">
+                <UtensilsCrossed className="h-6 w-6 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold">Opciones de Comidas</h2>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">{currentStepData.title}</h2>
-              <p className="text-muted-foreground">{currentStepData.description}</p>
-            </div>
-          </div>
-
-          {/* Options Grid or Number Inputs */}
-          {currentStepData.isNumberInput ? (
-            <div className="space-y-6 max-w-md mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="breakfast">Desayuno</Label>
                 <Input
@@ -462,10 +381,19 @@ const TestPreferencias = () => {
                 />
               </div>
             </div>
-          ) : currentStepData.isBudgetInput ? (
-            <div className="space-y-6 max-w-md mx-auto">
+          </Card>
+
+          {/* Budget */}
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-primary/10 rounded-full">
+                <Wallet className="h-6 w-6 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold">Presupuesto Semanal</h2>
+            </div>
+            <div className="max-w-md">
               <div className="space-y-2">
-                <Label htmlFor="budget">Presupuesto Semanal ($)</Label>
+                <Label htmlFor="budget">Presupuesto ($)</Label>
                 <Input
                   id="budget"
                   type="number"
@@ -480,65 +408,68 @@ const TestPreferencias = () => {
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {currentStepData.options.map((option) => {
-                const isSelected = currentStepData.single
-                  ? preferences[currentStepData.field] === option.value
-                  : (preferences[currentStepData.field] as string[]).includes(option.value);
+          </Card>
 
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => toggleOption(currentStepData.field, option.value, currentStepData.single)}
-                    className={`
-                      relative p-4 rounded-lg border-2 transition-all duration-300
-                      ${
-                        isSelected
-                          ? "border-primary bg-primary/10 shadow-md"
-                          : "border-border hover:border-primary/50 hover:bg-accent/50"
-                      }
-                    `}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{option.icon}</span>
-                      <span className="font-medium text-left">{option.label}</span>
-                    </div>
-                    {isSelected && (
-                      <div className="absolute top-2 right-2">
-                        <Check className="h-5 w-5 text-primary" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+          {/* All other sections */}
+          {sections.map((section) => {
+            const Icon = section.icon;
+            return (
+              <Card key={section.field} className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-primary/10 rounded-full">
+                    <Icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold">{section.title}</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {section.options.map((option) => {
+                    const isSelected = section.single
+                      ? preferences[section.field] === option.value
+                      : (preferences[section.field] as string[]).includes(option.value);
 
-        {/* Navigation Buttons */}
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={handleBack} disabled={currentStep === 0} className="flex-1">
-            Atrás
-          </Button>
-          {currentStep === steps.length - 1 && hasExistingPreferences ? (
-            <>
-              <Button variant="outline" onClick={() => handleSubmit(false)} disabled={saving} className="flex-1">
-                {saving ? "Guardando..." : "Solo Guardar"}
-              </Button>
-              <Button onClick={() => handleSubmit(true)} disabled={saving} className="flex-1">
-                {saving ? "Generando..." : "Guardar y Regenerar Plan"}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={handleNext} disabled={saving} className="flex-1">
-              {saving ? "Guardando..." : currentStep === steps.length - 1 ? "Finalizar" : "Siguiente"}
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => toggleOption(section.field, option.value, section.single)}
+                        className={`
+                          relative p-4 rounded-lg border-2 transition-all duration-300
+                          ${
+                            isSelected
+                              ? "border-primary bg-primary/10 shadow-md"
+                              : "border-border hover:border-primary/50 hover:bg-accent/50"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{option.icon}</span>
+                          <span className="font-medium text-left">{option.label}</span>
+                        </div>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2">
+                            <Check className="h-5 w-5 text-primary" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            );
+          })}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 sticky bottom-4 bg-background p-4 border border-border rounded-lg shadow-lg">
+            <Button variant="outline" onClick={() => handleSubmit(false)} disabled={saving} className="flex-1">
+              {saving ? "Guardando..." : "Guardar Cambios"}
             </Button>
-          )}
+            <Button onClick={() => handleSubmit(true)} disabled={saving} className="flex-1">
+              {saving ? "Generando..." : "Guardar y Regenerar Plan"}
+            </Button>
+          </div>
         </div>
       </main>
     </div>
   );
 };
 
-export default TestPreferencias;
+export default EditPreferencias;
