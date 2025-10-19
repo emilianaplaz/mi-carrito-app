@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2 } from "lucide-react";
+import { ChefHat, ArrowLeft, Plus, Star, Trash2, ShoppingCart, Eye, Edit2, Calendar as CalendarIcon } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
 import { CartButton } from "@/components/Cart";
 
@@ -392,6 +392,14 @@ const Listas = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/calendar")}
+              className="flex items-center gap-2"
+            >
+              <CalendarIcon className="h-4 w-4" />
+              Calendario
+            </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ChefHat className="h-10 w-10" />

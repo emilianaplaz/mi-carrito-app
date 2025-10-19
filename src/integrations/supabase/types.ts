@@ -52,29 +52,41 @@ export type Database = {
       }
       grocery_lists: {
         Row: {
+          automation_frequency: string | null
           created_at: string
           id: string
+          is_automated: boolean | null
           is_favorite: boolean | null
           items: Json | null
+          last_executed_date: string | null
           name: string
+          next_scheduled_date: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          automation_frequency?: string | null
           created_at?: string
           id?: string
+          is_automated?: boolean | null
           is_favorite?: boolean | null
           items?: Json | null
+          last_executed_date?: string | null
           name: string
+          next_scheduled_date?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          automation_frequency?: string | null
           created_at?: string
           id?: string
+          is_automated?: boolean | null
           is_favorite?: boolean | null
           items?: Json | null
+          last_executed_date?: string | null
           name?: string
+          next_scheduled_date?: string | null
           updated_at?: string
           user_id?: string
         }

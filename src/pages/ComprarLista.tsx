@@ -4,11 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart, AlertCircle, X } from "lucide-react";
+import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart, AlertCircle, X, Clock, Calendar as CalendarIcon, ToggleLeft, ToggleRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, addDays, addWeeks, addMonths } from "date-fns";
+import { es } from "date-fns/locale";
 type GroceryItem = {
   name: string;
   brand: string;
@@ -19,6 +25,9 @@ type GroceryList = {
   id: string;
   name: string;
   items: GroceryItem[];
+  is_automated?: boolean;
+  automation_frequency?: string;
+  next_scheduled_date?: string;
 };
 type ItemWithPrice = {
   item: string;
@@ -65,6 +74,10 @@ const ComprarLista = () => {
   const [userBudget, setUserBudget] = useState<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [showMissingAlert, setShowMissingAlert] = useState(true);
+  const [isAutomated, setIsAutomated] = useState(false);
+  const [automationFrequency, setAutomationFrequency] = useState<string>("weekly");
+  const [nextScheduledDate, setNextScheduledDate] = useState<Date | undefined>(undefined);
+  const [showAutomationSettings, setShowAutomationSettings] = useState(false);
   
   const navigate = useNavigate();
   const {
@@ -122,8 +135,20 @@ const ComprarLista = () => {
       if (error) throw error;
       const formattedList: GroceryList = {
         ...data,
-        items: Array.isArray(data.items) ? data.items as GroceryItem[] : []
+        items: Array.isArray(data.items) ? data.items as GroceryItem[] : [],
+        is_automated: data.is_automated,
+        automation_frequency: data.automation_frequency,
+        next_scheduled_date: data.next_scheduled_date
       };
+
+      // Set automation state
+      if (formattedList.is_automated) {
+        setIsAutomated(true);
+        setAutomationFrequency(formattedList.automation_frequency || "weekly");
+        if (formattedList.next_scheduled_date) {
+          setNextScheduledDate(new Date(formattedList.next_scheduled_date));
+        }
+      }
 
       // Initialize brand preferences from list items
       const initialPreferences: Record<string, string> = {};
@@ -247,6 +272,68 @@ const ComprarLista = () => {
       loadRecommendations(list, userBudget || undefined);
     }
   };
+
+  const calculateNextDate = (frequency: string, fromDate?: Date): Date => {
+    const startDate = fromDate || new Date();
+    switch (frequency) {
+      case "weekly":
+        return addWeeks(startDate, 1);
+      case "bi-weekly":
+        return addWeeks(startDate, 2);
+      case "monthly":
+        return addMonths(startDate, 1);
+      default:
+        return addWeeks(startDate, 1);
+    }
+  };
+
+  const handleSaveAutomation = async () => {
+    if (!list) return;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    try {
+      const nextDate = isAutomated
+        ? (nextScheduledDate || calculateNextDate(automationFrequency))
+        : null;
+
+      const { error } = await supabase
+        .from("grocery_lists")
+        .update({
+          is_automated: isAutomated,
+          automation_frequency: isAutomated ? automationFrequency : null,
+          next_scheduled_date: nextDate ? nextDate.toISOString() : null,
+        })
+        .eq("id", list.id);
+
+      if (error) throw error;
+
+      toast({
+        title: isAutomated ? "Automatización activada" : "Automatización desactivada",
+        description: isAutomated
+          ? `Tu lista se agregará automáticamente cada ${
+              automationFrequency === "weekly"
+                ? "semana"
+                : automationFrequency === "bi-weekly"
+                ? "2 semanas"
+                : "mes"
+            }`
+          : "La automatización ha sido desactivada",
+      });
+
+      setShowAutomationSettings(false);
+    } catch (error: any) {
+      console.error("Error saving automation:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la configuración",
+        variant: "destructive",
+      });
+    }
+  };
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <ChefHat className="h-12 w-12 text-primary animate-pulse" />
@@ -359,6 +446,154 @@ const ComprarLista = () => {
         </>
       )}
     </Card>
+
+        {/* Automation Settings Section */}
+        <Card className="p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-6 w-6 text-primary" />
+              <div>
+                <h2 className="text-xl font-bold">Automatización de Lista</h2>
+                <p className="text-sm text-muted-foreground">
+                  Programa esta lista para agregarla automáticamente al carrito
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={isAutomated}
+                onCheckedChange={(checked) => {
+                  setIsAutomated(checked);
+                  setShowAutomationSettings(checked);
+                }}
+              />
+              <Label htmlFor="automation-toggle">
+                {isAutomated ? "Activado" : "Desactivado"}
+              </Label>
+            </div>
+          </div>
+
+          {showAutomationSettings && (
+            <div className="space-y-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Frecuencia</Label>
+                  <Select value={automationFrequency} onValueChange={setAutomationFrequency}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona frecuencia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="bi-weekly">Quincenal (cada 2 semanas)</SelectItem>
+                      <SelectItem value="monthly">Mensual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Primera fecha programada</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {nextScheduledDate ? (
+                          format(nextScheduledDate, "PPP", { locale: es })
+                        ) : (
+                          <span>Selecciona una fecha</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={nextScheduledDate}
+                        onSelect={setNextScheduledDate}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <CalendarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  {isAutomated && nextScheduledDate ? (
+                    <>
+                      Esta lista se agregará automáticamente al carrito el{" "}
+                      <strong>{format(nextScheduledDate, "PPP", { locale: es })}</strong> y luego cada{" "}
+                      {automationFrequency === "weekly"
+                        ? "semana"
+                        : automationFrequency === "bi-weekly"
+                        ? "2 semanas"
+                        : "mes"}
+                    </>
+                  ) : (
+                    "Selecciona una fecha y frecuencia para activar"
+                  )}
+                </p>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAutomationSettings(false);
+                    setIsAutomated(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveAutomation} disabled={!nextScheduledDate}>
+                  Guardar Automatización
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/calendar")}
+                  className="flex items-center gap-2"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  Ver Calendario
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {isAutomated && !showAutomationSettings && nextScheduledDate && (
+            <div className="pt-4 border-t">
+              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="font-medium text-green-800 dark:text-green-300">
+                      Próxima programación:{" "}
+                      {format(nextScheduledDate, "PPP", { locale: es })}
+                    </p>
+                    <p className="text-sm text-green-700 dark:text-green-400">
+                      Frecuencia:{" "}
+                      {automationFrequency === "weekly"
+                        ? "Semanal"
+                        : automationFrequency === "bi-weekly"
+                        ? "Quincenal"
+                        : "Mensual"}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAutomationSettings(true)}
+                >
+                  Editar
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
 
         {/* Loading state */}
         {loadingRecommendations ? <Card className="p-6 mb-6">
