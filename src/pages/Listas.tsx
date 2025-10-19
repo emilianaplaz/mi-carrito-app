@@ -41,7 +41,7 @@ const Listas = () => {
   const [editingList, setEditingList] = useState<GroceryList | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [allBrands, setAllBrands] = useState<string[]>([]);
+  const [subcategoryBrands, setSubcategoryBrands] = useState<Map<string, string[]>>(new Map());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -70,14 +70,42 @@ const Listas = () => {
       if (subcatsError) throw subcatsError;
       setSubcategories((subcatsData || []).map((s: any) => s.name));
       
-      // Fetch brands
-      const { data: brandsData, error: brandsError } = await supabase
-        .from("brands")
-        .select("name")
-        .order("name", { ascending: true });
+      // Fetch all product prices to build subcategory -> brands mapping
+      const brandMap = new Map<string, Set<string>>();
+      const pageSize = 1000;
+      let from = 0;
       
-      if (brandsError) throw brandsError;
-      setAllBrands((brandsData || []).map((b: any) => b.name));
+      while (true) {
+        const { data: pricesPage, error: pricesError } = await supabase
+          .from("product_prices")
+          .select("subcategoria, marca")
+          .range(from, from + pageSize - 1);
+        
+        if (pricesError) throw pricesError;
+        if (!pricesPage || pricesPage.length === 0) break;
+
+        pricesPage.forEach((row: any) => {
+          const subcat = row.subcategoria;
+          const brand = row.marca;
+          if (!subcat || !brand) return;
+          
+          if (!brandMap.has(subcat)) {
+            brandMap.set(subcat, new Set());
+          }
+          brandMap.get(subcat)!.add(brand);
+        });
+
+        if (pricesPage.length < pageSize) break;
+        from += pageSize;
+      }
+
+      // Convert Set to Array and create final map
+      const finalMap = new Map<string, string[]>();
+      brandMap.forEach((brands, subcat) => {
+        finalMap.set(subcat, Array.from(brands).sort());
+      });
+      
+      setSubcategoryBrands(finalMap);
     } catch (error) {
       console.error("Error loading subcategories and brands:", error);
       toast({
@@ -383,7 +411,7 @@ const Listas = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                          {allBrands.map((brand) => (
+                          {(subcategoryBrands.get(item.name) || []).map((brand) => (
                             <SelectItem key={brand} value={brand}>
                               {brand}
                             </SelectItem>
@@ -613,7 +641,7 @@ const Listas = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ANY">CUALQUIER MARCA</SelectItem>
-                      {allBrands.map((brand) => (
+                      {(subcategoryBrands.get(item.name) || []).map((brand) => (
                         <SelectItem key={brand} value={brand}>
                           {brand}
                         </SelectItem>
