@@ -16,6 +16,7 @@ import {
   Check,
   Calendar,
   UtensilsCrossed,
+  Wallet,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
@@ -32,6 +33,7 @@ const preferencesSchema = z.object({
   cookingTime: z.string().min(1, "Por favor selecciona un tiempo de cocina"),
   healthGoals: z.array(z.string()).min(1, "Por favor selecciona al menos un objetivo"),
   cuisinePreferences: z.array(z.string()),
+  budget: z.number().min(10, "El presupuesto debe ser al menos 10€").optional(),
 });
 
 const TestPreferencias = () => {
@@ -51,6 +53,7 @@ const TestPreferencias = () => {
     cookingTime: "",
     healthGoals: [] as string[],
     cuisinePreferences: [] as string[],
+    budget: undefined as number | undefined,
   });
 
   const steps = [
@@ -145,6 +148,14 @@ const TestPreferencias = () => {
         { value: "todas", label: "Todas", icon: "🌍" },
       ],
     },
+    {
+      title: "Presupuesto Semanal",
+      icon: Wallet,
+      description: "¿Cuál es tu presupuesto para compras?",
+      field: "budget" as const,
+      isBudgetInput: true,
+      options: [],
+    },
   ];
 
   useEffect(() => {
@@ -224,6 +235,7 @@ const TestPreferencias = () => {
         breakfast_options: validated.breakfastOptions,
         lunch_options: validated.lunchOptions,
         dinner_options: validated.dinnerOptions,
+        budget: validated.budget,
       });
 
       if (prefsError) throw prefsError;
@@ -382,6 +394,24 @@ const TestPreferencias = () => {
                   value={preferences.dinnerOptions}
                   onChange={(e) => handleNumberChange("dinnerOptions", parseInt(e.target.value) || 1)}
                 />
+              </div>
+            </div>
+          ) : currentStepData.isBudgetInput ? (
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="space-y-2">
+                <Label htmlFor="budget">Presupuesto Semanal (€)</Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  min={10}
+                  step={5}
+                  placeholder="Ej: 50"
+                  value={preferences.budget || ""}
+                  onChange={(e) => handleNumberChange("budget", parseFloat(e.target.value) || 0)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Las recomendaciones de compra no excederán este presupuesto
+                </p>
               </div>
             </div>
           ) : (

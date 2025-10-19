@@ -60,6 +60,7 @@ const ComprarLista = () => {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [aiSummary, setAiSummary] = useState("");
   const [itemBrandPreferences, setItemBrandPreferences] = useState<Record<string, string>>({});
+  const [userBudget, setUserBudget] = useState<number | null>(null);
   const navigate = useNavigate();
   const {
     toast
@@ -97,6 +98,18 @@ const ComprarLista = () => {
         navigate("/auth");
         return;
       }
+      
+      // Load user budget preference
+      const { data: prefsData } = await supabase
+        .from("user_preferences")
+        .select("budget")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      
+      if (prefsData?.budget) {
+        setUserBudget(prefsData.budget);
+      }
+      
       const {
         data,
         error
@@ -114,7 +127,7 @@ const ComprarLista = () => {
       });
       setItemBrandPreferences(initialPreferences);
       setList(formattedList);
-      await loadRecommendations(formattedList);
+      await loadRecommendations(formattedList, prefsData?.budget);
     } catch (error: any) {
       console.error("Error loading list:", error);
       toast({
@@ -126,7 +139,7 @@ const ComprarLista = () => {
       setLoading(false);
     }
   };
-  const loadRecommendations = async (groceryList: GroceryList) => {
+  const loadRecommendations = async (groceryList: GroceryList, budget?: number) => {
     setLoadingRecommendations(true);
     try {
       // Apply brand preferences to items
@@ -187,7 +200,8 @@ const ComprarLista = () => {
           listName: groceryList.name,
           items: itemsWithPreferences,
           availablePrices: matchedPrices || [],
-          allSupermarkets: (allSupermarkets || []).map((s: any) => s.name)
+          allSupermarkets: (allSupermarkets || []).map((s: any) => s.name),
+          budget: budget || userBudget
         }
       });
       if (error) throw error;
@@ -220,7 +234,7 @@ const ComprarLista = () => {
   };
   const handleRefreshRecommendations = () => {
     if (list) {
-      loadRecommendations(list);
+      loadRecommendations(list, userBudget || undefined);
     }
   };
   if (loading) {
@@ -261,7 +275,14 @@ const ComprarLista = () => {
         {/* Brand Selection Section */}
         <Card className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Preferencias de Marca</h2>
+            <div>
+              <h2 className="text-xl font-bold">Preferencias de Marca</h2>
+              {userBudget && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Presupuesto: <span className="font-semibold text-primary">€{userBudget.toFixed(2)}</span>
+                </p>
+              )}
+            </div>
             
           </div>
           <p className="text-sm text-muted-foreground mb-4">

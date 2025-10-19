@@ -347,6 +347,7 @@ export type Database = {
         Row: {
           allergies: string[] | null
           breakfast_options: number | null
+          budget: number | null
           completed_at: string | null
           cooking_time: string | null
           created_at: string
@@ -363,6 +364,7 @@ export type Database = {
         Insert: {
           allergies?: string[] | null
           breakfast_options?: number | null
+          budget?: number | null
           completed_at?: string | null
           cooking_time?: string | null
           created_at?: string
@@ -379,6 +381,7 @@ export type Database = {
         Update: {
           allergies?: string[] | null
           breakfast_options?: number | null
+          budget?: number | null
           completed_at?: string | null
           cooking_time?: string | null
           created_at?: string
