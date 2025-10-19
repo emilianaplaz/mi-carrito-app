@@ -383,7 +383,7 @@ const ComprarLista = () => {
           </div>
           <div className="flex items-center gap-2 flex-1 justify-end">
             <Button variant="ghost" size="icon" onClick={() => navigate("/calendar")}>
-              <Calendar className="h-10 w-10" />
+              <CalendarIcon className="h-5 w-5" />
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>

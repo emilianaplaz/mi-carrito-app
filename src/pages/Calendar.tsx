@@ -8,7 +8,7 @@ import { ChefHat, ArrowLeft, Calendar as CalendarIcon, Clock, ShoppingCart } fro
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/mi-carrit-logo.png";
 import { CartButton } from "@/components/Cart";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addDays, addWeeks, isWithinInterval, isBefore, isAfter } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addDays, addWeeks, isWithinInterval, isBefore, isAfter, getDay, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
 
 type AutomatedList = {
@@ -133,10 +133,16 @@ const Calendar = () => {
     return listsForThisDay;
   };
 
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({
-    start: startOfMonth(currentMonth),
-    end: endOfMonth(currentMonth),
+    start: monthStart,
+    end: monthEnd,
   });
+  
+  // Calculate empty cells needed before the first day
+  const firstDayOfMonth = getDay(monthStart); // 0 = Sunday, 1 = Monday, etc.
+  const emptyCells = Array(firstDayOfMonth).fill(null);
 
   const previousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
@@ -233,10 +239,16 @@ const Calendar = () => {
               </div>
             ))}
 
+            {/* Empty cells before first day of month */}
+            {emptyCells.map((_, index) => (
+              <div key={`empty-${index}`} className="p-2 min-h-[100px]" />
+            ))}
+            
             {/* Calendar Days */}
             {daysInMonth.map((day) => {
               const listsForDay = getListsForDay(day);
-              const isToday = isSameDay(day, new Date());
+              const today = new Date();
+              const isToday = isSameDay(day, today);
 
               return (
                 <Card
