@@ -256,7 +256,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <CartButton className="h-10 w-10" />
+            <CartButton />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
