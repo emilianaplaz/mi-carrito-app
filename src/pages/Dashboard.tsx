@@ -444,7 +444,7 @@ const Dashboard = () => {
           </div>
 
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <img src={logo} alt="MiCarrit" className="h-28" />
+            <ShoppingCart className="h-12 w-12 text-primary" />
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
