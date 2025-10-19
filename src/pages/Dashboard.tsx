@@ -256,11 +256,11 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <CartButton />
+            <CartButton className="h-10 w-10" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                  <UserIcon className="h-6 w-6" />
+                  <UserIcon className="h-10 w-10" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
