@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Store, Sparkles, Loader2, ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type GroceryItem = {
   name: string;
@@ -66,6 +67,7 @@ const ComprarLista = () => {
   const [itemsWithoutPrices, setItemsWithoutPrices] = useState<MissingItem[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [aiSummary, setAiSummary] = useState("");
+  const [itemBrandPreferences, setItemBrandPreferences] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addItem } = useCart();
@@ -114,6 +116,13 @@ const ComprarLista = () => {
         items: Array.isArray(data.items) ? data.items as GroceryItem[] : []
       };
 
+      // Initialize brand preferences from list items
+      const initialPreferences: Record<string, string> = {};
+      formattedList.items.forEach(item => {
+        initialPreferences[item.name] = item.brand || "ANY";
+      });
+      setItemBrandPreferences(initialPreferences);
+
       setList(formattedList);
       await loadRecommendations(formattedList);
     } catch (error: any) {
@@ -131,6 +140,12 @@ const ComprarLista = () => {
   const loadRecommendations = async (groceryList: GroceryList) => {
     setLoadingRecommendations(true);
     try {
+      // Apply brand preferences to items
+      const itemsWithPreferences = groceryList.items.map(item => ({
+        ...item,
+        brand: itemBrandPreferences[item.name] === "ANY" ? undefined : itemBrandPreferences[item.name]
+      }));
+      
       const itemNames = groceryList.items.map(item => item.name);
 
       // Get all prices for the items in the list by product name
@@ -156,7 +171,7 @@ const ComprarLista = () => {
       const { data, error } = await supabase.functions.invoke('list-recommendations', {
         body: {
           listName: groceryList.name,
-          items: groceryList.items,
+          items: itemsWithPreferences,
           availablePrices: pricesData || [],
           allSupermarkets: (allSupermarkets || []).map((s: any) => s.name),
         }
@@ -183,6 +198,19 @@ const ComprarLista = () => {
       });
     } finally {
       setLoadingRecommendations(false);
+    }
+  };
+
+  const handleBrandChange = (itemName: string, brand: string) => {
+    setItemBrandPreferences(prev => ({
+      ...prev,
+      [itemName]: brand
+    }));
+  };
+
+  const handleRefreshRecommendations = () => {
+    if (list) {
+      loadRecommendations(list);
     }
   };
 
@@ -223,6 +251,69 @@ const ComprarLista = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Brand Selection Section */}
+        <Card className="p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Preferencias de Marca</h2>
+            <Button 
+              onClick={handleRefreshRecommendations}
+              disabled={loadingRecommendations}
+            >
+              {loadingRecommendations ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Buscando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Actualizar Recomendaciones
+                </>
+              )}
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Selecciona "ANY" para buscar el mejor precio entre todas las marcas, o elige una marca específica
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {list?.items.map((item, index) => {
+              const availableBrands = allPrices
+                .find(p => p.name.toLowerCase() === item.name.toLowerCase())
+                ?.availablePrices.map(p => p.brand)
+                .filter((brand, idx, arr) => brand && arr.indexOf(brand) === idx) || [];
+              
+              return (
+                <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium">{item.name}</p>
+                    {item.amount && (
+                      <p className="text-xs text-muted-foreground">
+                        {item.amount} {item.unit || ""}
+                      </p>
+                    )}
+                  </div>
+                  <Select
+                    value={itemBrandPreferences[item.name] || "ANY"}
+                    onValueChange={(value) => handleBrandChange(item.name, value)}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Seleccionar marca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ANY">ANY (Mejor precio)</SelectItem>
+                      {availableBrands.map((brand) => (
+                        <SelectItem key={brand} value={brand || "sin marca"}>
+                          {brand || "Sin marca"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
         {/* Loading state */}
         {loadingRecommendations ? (
           <Card className="p-6 mb-6">
