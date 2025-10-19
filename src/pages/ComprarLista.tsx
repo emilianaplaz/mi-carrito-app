@@ -166,9 +166,9 @@ const ComprarLista = () => {
         const searchWords = normSearch.split(' ');
         const subWords = normSub.split(' ');
         
-        // Check if any significant word matches (length > 3)
+        // Check if any word matches (length >= 3 for meaningful matches)
         return searchWords.some(sw => 
-          sw.length > 3 && subWords.some(subw => 
+          sw.length >= 3 && subWords.some(subw => 
             subw.includes(sw) || sw.includes(subw)
           )
         );
