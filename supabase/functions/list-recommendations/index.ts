@@ -157,9 +157,45 @@ serve(async (req) => {
       }
     }
 
-    // Option 2: Generate smart combination strategies that minimize store count
-    // Strategy: Try to build complete coverage combinations with minimum stores
-    console.log('Exploring smart combinations that minimize store count...');
+    // Option 2A: Generate the CHEAPEST overall combination (regardless of store count)
+    const cheapestCombination: any[] = [];
+    let cheapestTotal = 0;
+    const cheapestUsedSupermarkets = new Set<string>();
+    
+    for (const item of items) {
+      const productKey = `${item.name}-${item.brand || 'sin marca'}`;
+      const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
+      
+      if (prices.length > 0) {
+        const cheapest = prices.reduce((min: any, p: any) => (min && min.price <= p.price) ? min : p, undefined as any);
+        if (cheapest) {
+          cheapestCombination.push({ 
+            item: item.name, 
+            price: cheapest.price, 
+            brand: cheapest.brand, 
+            supermarket: cheapest.supermarket 
+          });
+          cheapestTotal += cheapest.price;
+          cheapestUsedSupermarkets.add(cheapest.supermarket);
+        }
+      }
+    }
+    
+    if (cheapestCombination.length === items.length) {
+      const cheapestStoreCount = cheapestUsedSupermarkets.size;
+      supermarketOptions.push({
+        supermarket: `Combinación más barata: ${Array.from(cheapestUsedSupermarkets).join(' + ')}`,
+        items: cheapestCombination,
+        totalPrice: cheapestTotal,
+        isCombination: true,
+        missingCount: 0,
+        strategy: 'cheapest',
+        storeCount: cheapestStoreCount
+      });
+      console.log(`Cheapest overall: ${cheapestStoreCount} stores for $${cheapestTotal.toFixed(2)}`);
+    }
+    
+    // Option 2B: Generate smart combination strategies that minimize store count
       
       // Build supermarket coverage map with price details
       const supermarketCoverage: { name: string; itemCount: number; items: Set<string>; priceMap: Map<string, any> }[] = [];
@@ -297,21 +333,24 @@ serve(async (req) => {
       // Add the found combinations to options
       for (const combo of foundCompleteCombinations) {
         const storeNames = combo.stores.join(' + ');
+        const storeCount = combo.stores.length;
         const alreadyExists = supermarketOptions.some(opt => 
           opt.isCombination && opt.supermarket === `Combinación: ${storeNames}`
         );
         if (!alreadyExists) {
           supermarketOptions.push({
-            supermarket: `Combinación: ${storeNames}`,
+            supermarket: `Combinación con menos tiendas: ${storeNames}`,
             items: combo.items,
             totalPrice: combo.total,
             isCombination: true,
-            missingCount: 0
+            missingCount: 0,
+            strategy: 'fewest-stores',
+            storeCount: storeCount
           });
         }
       }
     
-    // CRITICAL SORTING: Prioritize complete coverage, then minimum stores, then cost
+    // CRITICAL SORTING: Prioritize by strategy first, then details
     supermarketOptions.sort((a, b) => {
       const aMissing = a.missingCount || 0;
       const bMissing = b.missingCount || 0;
@@ -323,12 +362,16 @@ serve(async (req) => {
       // If both are incomplete, prioritize more items covered
       if (aMissing !== bMissing) return aMissing - bMissing;
       
-      // 2. Among equal coverage, prioritize fewer stores
-      const aStores = a.isCombination ? new Set(a.items.map((i: any) => i.supermarket)).size : 1;
-      const bStores = b.isCombination ? new Set(b.items.map((i: any) => i.supermarket)).size : 1;
+      // 2. For complete options, show fewest-stores first, then cheapest
+      if (a.strategy === 'fewest-stores' && b.strategy !== 'fewest-stores') return -1;
+      if (b.strategy === 'fewest-stores' && a.strategy !== 'fewest-stores') return 1;
+      
+      // 3. Among same strategy, prioritize fewer stores
+      const aStores = a.storeCount || (a.isCombination ? new Set(a.items.map((i: any) => i.supermarket)).size : 1);
+      const bStores = b.storeCount || (b.isCombination ? new Set(b.items.map((i: any) => i.supermarket)).size : 1);
       if (aStores !== bStores) return aStores - bStores;
       
-      // 3. Finally, prioritize lower cost
+      // 4. Finally, prioritize lower cost
       return a.totalPrice - b.totalPrice;
     });
     
