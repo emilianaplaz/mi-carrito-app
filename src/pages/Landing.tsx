@@ -69,7 +69,7 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="px-4 bg-background pt-20">
         <div className="container mx-auto">
-          <div className="max-w-4xl mx-auto text-center space-y-6 animate-fade-in pt-8">
+          <div className="max-w-4xl mx-auto text-center space-y-6 animate-fade-in pt-4">
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
               Planifica tu nutrición,{" "}
               <span className="text-primary">
