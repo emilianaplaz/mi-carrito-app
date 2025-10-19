@@ -89,8 +89,8 @@ const Landing = () => {
 
       {/* Hero Banner Image */}
       <section className="-mt-8 relative">
-        <div className="w-full">
-          <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
+        <div className="w-full overflow-hidden">
+          <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover -mt-16" />
         </div>
       </section>
 
