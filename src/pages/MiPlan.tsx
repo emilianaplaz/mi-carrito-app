@@ -982,7 +982,7 @@ const MiPlan = () => {
                   <SelectValue placeholder="Elige una opción" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">➕ Crear nueva lista</SelectItem>
+                  <SelectItem value="new">➕ Agregar a una lista</SelectItem>
                   {existingLists.map((list) => (
                     <SelectItem key={list.id} value={list.id}>
                       {list.name}
