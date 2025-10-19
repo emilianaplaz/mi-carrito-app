@@ -42,6 +42,7 @@ const preferencesSchema = z.object({
 const TestPreferencias = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [hasExistingPreferences, setHasExistingPreferences] = useState(false);
   const [regeneratePlan, setRegeneratePlan] = useState(false);
@@ -300,6 +301,7 @@ const TestPreferencias = () => {
       }
 
       // Generate AI-powered meal plan
+      setGeneratingPlan(true);
       toast({
         title: "Generando tu plan...",
         description: "Esto puede tomar unos momentos",
@@ -313,11 +315,13 @@ const TestPreferencias = () => {
 
       if (planGenError) {
         console.error("Plan generation error:", planGenError);
+        setGeneratingPlan(false);
         throw new Error(`Error generando plan: ${planGenError.message || "Error desconocido"}`);
       }
 
       if (!planData?.success) {
         console.error("Plan generation failed:", planData);
+        setGeneratingPlan(false);
         throw new Error(planData?.error || "No se pudo generar el plan de comidas");
       }
 
@@ -330,9 +334,11 @@ const TestPreferencias = () => {
 
       if (planError) {
         console.error("Error saving plan:", planError);
+        setGeneratingPlan(false);
         throw planError;
       }
 
+      setGeneratingPlan(false);
       toast({
         title: "¡Plan creado exitosamente!",
         description: "Tu plan personalizado está listo",
@@ -340,6 +346,7 @@ const TestPreferencias = () => {
 
       navigate("/mi-plan");
     } catch (error) {
+      setGeneratingPlan(false);
       if (error instanceof z.ZodError) {
         toast({
           title: "Información incompleta",
@@ -560,6 +567,17 @@ const TestPreferencias = () => {
           )}
         </div>
       </main>
+
+      {/* Full-screen Loading Overlay */}
+      {generatingPlan && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <img src={loadingCart} alt="Loading" className="w-32 h-auto object-contain animate-pulse" />
+            <p className="text-lg font-semibold">Generando tu plan personalizado...</p>
+            <p className="text-sm text-muted-foreground">Esto puede tomar unos momentos</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

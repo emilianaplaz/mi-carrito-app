@@ -43,6 +43,7 @@ const preferencesSchema = z.object({
 const EditPreferencias = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -257,6 +258,7 @@ const EditPreferencias = () => {
       }
 
       // Generate AI-powered meal plan
+      setGeneratingPlan(true);
       toast({
         title: "Generando tu plan...",
         description: "Esto puede tomar unos momentos",
@@ -267,10 +269,12 @@ const EditPreferencias = () => {
       });
 
       if (planGenError) {
+        setGeneratingPlan(false);
         throw new Error(`Error generando plan: ${planGenError.message || "Error desconocido"}`);
       }
 
       if (!planData?.success) {
+        setGeneratingPlan(false);
         throw new Error(planData?.error || "No se pudo generar el plan de comidas");
       }
 
@@ -282,9 +286,11 @@ const EditPreferencias = () => {
       });
 
       if (planError) {
+        setGeneratingPlan(false);
         throw planError;
       }
 
+      setGeneratingPlan(false);
       toast({
         title: "¡Plan creado exitosamente!",
         description: "Tu plan personalizado está listo",
@@ -292,6 +298,7 @@ const EditPreferencias = () => {
 
       navigate("/mi-plan");
     } catch (error) {
+      setGeneratingPlan(false);
       if (error instanceof z.ZodError) {
         toast({
           title: "Información incompleta",
@@ -510,6 +517,17 @@ const EditPreferencias = () => {
           </div>
         </div>
       </main>
+
+      {/* Full-screen Loading Overlay */}
+      {generatingPlan && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <img src={loadingCart} alt="Loading" className="w-32 h-auto object-contain animate-pulse" />
+            <p className="text-lg font-semibold">Generando tu plan personalizado...</p>
+            <p className="text-sm text-muted-foreground">Esto puede tomar unos momentos</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
