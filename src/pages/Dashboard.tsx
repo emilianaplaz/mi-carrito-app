@@ -57,6 +57,7 @@ const Dashboard = () => {
   const [todayDate, setTodayDate] = useState<string>("");
   const [recipePrefs, setRecipePrefs] = useState<Record<string, boolean>>({});
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [showPreferencesPrompt, setShowPreferencesPrompt] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   useEffect(() => {
@@ -97,6 +98,8 @@ const Dashboard = () => {
       .maybeSingle();
     if (!plan || !plan.recipe_ids) {
       setTodayRecipes(null);
+      // Show preferences prompt if no meal plan exists
+      setShowPreferencesPrompt(true);
       return;
     }
     const planData = plan.recipe_ids as any;
@@ -428,6 +431,39 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Preferences Prompt Dialog */}
+      <Dialog open={showPreferencesPrompt} onOpenChange={setShowPreferencesPrompt}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¡Bienvenido a MiCarrito!</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Para comenzar a usar MiCarrito y generar tu plan de comidas personalizado, necesitamos conocer tus preferencias alimentarias.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => {
+                  setShowPreferencesPrompt(false);
+                  navigate("/test-preferencias");
+                }}
+                className="flex-1"
+              >
+                <ClipboardList className="mr-2 h-4 w-4" />
+                Completar Test de Preferencias
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowPreferencesPrompt(false)}
+                className="flex-1"
+              >
+                Más Tarde
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

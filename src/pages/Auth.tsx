@@ -81,7 +81,7 @@ const Auth = () => {
           title: "¡Registro exitoso!",
           description: "Ahora puedes iniciar sesión con tu cuenta."
         });
-        navigate("/test-preferencias");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       toast({
@@ -115,29 +115,8 @@ const Auth = () => {
           throw error;
         }
       } else {
-        // Check if user has meal plan or preferences
-        const {
-          data: {
-            user
-          }
-        } = await supabase.auth.getUser();
-        if (user) {
-          const {
-            data: mealPlan
-          } = await supabase.from("meal_plans").select("id").eq("user_id", user.id).single();
-          if (mealPlan) {
-            navigate("/dashboard");
-          } else {
-            const {
-              data: prefs
-            } = await supabase.from("user_preferences").select("id").eq("user_id", user.id).single();
-            if (prefs) {
-              navigate("/dashboard");
-            } else {
-              navigate("/test-preferencias");
-            }
-          }
-        }
+        // Always redirect to dashboard after login
+        navigate("/dashboard");
       }
     } catch (error: any) {
       toast({
