@@ -11,6 +11,7 @@ import { ChefHat, ArrowLeft, Store, TrendingDown, Truck, ShoppingCart, Calendar 
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
+import loadingCart from "@/assets/loading-cart.png";
 type PriceInfo = {
   id: string;
   price: number;
@@ -124,7 +125,7 @@ const ComprarIngrediente = () => {
   };
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
-        <ChefHat className="h-12 w-12 text-primary animate-pulse" />
+        <img src={loadingCart} alt="Cargando" className="h-24 w-24 animate-pulse" />
       </div>;
   }
   return <div className="min-h-screen bg-background">

@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChefHat, ArrowLeft, Calendar as CalendarIcon, Clock, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/mi-carrit-logo.png";
+import loadingCart from "@/assets/loading-cart.png";
 import { CartButton } from "@/components/Cart";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addDays, addWeeks, isWithinInterval, isBefore, isAfter, getDay, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
@@ -185,7 +186,7 @@ const Calendar = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <CalendarIcon className="h-12 w-12 text-primary animate-pulse" />
+        <img src={loadingCart} alt="Cargando" className="h-24 w-24 animate-pulse" />
       </div>
     );
   }

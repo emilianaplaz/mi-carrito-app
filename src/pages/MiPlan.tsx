@@ -31,6 +31,7 @@ import {
   Calendar,
 } from "lucide-react";
 import logo from "@/assets/mi-carrit-logo.png";
+import loadingCart from "@/assets/loading-cart.png";
 import { CartButton } from "@/components/Cart";
 
 type Recipe = {
@@ -562,7 +563,7 @@ const MiPlan = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <ChefHat className="h-12 w-12 text-primary animate-pulse" />
+        <img src={loadingCart} alt="Cargando" className="h-24 w-24 animate-pulse" />
       </div>
     );
   }

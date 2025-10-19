@@ -21,6 +21,7 @@ import {
 import { useCart } from "@/contexts/CartContext";
 import { CartButton } from "@/components/Cart";
 import logo from "@/assets/mi-carrit-logo.png";
+import loadingCart from "@/assets/loading-cart.png";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
@@ -351,7 +352,7 @@ const ComprarLista = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <ChefHat className="h-12 w-12 text-primary animate-pulse" />
+        <img src={loadingCart} alt="Cargando" className="h-24 w-24 animate-pulse" />
       </div>
     );
   }
