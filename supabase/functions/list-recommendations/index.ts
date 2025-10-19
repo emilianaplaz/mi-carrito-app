@@ -452,23 +452,41 @@ serve(async (req) => {
     // First position: Mejor Opción (fewest stores strategy)
     if (fewestStoresOption) {
       const cleanedName = cleanSupermarketName(fewestStoresOption.supermarket);
+      console.log('Adding fewestStoresOption:', cleanedName, fewestStoresOption.totalPrice);
       finalRecommendations.push({ 
         ...fewestStoresOption,
         supermarket: cleanedName,
         displayLabel: 'Mejor Opción',
         sortOrder: 1
       });
+    } else {
+      console.log('No fewestStoresOption found');
     }
     
     // Second position: Opción Más Barata (cheapest strategy) - only if different from first
-    if (cheapestOption && cheapestOption !== fewestStoresOption) {
-      const cleanedName = cleanSupermarketName(cheapestOption.supermarket);
-      finalRecommendations.push({
-        ...cheapestOption,
-        supermarket: cleanedName,
-        displayLabel: 'Opción Más Barata',
-        sortOrder: 2
+    if (cheapestOption) {
+      const areSame = cheapestOption === fewestStoresOption;
+      console.log('Checking cheapestOption:', {
+        exists: !!cheapestOption,
+        areSame,
+        supermarket: cheapestOption.supermarket,
+        price: cheapestOption.totalPrice
       });
+      
+      if (!areSame) {
+        const cleanedName = cleanSupermarketName(cheapestOption.supermarket);
+        console.log('Adding cheapestOption:', cleanedName, cheapestOption.totalPrice);
+        finalRecommendations.push({
+          ...cheapestOption,
+          supermarket: cleanedName,
+          displayLabel: 'Opción Más Barata',
+          sortOrder: 2
+        });
+      } else {
+        console.log('Skipping cheapestOption - same as fewestStoresOption');
+      }
+    } else {
+      console.log('No cheapestOption found');
     }
     
     // If we still don't have 2 options, add other top options
@@ -493,7 +511,15 @@ serve(async (req) => {
     // Final sort to ensure correct order
     finalRecommendations.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
     
-    console.log(`Final recommendations (${finalRecommendations.length}):`, finalRecommendations.map((r, i) => `${i}: ${r.displayLabel} - ${r.supermarket} - $${r.totalPrice} (missing: ${r.missingCount || 0})`));
+    console.log(`Final recommendations count: ${finalRecommendations.length}`);
+    console.log('Final recommendations details:', JSON.stringify(finalRecommendations.map((r, i) => ({
+      index: i,
+      displayLabel: r.displayLabel,
+      supermarket: r.supermarket,
+      totalPrice: r.totalPrice,
+      missingCount: r.missingCount || 0,
+      itemsCount: r.items?.length || 0
+    })), null, 2));
     
     const response = {
       allPrices: itemsWithPrices,
