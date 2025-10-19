@@ -113,19 +113,29 @@ const Auth = () => {
           throw error;
         }
       } else {
-        // Check if user has completed preferences
+        // Check if user has meal plan or preferences
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data: prefs } = await supabase
-            .from("user_preferences")
+          const { data: mealPlan } = await supabase
+            .from("meal_plans")
             .select("id")
             .eq("user_id", user.id)
             .single();
           
-          if (prefs) {
+          if (mealPlan) {
             navigate("/dashboard");
           } else {
-            navigate("/test-preferencias");
+            const { data: prefs } = await supabase
+              .from("user_preferences")
+              .select("id")
+              .eq("user_id", user.id)
+              .single();
+            
+            if (prefs) {
+              navigate("/dashboard");
+            } else {
+              navigate("/test-preferencias");
+            }
           }
         }
       }
