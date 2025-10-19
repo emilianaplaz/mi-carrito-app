@@ -12,9 +12,7 @@ const Landing = () => {
   useEffect(() => {
     const checkSession = async () => {
       const {
-        data: {
-          session
-        }
+        data: { session },
       } = await supabase.auth.getSession();
       if (session) {
         navigate("/dashboard");
@@ -22,40 +20,46 @@ const Landing = () => {
     };
     checkSession();
   }, [navigate]);
-  const features = [{
-    icon: ChefHat,
-    title: "Menús Personalizados",
-    description: "Genera menús semanales adaptados a tus objetivos, alergias y preferencias alimentarias."
-  }, {
-    icon: Bell,
-    title: "Comparador de Precios",
-    description: "Encuentra los mejores precios comparando entre múltiples supermercados locales en tiempo real."
-  }, {
-    icon: ShoppingCart,
-    title: "Mercado inteligente",
-    description: "Automatiza la compra de tu mercado según tus necesidades."
-  }, {
-    icon: Home,
-    title: "Gestión de listas de compra",
-    description: "Crea listas de compra y recibe recomendaciones de nuevos productos por mejores precios."
-  }, {
-    icon: TrendingDown,
-    title: "Optimización de Costos",
-    description: "Reduce tu gasto en alimentos con carritos divididos por tienda."
-  }, {
-    icon: Sparkles,
-    title: "IA Nutricional",
-    description: "Tecnología avanzada que calcula macros, micros y porciones perfectas para ti."
-  }];
-  return <div className="min-h-screen">
+  const features = [
+    {
+      icon: ChefHat,
+      title: "Menús Personalizados",
+      description: "Genera menús semanales adaptados a tus objetivos, alergias y preferencias alimentarias.",
+    },
+    {
+      icon: Bell,
+      title: "Comparador de Precios",
+      description: "Encuentra los mejores precios comparando entre múltiples supermercados locales en tiempo real.",
+    },
+    {
+      icon: ShoppingCart,
+      title: "Mercado inteligente",
+      description: "Automatiza la compra de tu mercado según tus necesidades.",
+    },
+    {
+      icon: Home,
+      title: "Gestión de listas de compra",
+      description: "Crea listas de compra y recibe recomendaciones de nuevos productos por mejores precios.",
+    },
+    {
+      icon: TrendingDown,
+      title: "Optimización de Costos",
+      description: "Reduce tu gasto en alimentos con carritos divididos por tienda.",
+    },
+    {
+      icon: Sparkles,
+      title: "IA Nutricional",
+      description: "Tecnología avanzada que calcula macros, micros y porciones perfectas para ti.",
+    },
+  ];
+  return (
+    <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ChefHat className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">
-              MiCarrito
-            </span>
+            <span className="text-2xl font-bold text-primary">MiCarrito</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate("/auth")}>
@@ -71,10 +75,7 @@ const Landing = () => {
         <div className="container mx-auto">
           <div className="max-w-4xl mx-auto text-center space-y-6 animate-fade-in pt-2">
             <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-              Planifica tu nutrición,{" "}
-              <span className="text-primary">
-                optimiza tu presupuesto
-              </span>
+              Planifica tu nutrición, <span className="text-primary">optimiza tu presupuesto</span>
             </h1>
             <p className="text-xl text-muted-foreground">
               Menús personalizados, autogeneración de listas de compra, comparación de precios entre supermercados y
@@ -88,7 +89,7 @@ const Landing = () => {
       </section>
 
       {/* Hero Banner Image */}
-      <section className="-mt-8 relative">
+      <section className="mt-8 relative">
         <div className="w-full overflow-hidden">
           <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
         </div>
@@ -104,13 +105,19 @@ const Landing = () => {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => <Card key={index} className="p-6 hover:shadow-medium transition-all duration-300 hover:-translate-y-1 border-border bg-card" style={{
-            animationDelay: `${index * 100}ms`
-          }}>
+            {features.map((feature, index) => (
+              <Card
+                key={index}
+                className="p-6 hover:shadow-medium transition-all duration-300 hover:-translate-y-1 border-border bg-card"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                }}
+              >
                 <feature.icon className="h-12 w-12 text-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
-              </Card>)}
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -140,6 +147,7 @@ const Landing = () => {
           <p className="text-muted-foreground">© 2025 MiCarrito. Todos los derechos reservados.</p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
 export default Landing;
