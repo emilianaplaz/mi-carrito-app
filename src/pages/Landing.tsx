@@ -89,7 +89,7 @@ const Landing = () => {
       </section>
 
       {/* Hero Banner Image */}
-      <section className="mt-2 relative">
+      <section className="relative">
         <div className="w-full overflow-hidden">
           <img src={heroImage} alt="Mi Carrito - Shopping Cart" className="w-full h-auto object-cover" />
         </div>
