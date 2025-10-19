@@ -74,6 +74,10 @@ serve(async (req) => {
       name: it.name,
       brand: it.brand
     }));
+    
+    if (itemsWithoutPrices.length > 0) {
+      console.log('Items without any prices in database:', itemsWithoutPrices.map((i: any) => i.name).join(', '));
+    }
 
     // Calculate best options
     const supermarketOptions: any[] = [];
@@ -153,11 +157,12 @@ serve(async (req) => {
       }
     }
 
-    // Option 2: Find cheapest combination (allow partial and single-supermarket)
+    // Option 2: Generate multiple combination strategies
+    // Strategy 1: Cheapest combination (picks lowest price for each item)
     const cheapestCombination: any[] = [];
     let combinationTotal = 0;
     const usedSupermarkets = new Set<string>();
-    const missingItems: string[] = [];
+    const cheapestMissingItems: string[] = [];
     
     for (const item of items) {
       const productKey = `${item.name}-${item.brand || 'sin marca'}`;
@@ -171,7 +176,7 @@ serve(async (req) => {
           usedSupermarkets.add(cheapest.supermarket);
         }
       } else {
-        missingItems.push(item.name);
+        cheapestMissingItems.push(item.name);
       }
     }
     
@@ -181,8 +186,82 @@ serve(async (req) => {
         items: cheapestCombination,
         totalPrice: combinationTotal,
         isCombination: true,
-        missingCount: missingItems.length
+        missingCount: cheapestMissingItems.length
       });
+    }
+    
+    // Strategy 2: Try to build complete coverage combinations by exploring different supermarket sets
+    // This ensures we find complete coverage options even if they're not the absolute cheapest
+    if (cheapestMissingItems.length > 0) {
+      console.log('Cheapest combination is missing items, exploring alternative combinations...');
+      
+      // Get all unique supermarkets
+      const allSupermarketsSet = new Set(Object.keys(pricesBySupermarket));
+      
+      // Try combinations starting with supermarkets that have the most items
+      const supermarketCoverage: { name: string; itemCount: number; items: Set<string> }[] = [];
+      for (const [supermarket, prices] of Object.entries(pricesBySupermarket)) {
+        const coveredItems = new Set<string>();
+        for (const item of items) {
+          const hasItem = (prices as any[]).some((p: any) => 
+            p.product === item.name && (!item.brand || (p.brand || 'sin marca') === (item.brand || 'sin marca'))
+          );
+          if (hasItem) {
+            coveredItems.add(item.name);
+          }
+        }
+        supermarketCoverage.push({ name: supermarket, itemCount: coveredItems.size, items: coveredItems });
+      }
+      
+      // Sort by coverage (most items first)
+      supermarketCoverage.sort((a, b) => b.itemCount - a.itemCount);
+      
+      // Try to build a complete combination by greedily adding supermarkets
+      const greedyCombination: any[] = [];
+      let greedyTotal = 0;
+      const greedyUsedSupermarkets = new Set<string>();
+      const coveredItemsSet = new Set<string>();
+      const itemToSupermarket: Record<string, { supermarket: string; price: any }> = {};
+      
+      // First pass: try to get one option for each item from the best supermarkets
+      for (const item of items) {
+        if (coveredItemsSet.has(item.name)) continue;
+        
+        // Find cheapest price for this item across all supermarkets
+        const productKey = `${item.name}-${item.brand || 'sin marca'}`;
+        const prices = item.brand ? (productPriceMap[productKey] || []) : (productOnlyMap[item.name] || []);
+        
+        if (prices.length > 0) {
+          const cheapest = prices.reduce((min: any, p: any) => (min && min.price <= p.price) ? min : p, undefined as any);
+          greedyCombination.push({ 
+            item: item.name, 
+            price: cheapest.price, 
+            brand: cheapest.brand, 
+            supermarket: cheapest.supermarket 
+          });
+          greedyTotal += cheapest.price;
+          greedyUsedSupermarkets.add(cheapest.supermarket);
+          coveredItemsSet.add(item.name);
+        }
+      }
+      
+      const greedyMissing = items.length - greedyCombination.length;
+      
+      // Only add if it's actually complete (no missing items)
+      if (greedyMissing === 0 && greedyCombination.length > 0) {
+        // Check if this combination is different from the cheapest one
+        const isDifferent = greedyTotal !== combinationTotal || greedyUsedSupermarkets.size !== usedSupermarkets.size;
+        if (isDifferent) {
+          supermarketOptions.push({
+            supermarket: `Combinación: ${Array.from(greedyUsedSupermarkets).join(' + ')}`,
+            items: greedyCombination,
+            totalPrice: greedyTotal,
+            isCombination: true,
+            missingCount: 0
+          });
+          console.log('Found complete coverage alternative combination');
+        }
+      }
     }
     
     // CRITICAL SORTING: Prioritize complete coverage, then minimum stores, then cost
