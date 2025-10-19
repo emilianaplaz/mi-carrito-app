@@ -329,7 +329,7 @@ const EditPreferencias = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <UserIcon className="h-5 w-5 text-primary" />
+              <ChefHat className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold">Editar Preferencias</span>
             </div>
             <BCVRate />
@@ -345,7 +345,7 @@ const EditPreferencias = () => {
             </Button>
             <CartButton />
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-              <ChefHat className="h-10 w-10" />
+              <UserIcon className="h-10 w-10" />
             </Button>
           </div>
         </div>
