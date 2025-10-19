@@ -418,34 +418,43 @@ serve(async (req) => {
     
      // Return structured data with all available prices
     // Ensure we show both strategies if available
+    // CRITICAL: fewest-stores should be labeled "Mejor Opción", cheapest should be "Opción Más Barata"
     const fewestStoresOption = withinBudget.find(opt => opt.strategy === 'fewest-stores' && (opt.missingCount || 0) === 0);
     const cheapestOption = withinBudget.find(opt => opt.strategy === 'cheapest' && (opt.missingCount || 0) === 0);
     
+    console.log('Found options:', {
+      fewestStores: fewestStoresOption ? `${fewestStoresOption.supermarket} - $${fewestStoresOption.totalPrice}` : 'none',
+      cheapest: cheapestOption ? `${cheapestOption.supermarket} - $${cheapestOption.totalPrice}` : 'none'
+    });
+    
     // Build final recommendations list with both strategies
+    // ORDER MATTERS: First = Mejor Opción (fewest stores), Second = Opción Más Barata (cheapest)
     const finalRecommendations: any[] = [];
     
-    // ALWAYS label the best option as "Mejor Opción"
+    // First position: Mejor Opción (fewest stores strategy)
     if (fewestStoresOption) {
       const labeled = { 
         ...fewestStoresOption,
-        displayLabel: 'Mejor Opción'
+        displayLabel: 'Mejor Opción',
+        sortOrder: 1
       };
       // Ensure supermarket name has the label
       if (!labeled.supermarket.includes('Mejor Opción')) {
-        labeled.supermarket = `Mejor Opción: ${labeled.supermarket}`;
+        labeled.supermarket = `Mejor Opción: ${labeled.supermarket.replace('Opción Más Barata: ', '')}`;
       }
       finalRecommendations.push(labeled);
     }
     
-    // ALWAYS label the cheapest option as "Opción Más Barata"
+    // Second position: Opción Más Barata (cheapest strategy)
     if (cheapestOption && cheapestOption !== fewestStoresOption) {
       const labeled = {
         ...cheapestOption,
-        displayLabel: 'Opción Más Barata'
+        displayLabel: 'Opción Más Barata',
+        sortOrder: 2
       };
       // Ensure supermarket name has the label
       if (!labeled.supermarket.includes('Opción Más Barata')) {
-        labeled.supermarket = `Opción Más Barata: ${labeled.supermarket}`;
+        labeled.supermarket = `Opción Más Barata: ${labeled.supermarket.replace('Mejor Opción: ', '')}`;
       }
       finalRecommendations.push(labeled);
     }
@@ -458,21 +467,26 @@ serve(async (req) => {
       
       for (let i = 0; i < Math.min(remainingOptions.length, 2 - finalRecommendations.length); i++) {
         const opt = remainingOptions[i];
+        const isFirst = finalRecommendations.length === 0;
         const labeled = {
           ...opt,
-          displayLabel: finalRecommendations.length === 0 ? 'Mejor Opción' : 'Opción Más Barata'
+          displayLabel: isFirst ? 'Mejor Opción' : 'Opción Más Barata',
+          sortOrder: isFirst ? 1 : 2
         };
         // Add label to supermarket name if not present
-        if (finalRecommendations.length === 0 && !labeled.supermarket.includes('Mejor Opción')) {
+        if (isFirst && !labeled.supermarket.includes('Mejor Opción')) {
           labeled.supermarket = `Mejor Opción: ${labeled.supermarket}`;
-        } else if (finalRecommendations.length === 1 && !labeled.supermarket.includes('Opción Más Barata')) {
+        } else if (!isFirst && !labeled.supermarket.includes('Opción Más Barata')) {
           labeled.supermarket = `Opción Más Barata: ${labeled.supermarket}`;
         }
         finalRecommendations.push(labeled);
       }
     }
     
-    console.log(`Final recommendations count: ${finalRecommendations.length} (fewest: ${fewestStoresOption ? 'yes' : 'no'}, cheapest: ${cheapestOption ? 'yes' : 'no'})`);
+    // Final sort to ensure correct order
+    finalRecommendations.sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
+    
+    console.log(`Final recommendations order:`, finalRecommendations.map((r, i) => `${i}: ${r.displayLabel} - ${r.supermarket} - $${r.totalPrice}`));
     
     const response = {
       allPrices: itemsWithPrices,
