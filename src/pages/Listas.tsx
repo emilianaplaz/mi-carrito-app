@@ -64,29 +64,45 @@ const Listas = () => {
         .order("name", { ascending: true });
       if (brandsError) throw brandsError;
 
-      // Fetch subcategorias and brands from product_prices
-      const { data: pricesData, error: pricesError } = await supabase
-        .from("product_prices")
-        .select("subcategoria, marca")
-        .limit(10000);
-      if (pricesError) throw pricesError;
-
+      // Paginate through product_prices to ensure we get ALL subcategorias
+      const pageSize = 1000;
+      let from = 0;
       const brandMap = new Map<string, Set<string>>();
-      pricesData?.forEach((row: any) => {
-        const subcategoriaName = row.subcategoria;
-        const brandName = row.marca || "Sin marca";
-        if (!subcategoriaName) return;
-        if (!brandMap.has(subcategoriaName)) brandMap.set(subcategoriaName, new Set());
-        brandMap.get(subcategoriaName)!.add(brandName);
-      });
+      const displayNameMap = new Map<string, string>();
+      const norm = (s: string) => s?.toString().normalize('NFKC').trim().replace(/\s+/g, ' ');
 
-      // Create products list from unique subcategorias in product_prices
+      while (true) {
+        const { data: pricesPage, error: pricesError } = await supabase
+          .from("product_prices")
+          .select("subcategoria, marca")
+          .range(from, from + pageSize - 1);
+        if (pricesError) throw pricesError;
+
+        if (!pricesPage || pricesPage.length === 0) break;
+
+        pricesPage.forEach((row: any) => {
+          const rawSub = row.subcategoria;
+          const brandName = row.marca || "Sin marca";
+          if (!rawSub) return;
+          const key = norm(rawSub).toLowerCase();
+          const display = norm(rawSub);
+          if (!display) return;
+          if (!displayNameMap.has(key)) displayNameMap.set(key, display);
+          if (!brandMap.has(key)) brandMap.set(key, new Set());
+          brandMap.get(key)!.add(brandName);
+        });
+
+        if (pricesPage.length < pageSize) break;
+        from += pageSize;
+      }
+
+      // Create products list from unique normalized subcategorias
       const products = Array.from(brandMap.keys())
-        .sort()
-        .map((subcategoriaName) => ({
-          name: subcategoriaName,
-          brands: Array.from(brandMap.get(subcategoriaName) || []),
-        }));
+        .map((key) => ({
+          name: displayNameMap.get(key) || key,
+          brands: Array.from(brandMap.get(key) || []),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
       setAvailableProducts(products);
       setAllBrands((brandsData || []).map((b: any) => b.name));
