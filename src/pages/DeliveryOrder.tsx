@@ -181,7 +181,7 @@ const DeliveryOrder = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-primary" />
+              <img src={logo} alt="MiCarrit" className="h-6 w-6 object-contain" />
               <span className="text-lg font-bold">Delivery en Caracas</span>
             </div>
           </div>
@@ -209,7 +209,7 @@ const DeliveryOrder = () => {
             <div className="lg:col-span-1 space-y-6">
               <Card className="p-6 shadow-lg">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5 text-primary" />
+                  <img src={logo} alt="MiCarrit" className="h-6 w-6 object-contain" />
                   Resumen del Pedido
                 </h2>
                 <div className="space-y-3 mb-4">

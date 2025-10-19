@@ -482,7 +482,7 @@ const Listas = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-primary" />
+              <img src={logo} alt="MiCarrit" className="h-6 w-6 object-contain" />
               <span className="text-lg font-bold">Mis Listas</span>
             </div>
           </div>
@@ -658,7 +658,7 @@ const Listas = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {lists.length === 0 ? (
           <Card className="p-8 text-center">
-            <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <img src={logo} alt="MiCarrit" className="h-16 w-16 object-contain mx-auto mb-4 opacity-50" />
             <h2 className="text-2xl font-bold mb-2">No tienes listas todavía</h2>
             <p className="text-muted-foreground mb-6">Crea tu primera lista de compras para empezar a organizarte</p>
             <Button onClick={() => setIsDialogOpen(true)}>
