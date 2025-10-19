@@ -135,61 +135,89 @@ const ComprarLista = () => {
         brand: itemBrandPreferences[item.name] === "ANY" ? undefined : itemBrandPreferences[item.name]
       }));
 
-      // Fetch ALL product prices to do fuzzy matching
-      const { data: allPricesData, error: pricesError } = await supabase
-        .from("product_prices")
-        .select(`
-          precio,
-          presentacion,
-          marca,
-          producto,
-          mercado
-        `);
-      if (pricesError) throw pricesError;
+      // Fetch ALL product prices to do fuzzy matching (paginate to get full table)
+      const PAGE_SIZE = 1000;
+      const allPricesData: any[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+          .from("product_prices")
+          .select(`
+            precio,
+            presentacion,
+            marca,
+            producto,
+            mercado
+          `)
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        if (data && data.length > 0) allPricesData.push(...data);
+        if (!data || data.length < PAGE_SIZE) break;
+      }
 
-      // Create a fuzzy matcher function
-      const normalize = (str: string) => 
-        str.toLowerCase()
+      // Create a fuzzy matcher function with accent-insensitive comparison and basic synonyms
+      const normalize = (str: string) =>
+        (str || "")
+          .toLowerCase()
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '') // remove accents
+          .replace(/[^a-z0-9\s]/g, ' ') // remove punctuation/symbols
           .replace(/\s+/g, ' ')
           .trim();
 
+      const synonyms: Record<string, string[]> = {
+        platano: ['platano', 'plátano', 'cambur', 'banana'],
+        manzana: ['manzana', 'manzanas'],
+        tomate: ['tomate', 'tomates'],
+        cebolla: ['cebolla', 'cebollas'],
+        ajo: ['ajo', 'ajos'],
+      };
+
+      const expandTerms = (term: string): string[] => {
+        const t = normalize(term);
+        const syns = synonyms[t];
+        return syns ? Array.from(new Set(syns.map(normalize))) : [t];
+      };
+
       const fuzzyMatch = (searchTerm: string, productName: string): boolean => {
-        const normSearch = normalize(searchTerm);
         const normProduct = normalize(productName);
-        
-        // Direct substring match
-        if (normProduct.includes(normSearch) || normSearch.includes(normProduct)) return true;
-        
-        // Split and check each word
-        const searchWords = normSearch.split(' ').filter(w => w.length >= 2);
-        const productWords = normProduct.split(' ').filter(w => w.length >= 2);
-        
-        // Check if most search words appear in product
-        if (searchWords.length > 0) {
-          const matchCount = searchWords.filter(sw => 
-            productWords.some(pw => pw.includes(sw) || sw.includes(pw))
-          ).length;
-          
-          // Match if at least 50% of words match, or if there's only 1 word
-          return matchCount > 0 && (searchWords.length === 1 || matchCount >= Math.ceil(searchWords.length / 2));
+        const candidateTerms = expandTerms(searchTerm);
+
+        for (const normSearch of candidateTerms) {
+          if (!normSearch) continue;
+          // Direct substring match
+          if (normProduct.includes(normSearch) || normSearch.includes(normProduct)) return true;
+
+          // Split and check each word
+          const searchWords = normSearch.split(' ').filter(w => w.length >= 2);
+          const productWords = normProduct.split(' ').filter(w => w.length >= 2);
+
+          if (searchWords.length > 0) {
+            const matchCount = searchWords.filter(sw =>
+              productWords.some(pw => pw.includes(sw) || sw.includes(pw))
+            ).length;
+            if (matchCount > 0 && (searchWords.length === 1 || matchCount >= Math.ceil(searchWords.length / 2))) {
+              return true;
+            }
+          }
         }
-        
         return false;
       };
 
-      // Filter prices to only matching items using fuzzy matching on producto
-      const matchedPrices = (allPricesData || []).filter((price: any) => 
-        groceryList.items.some(item => fuzzyMatch(item.name, price.producto))
-      );
+      // Build matched prices and REMAP product name to the corresponding list item name
+      const matchedPrices = [] as any[];
+      for (const price of allPricesData || []) {
+        const matchedItem = groceryList.items.find(item => fuzzyMatch(item.name, price.producto));
+        if (matchedItem) {
+          matchedPrices.push({ ...price, producto: matchedItem.name });
+        }
+      }
 
       console.log('🔍 Fuzzy Matching Debug:');
       console.log('List items:', groceryList.items.map(i => i.name));
       console.log('Sample productos from DB:', (allPricesData || []).slice(0, 10).map((p: any) => p.producto));
       console.log('Matched prices count:', matchedPrices.length);
       console.log('Total prices count:', (allPricesData || []).length);
-      
+
       // Show specific matching details for common items
       ['Platano', 'manzana', 'tomate', 'cebolla', 'ajo'].forEach(itemName => {
         const matches = (allPricesData || []).filter((p: any) => fuzzyMatch(itemName, p.producto));
